@@ -1,0 +1,148 @@
+{
+  "seed": 123,
+  "generated_at": "2026-02-06T21:18:38.856052",
+  "slots": [
+    {
+      "day": "mon",
+      "meal": "lunch",
+      "recipeId": "pasta_tefy",
+      "recipeName": "Pasta Tefy",
+      "variantId": "pasta_tefy__carb_pasta",
+      "protein": "fish",
+      "carb": "pasta"
+    },
+    {
+      "day": "mon",
+      "meal": "dinner",
+      "recipeId": "pollo_guiso_habichuelas_dinner",
+      "recipeName": "Pollo con guiso y habichuelas",
+      "variantId": "pollo_guiso_habichuelas_dinner__carb_none",
+      "protein": "chicken",
+      "carb": "none"
+    },
+    {
+      "day": "tue",
+      "meal": "lunch",
+      "recipeId": "lentejas",
+      "recipeName": "Lentejas",
+      "variantId": "lentejas__carb_lentils",
+      "protein": "pork",
+      "carb": "lentils"
+    },
+    {
+      "day": "tue",
+      "meal": "dinner",
+      "recipeId": "atun_guisito_dinner",
+      "recipeName": "Atún con guisito",
+      "variantId": "atun_guisito_dinner__carb_none",
+      "protein": "fish",
+      "carb": "none"
+    },
+    {
+      "day": "wed",
+      "meal": "lunch",
+      "recipeId": "carne_encebollada_lunch",
+      "recipeName": "Carne encebollada",
+      "variantId": "carne_encebollada_lunch__carb_rice",
+      "protein": "beef",
+      "carb": "rice"
+    },
+    {
+      "day": "wed",
+      "meal": "dinner",
+      "recipeId": "chicken_fricassee_dinner",
+      "recipeName": "Chicken Fricassée",
+      "variantId": "chicken_fricassee_dinner__carb_none",
+      "protein": "chicken",
+      "carb": "none"
+    },
+    {
+      "day": "thu",
+      "meal": "lunch",
+      "recipeId": "salmon_horneado_lunch",
+      "recipeName": "Salmón horneado",
+      "variantId": "salmon_horneado_lunch__carb_corn",
+      "protein": "fish",
+      "carb": "corn"
+    },
+    {
+      "day": "thu",
+      "meal": "dinner",
+      "recipeId": "atun_juanfe_dinner",
+      "recipeName": "Atún a la JuanFe",
+      "variantId": "atun_juanfe_dinner__carb_none",
+      "protein": "fish",
+      "carb": "none"
+    },
+    {
+      "day": "fri",
+      "meal": "lunch",
+      "recipeId": "sudado_carne",
+      "recipeName": "Sudado de carne",
+      "variantId": "sudado_carne__carb_potato",
+      "protein": "beef",
+      "carb": "potato"
+    },
+    {
+      "day": "fri",
+      "meal": "dinner",
+      "recipeId": "pollo_guiso_habichuelas_dinner",
+      "recipeName": "Pollo con guiso y habichuelas",
+      "variantId": "pollo_guiso_habichuelas_dinner__carb_none",
+      "protein": "chicken",
+      "carb": "none"
+    },
+    {
+      "day": "sat",
+      "meal": "lunch",
+      "recipeId": "arroz_con_pollo",
+      "recipeName": "Arroz con pollo",
+      "variantId": "arroz_con_pollo__carb_rice",
+      "protein": "chicken",
+      "carb": "rice"
+    },
+    {
+      "day": "sat",
+      "meal": "dinner",
+      "recipeId": "salmon_horneado_dinner",
+      "recipeName": "Salmón horneado",
+      "variantId": "salmon_horneado_dinner__carb_none",
+      "protein": "fish",
+      "carb": "none"
+    },
+    {
+      "day": "sun",
+      "meal": "lunch",
+      "recipeId": "sudado_carne",
+      "recipeName": "Sudado de carne",
+      "variantId": "sudado_carne__carb_potato",
+      "protein": "beef",
+      "carb": "potato"
+    },
+    {
+      "day": "sun",
+      "meal": "dinner",
+      "recipeId": "chicken_fricassee_dinner",
+      "recipeName": "Chicken Fricassée",
+      "variantId": "chicken_fricassee_dinner__carb_none",
+      "protein": "chicken",
+      "carb": "none"
+    }
+  ],
+  "derived": {
+    "protein_counts": {
+      "chicken": 5,
+      "beef": 3,
+      "pork": 1,
+      "fish": 5,
+      "egg": 0
+    },
+    "carb_counts": {
+      "pasta": 1,
+      "lentils": 1,
+      "rice": 2,
+      "corn": 1,
+      "potato": 2
+    }
+  }
+}

@@ -1,0 +1,49 @@
+# Recipe: Salmón Horneado (Dinner Version)
+# Based on R007 from Excel data
+# No carbs for dinner
+
+id: salmon_horneado_dinner
+name: "Salmón horneado"
+meal_types: [dinner]
+
+tags:
+  primary_protein: fish
+
+# No carbs for dinner
+carbs:
+  strategy: none
+
+ingredients:
+  # Protein
+  - item: fish_salmon
+    role: protein
+    qty: "@portion"
+
+  # Vegetables
+  - item: asparagus
+    role: veg
+    qty_g: 150
+    notes: "O usar zanahoria y zucchini"
+
+  - item: lemon
+    role: condiment
+    qty_units: 0.5
+
+  - item: garlic
+    role: veg
+    qty_g: 10
+
+  - item: green_onion
+    role: veg
+    qty_g: 15
+
+  - item: rosemary
+    role: herb
+    qty_g: 3
+    notes: "O tomillo"
+
+  - item: olive_oil
+    role: fat
+    qty_ml: 10
+
+notes: "Puede usar espárragos o zanahoria con zucchini. Romero o tomillo según preferencia."

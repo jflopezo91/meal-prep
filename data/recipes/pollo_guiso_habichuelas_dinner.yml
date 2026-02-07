@@ -1,0 +1,43 @@
+# Recipe: Pollo con Guiso y Habichuelas
+# Based on R002 from Excel data
+# Dinner version - NO CARBS
+
+id: pollo_guiso_habichuelas_dinner
+name: "Pollo con guiso y habichuelas"
+meal_types: [dinner]
+
+tags:
+  primary_protein: chicken
+
+# No carbs for dinner
+carbs:
+  strategy: none
+
+ingredients:
+  # Protein - quantity resolved at planning time
+  - item: chicken
+    role: protein
+    qty: "@portion"
+    notes: "Pechuga desmechada"
+
+  # Vegetables
+  - item: tomato
+    role: veg
+    qty_g: 150
+
+  - item: onion
+    role: veg
+    qty_g: 80
+
+  - item: green_beans
+    role: veg
+    qty_g: 120
+
+  - item: garlic
+    role: veg
+    qty_g: 10
+
+  # Fat
+  - item: olive_oil
+    role: fat
+    qty_ml: 10

@@ -1,0 +1,70 @@
+# Meal Planner Rules Configuration
+# All measurements are for RAW ingredients unless otherwise specified
+
+week:
+  days: [mon, tue, wed, thu, fri, sat, sun]
+  meals: [lunch, dinner]
+
+meal_rules:
+  lunch:
+    allow_carbs: true
+  dinner:
+    allow_carbs: false  # Hard constraint: no carbs at dinner
+
+# Global fixed portions by protein type and meal
+# All weights are RAW (uncooked)
+protein_portions_g:
+  chicken:
+    lunch: 210
+    dinner: 140  # Reduced for dinner (assumes pre-workout protein)
+  beef:
+    lunch: 230
+    dinner: 230
+  pork:
+    lunch: 235
+    dinner: 200
+  fish:
+    lunch: 235
+    dinner: 235
+  egg:
+    lunch: 3   # Assuming if egg is used in lunch/dinner, it follows units
+    dinner: 3
+
+# Global carb portions by meal
+# All weights are RAW (uncooked)
+carb_portions_g:
+  lunch_default: 90
+  dinner_default: 0  # No carbs at dinner
+  
+  # Specific overrides for certain carbs
+  overrides:
+    potato: 120
+    yuca: 70
+    platano_verde: 40
+    platano_maduro: 45
+    arepa: 0.5  # units (half arepa)
+    lentils: 60
+    pasta: 100
+    corn: 100
+
+# Planning constraints
+constraints:
+  # Weekly protein distribution (total across all meals)
+  # Adjust these based on your dietary goals
+  weekly_protein_counts:
+    chicken: 5
+    fish: 5
+    beef: 3
+    pork: 1
+    # Total: 14 meals (2 meals × 7 days)
+    # Total: 21 meals (3 meals × 7 days)
+
+  # No same protein on consecutive days (per meal type)
+  no_consecutive_same_protein: true
+
+  # Fish-specific constraints
+  fish_dinner_max_per_week: 3  # Total fish dinners per week
+  fish_dinner_max_consecutive: 2  # Max consecutive days with fish at dinner
+
+  # Recipe usage
+  max_recipe_uses_per_week: 2  # Each recipe can only be used once per week

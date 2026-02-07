@@ -1,0 +1,41 @@
+# Recipe: Atún con Guisito
+# Based on R012 from Excel data
+# Dinner only, no carbs
+
+id: atun_guisito_dinner
+name: "Atún con guisito"
+meal_types: [dinner]
+
+tags:
+  primary_protein: fish
+
+# No carbs for dinner
+carbs:
+  strategy: none
+
+ingredients:
+  # Protein
+  - item: fish_tuna_canned
+    role: protein
+    qty: "@portion"
+    notes: "Atún en lata"
+
+  # Vegetables
+  - item: onion
+    role: veg
+    qty_g: 80
+
+  - item: tomato
+    role: veg
+    qty_g: 120
+
+  - item: asparagus
+    role: veg
+    qty_g: 100
+
+  # Fat
+  - item: olive_oil
+    role: fat
+    qty_ml: 10
+
+notes: "Receta rápida y fácil para cena"

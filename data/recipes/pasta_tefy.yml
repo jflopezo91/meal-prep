@@ -1,0 +1,65 @@
+# Recipe: Pasta Tefy
+# Based on R013 from Excel data
+# Fixed carb - pasta (tornillos)
+
+id: pasta_tefy
+name: "Pasta Tefy"
+meal_types: [lunch]
+
+tags:
+  primary_protein: fish
+
+# Fixed carb - pasta
+carbs:
+  strategy: fixed
+  default: pasta
+
+ingredients:
+  # Protein
+  - item: fish_tuna_canned
+    role: protein
+    qty: "@portion"
+    notes: "Atún en lata"
+
+  # Vegetables
+  - item: eggplant
+    role: veg
+    qty_g: 120
+
+  - item: zucchini
+    role: veg
+    qty_g: 100
+
+  - item: yellow_zucchini
+    role: veg
+    qty_g: 100
+
+  - item: onion
+    role: veg
+    qty_g: 60
+
+  - item: tomato
+    role: veg
+    qty_g: 100
+
+  - item: olives
+    role: other
+    qty_g: 30
+
+  # Condiments
+  - item: tomato_paste
+    role: condiment
+    qty_g: 50
+    notes: "O salsa roja"
+
+  # Dairy
+  - item: parmesan
+    role: dairy
+    qty_g: 20
+
+  # Fat
+  - item: olive_oil
+    role: fat
+    qty_ml: 10
+
+notes: "Pasta tornillos con vegetales mediterráneos. Puede usar pasta de tomate o salsa roja."

@@ -1,0 +1,50 @@
+# Recipe: Atún a la JuanFe (Dinner Version)
+# Based on R006 from Excel data
+# No carbs for dinner
+
+id: atun_juanfe_dinner
+name: "Atún a la JuanFe"
+meal_types: [dinner]
+
+tags:
+  primary_protein: fish
+
+# No carbs for dinner
+carbs:
+  strategy: none
+
+ingredients:
+  # Protein
+  - item: fish_tuna_fillet
+    role: protein
+    qty: "@portion"
+
+  # Vegetables
+  - item: asparagus
+    role: veg
+    qty_g: 120
+
+  - item: green_onion
+    role: veg
+    qty_g: 20
+
+  - item: garlic
+    role: veg
+    qty_g: 10
+
+  - item: ginger
+    role: veg
+    qty_g: 10
+
+  # Condiments
+  - item: soy_sauce
+    role: condiment
+    qty_ml: 20
+
+  - item: sesame_oil
+    role: fat
+    qty_ml: 5
+
+  - item: sesame_seeds
+    role: garnish
+    qty_g: 5

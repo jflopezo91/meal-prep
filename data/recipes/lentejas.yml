@@ -1,0 +1,50 @@
+# Recipe: Lentejas
+# Based on R011 from Excel data
+# Fixed carb - lentils (which act as both protein and carb)
+
+id: lentejas
+name: "Lentejas"
+meal_types: [lunch]
+
+tags:
+  primary_protein: pork
+
+# Fixed carb - lentils
+carbs:
+  strategy: fixed
+  default: lentils
+
+ingredients:
+  # Protein
+  - item: sausage
+    role: protein
+    qty: "@portion"
+    notes: "Salchicha"
+
+  # Vegetables
+  - item: onion
+    role: veg
+    qty_g: 80
+
+  - item: green_onion
+    role: veg
+    qty_g: 20
+
+  - item: carrot
+    role: veg
+    qty_g: 80
+
+  - item: garlic
+    role: veg
+    qty_g: 10
+
+  - item: tomato
+    role: veg
+    qty_g: 100
+
+  # Fat
+  - item: olive_oil
+    role: fat
+    qty_ml: 10
+
+notes: "Las lentejas son tanto proteína vegetal como carbohidrato"

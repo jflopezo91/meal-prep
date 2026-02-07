@@ -1,0 +1,62 @@
+# Recipe: Pollo Toscano
+# Based on R001 from Excel data
+
+id: pollo_toscano_lunch
+name: "Pollo toscano"
+meal_types: [lunch]
+
+tags:
+  primary_protein: chicken
+
+# Variable carb strategy - can choose from allowed carbs
+carbs:
+  strategy: optional
+  allowed: [rice, potato, yuca, platano_verde]
+  default: rice
+
+ingredients:
+  # Protein - quantity resolved at planning time
+  - item: chicken
+    role: protein
+    qty: "@portion"
+
+  # Vegetables
+  - item: cherry_tomato
+    role: veg
+    qty_g: 100
+
+  - item: spinach
+    role: veg
+    qty_g: 80
+
+  - item: onion
+    role: veg
+    qty_g: 50
+
+  - item: green_onion
+    role: veg
+    qty_g: 20
+
+  - item: garlic
+    role: veg
+    qty_g: 10
+
+  - item: olives
+    role: other
+    qty_g: 30
+
+  - item: basil
+    role: herb
+    qty_g: 5
+
+  # Dairy
+  - item: greek_yogurt
+    role: dairy
+    qty_g: 50
+
+  # Fat
+  - item: olive_oil
+    role: fat
+    qty_ml: 10
+
+notes: "Usar pechuga o muslo según preferencia"

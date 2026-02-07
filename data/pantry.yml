@@ -1,0 +1,28 @@
+# Pantry Items
+# Ingredients that are always available and should be excluded from shopping lists
+# These are staples that don't need to be purchased weekly
+
+# Basic seasonings and spices
+- salt
+- pepper
+- bay_leaf
+- thyme
+- rosemary
+- basil
+- cilantro
+- parsley
+
+# Oils and fats
+- olive_oil
+- sesame_oil
+
+# Basic aromatics (if always in stock)
+- garlic
+- onion
+- green_onion
+
+# Condiments (if always in stock)
+- soy_sauce
+- lemon
+
+# Note: Adjust this list based on what you actually keep stocked at home
