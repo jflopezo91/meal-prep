@@ -1,0 +1,81 @@
+# Recipe: Arroz con Pollo
+# Based on R005 from Excel data
+# Fixed carb strategy - always includes rice
+
+id: arroz_con_pollo
+name: "Arroz con pollo"
+meal_types: [lunch]
+
+tags:
+  primary_protein: chicken
+
+# Fixed carb - always rice
+carbs:
+  strategy: fixed
+  default: rice
+
+ingredients:
+  # Protein
+  - item: chicken
+    role: protein
+    qty: "@portion"
+    notes: "Pechuga desmechada"
+
+  # Vegetables
+  - item: carrot
+    role: veg
+    qty_g: 80
+
+  - item: bell_pepper
+    role: veg
+    qty_g: 60
+
+  - item: peas
+    role: veg
+    qty_g: 50
+
+  - item: green_beans
+    role: veg
+    qty_g: 50
+
+  - item: cilantro
+    role: herb
+    qty_g: 10
+
+  - item: bay_leaf
+    role: spice
+    qty_units: 2
+
+  - item: garlic
+    role: veg
+    qty_g: 10
+
+  - item: onion
+    role: veg
+    qty_g: 80
+
+  - item: green_onion
+    role: veg
+    qty_g: 20
+
+  # Optional protein addition
+  - item: sausage
+    role: protein_extra
+    qty_g: 50
+    optional: true
+
+  # Condiments
+  - item: tomato_sauce
+    role: condiment
+    qty_ml: 50
+
+  - item: achiote
+    role: condiment
+    qty_g: 5
+
+  # Fat
+  - item: olive_oil
+    role: fat
+    qty_ml: 10
+
+notes: "Salchicha opcional. Usar achiote para dar color al arroz."

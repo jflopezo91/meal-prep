@@ -1,0 +1,46 @@
+# Recipe: Pescado Encocado
+# Based on R014 from Excel data
+
+id: pescado_encocado
+name: "Pescado encocado"
+meal_types: [lunch]
+
+tags:
+  primary_protein: fish
+
+# Variable carb strategy
+carbs:
+  strategy: optional
+  allowed: [rice, yuca, potato, platano_verde]
+  default: rice
+
+ingredients:
+  # Protein
+  - item: fish_tilapia
+    role: protein
+    qty: "@portion"
+
+  # Vegetables
+  - item: onion
+    role: veg
+    qty_g: 80
+
+  - item: green_onion
+    role: veg
+    qty_g: 20
+
+  - item: bell_pepper
+    role: veg
+    qty_g: 80
+
+  # Dairy/Condiment
+  - item: coconut_cream
+    role: condiment
+    qty_ml: 100
+
+  # Fat
+  - item: olive_oil
+    role: fat
+    qty_ml: 10
+
+notes: "Receta costeña colombiana con crema de coco"

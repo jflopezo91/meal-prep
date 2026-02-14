@@ -1,0 +1,248 @@
+{
+  "sections": {
+    "protein": [
+      {
+        "item": "chicken",
+        "display": "Pollo",
+        "quantity": 770.0,
+        "unit": "g",
+        "section": "protein",
+        "notes": null
+      },
+      {
+        "item": "sausage",
+        "display": "Salchicha",
+        "quantity": 285.0,
+        "unit": "g",
+        "section": "protein",
+        "notes": null
+      },
+      {
+        "item": "beef",
+        "display": "Carne de res",
+        "quantity": 690.0,
+        "unit": "g",
+        "section": "protein",
+        "notes": null
+      },
+      {
+        "item": "fish_salmon",
+        "display": "Salmón",
+        "quantity": 235.0,
+        "unit": "g",
+        "section": "protein",
+        "notes": null
+      },
+      {
+        "item": "fish_tuna_canned",
+        "display": "Atún en lata",
+        "quantity": 705.0,
+        "unit": "g",
+        "section": "protein",
+        "notes": null
+      },
+      {
+        "item": "fish_tilapia",
+        "display": "Tilapia",
+        "quantity": 235.0,
+        "unit": "g",
+        "section": "protein",
+        "notes": null
+      }
+    ],
+    "vegetable": [
+      {
+        "item": "carrot",
+        "display": "Zanahoria",
+        "quantity": 320.0,
+        "unit": "g",
+        "section": "vegetable",
+        "notes": null
+      },
+      {
+        "item": "bell_pepper",
+        "display": "Pimentón",
+        "quantity": 300.0,
+        "unit": "g",
+        "section": "vegetable",
+        "notes": null
+      },
+      {
+        "item": "peas",
+        "display": "Arverja",
+        "quantity": 50.0,
+        "unit": "g",
+        "section": "vegetable",
+        "notes": null
+      },
+      {
+        "item": "green_beans",
+        "display": "Habichuela",
+        "quantity": 290.0,
+        "unit": "g",
+        "section": "vegetable",
+        "notes": null
+      },
+      {
+        "item": "tomato",
+        "display": "Tomate",
+        "quantity": 1340.0,
+        "unit": "g",
+        "section": "vegetable",
+        "notes": null
+      },
+      {
+        "item": "asparagus",
+        "display": "Espárragos",
+        "quantity": 350.0,
+        "unit": "g",
+        "section": "vegetable",
+        "notes": null
+      },
+      {
+        "item": "zucchini",
+        "display": "Zucchini",
+        "quantity": 300.0,
+        "unit": "g",
+        "section": "vegetable",
+        "notes": null
+      },
+      {
+        "item": "broccoli",
+        "display": "Brócoli",
+        "quantity": 200.0,
+        "unit": "g",
+        "section": "vegetable",
+        "notes": null
+      },
+      {
+        "item": "ginger",
+        "display": "Jengibre",
+        "quantity": 20.0,
+        "unit": "g",
+        "section": "vegetable",
+        "notes": null
+      },
+      {
+        "item": "eggplant",
+        "display": "Berenjena",
+        "quantity": 120.0,
+        "unit": "g",
+        "section": "vegetable",
+        "notes": null
+      },
+      {
+        "item": "yellow_zucchini",
+        "display": "Zucchini amarillo",
+        "quantity": 100.0,
+        "unit": "g",
+        "section": "vegetable",
+        "notes": null
+      }
+    ],
+    "condiment": [
+      {
+        "item": "tomato_sauce",
+        "display": "Salsa de tomate",
+        "quantity": 50.0,
+        "unit": "ml",
+        "section": "condiment",
+        "notes": null
+      },
+      {
+        "item": "achiote",
+        "display": "Achiote",
+        "quantity": 5.0,
+        "unit": "g",
+        "section": "condiment",
+        "notes": null
+      },
+      {
+        "item": "honey",
+        "display": "Miel",
+        "quantity": 30.0,
+        "unit": "ml",
+        "section": "condiment",
+        "notes": null
+      },
+      {
+        "item": "olives",
+        "display": "Aceitunas",
+        "quantity": 30.0,
+        "unit": "g",
+        "section": "condiment",
+        "notes": null
+      },
+      {
+        "item": "tomato_paste",
+        "display": "Pasta de tomate",
+        "quantity": 50.0,
+        "unit": "g",
+        "section": "condiment",
+        "notes": null
+      }
+    ],
+    "carb": [
+      {
+        "item": "rice",
+        "display": "Arroz",
+        "quantity": 90.0,
+        "unit": "g",
+        "section": "carb",
+        "notes": null
+      },
+      {
+        "item": "lentils",
+        "display": "Lentejas",
+        "quantity": 60.0,
+        "unit": "g",
+        "section": "carb",
+        "notes": null
+      },
+      {
+        "item": "pasta",
+        "display": "Pasta",
+        "quantity": 100.0,
+        "unit": "g",
+        "section": "carb",
+        "notes": null
+      },
+      {
+        "item": "potato",
+        "display": "Papa",
+        "quantity": 240.0,
+        "unit": "g",
+        "section": "carb",
+        "notes": null
+      }
+    ],
+    "fat": [
+      {
+        "item": "sesame_seeds",
+        "display": "Ajonjolí",
+        "quantity": 10.0,
+        "unit": "g",
+        "section": "fat",
+        "notes": null
+      }
+    ],
+    "dairy": [
+      {
+        "item": "parmesan",
+        "display": "Queso parmesano",
+        "quantity": 20.0,
+        "unit": "g",
+        "section": "dairy",
+        "notes": null
+      },
+      {
+        "item": "coconut_cream",
+        "display": "Crema de coco",
+        "quantity": 100.0,
+        "unit": "ml",
+        "section": "dairy",
+        "notes": null
+      }
+    ]
+  }
+}

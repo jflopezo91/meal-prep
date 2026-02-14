@@ -1,0 +1,47 @@
+# Recipe: Carne Encebollada (Lunch Version)
+# Based on R009 from Excel data
+
+id: carne_encebollada_lunch
+name: "Carne encebollada"
+meal_types: [lunch]
+
+tags:
+  primary_protein: beef
+
+# Variable carb strategy for lunch
+carbs:
+  strategy: optional
+  allowed: [rice, potato, yuca, platano_verde, platano_maduro]
+  default: rice
+
+ingredients:
+  # Protein
+  - item: beef
+    role: protein
+    qty: "@portion"
+    notes: "Lomo fino"
+
+  # Vegetables
+  - item: onion
+    role: veg
+    qty_g: 200
+    notes: "Mucha cebolla"
+
+  - item: tomato
+    role: veg
+    qty_g: 100
+
+  - item: garlic
+    role: veg
+    qty_g: 10
+
+  - item: green_onion
+    role: veg
+    qty_g: 20
+
+  # Fat
+  - item: olive_oil
+    role: fat
+    qty_ml: 10
+
+notes: "Receta clásica colombiana con abundante cebolla"

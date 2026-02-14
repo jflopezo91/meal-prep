@@ -1,0 +1,47 @@
+# Recipe: Sudado de Carne
+# Based on R010 from Excel data
+# Fixed carb - always potato
+
+id: sudado_carne
+name: "Sudado de carne"
+meal_types: [lunch]
+
+tags:
+  primary_protein: beef
+
+# Fixed carb - always potato
+carbs:
+  strategy: fixed
+  default: potato
+
+ingredients:
+  # Protein
+  - item: beef
+    role: protein
+    qty: "@portion"
+    notes: "Lomo fino"
+
+  # Vegetables
+  - item: tomato
+    role: veg
+    qty_g: 250
+    notes: "Mucho tomate"
+
+  - item: onion
+    role: veg
+    qty_g: 80
+
+  - item: green_onion
+    role: veg
+    qty_g: 20
+
+  - item: garlic
+    role: veg
+    qty_g: 10
+
+  # Fat
+  - item: olive_oil
+    role: fat
+    qty_ml: 10
+
+notes: "Sudado tradicional colombiano con abundante tomate y papa"

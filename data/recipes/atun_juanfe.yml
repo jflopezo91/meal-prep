@@ -1,0 +1,53 @@
+# Recipe: Atún a la JuanFe (Lunch Version)
+# Based on R006 from Excel data
+
+id: atun_juanfe
+name: "Atún a la JuanFe"
+meal_types: [lunch, dinner]
+
+tags:
+  primary_protein: fish
+
+# Variable carb strategy for lunch
+carbs:
+  strategy: optional
+  allowed: [rice, potato]
+  default: rice
+
+ingredients:
+  # Protein
+  - item: fish_tuna_fillet
+    role: protein
+    qty: "@portion"
+
+  # Vegetables
+  - item: asparagus
+    role: veg
+    qty_g: 120
+
+  - item: green_onion
+    role: veg
+    qty_g: 20
+
+  - item: garlic
+    role: veg
+    qty_g: 10
+
+  - item: ginger
+    role: veg
+    qty_g: 10
+
+  # Condiments
+  - item: soy_sauce
+    role: condiment
+    qty_ml: 20
+
+  - item: sesame_oil
+    role: fat
+    qty_ml: 5
+
+  - item: sesame_seeds
+    role: garnish
+    qty_g: 5
+
+notes: "Receta especial con sabor asiático"

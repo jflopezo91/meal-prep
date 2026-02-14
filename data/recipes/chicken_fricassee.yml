@@ -1,0 +1,63 @@
+# Recipe: Chicken Fricassée (Lunch Version)
+# Based on R004 from Excel data
+
+id: chicken_fricassee
+name: "Chicken Fricassée"
+meal_types: [lunch, dinner]
+
+tags:
+  primary_protein: chicken
+
+# Variable carb strategy for lunch
+carbs:
+  strategy: optional
+  allowed: [rice, potato, pasta]
+  default: rice
+
+ingredients:
+  # Protein
+  - item: chicken
+    role: protein
+    qty: "@portion"
+    notes: "Pechuga"
+
+  # Vegetables
+  - item: mushroom
+    role: veg
+    qty_g: 150
+
+  - item: onion
+    role: veg
+    qty_g: 80
+
+  - item: green_onion
+    role: veg
+    qty_g: 20
+
+  - item: garlic
+    role: veg
+    qty_g: 10
+
+  - item: parsley
+    role: herb
+    qty_g: 5
+
+  - item: thyme
+    role: herb
+    qty_g: 2
+
+  - item: bay_leaf
+    role: spice
+    qty_units: 2
+
+  # Dairy
+  - item: heavy_cream
+    role: dairy
+    qty_ml: 80
+
+  # Fat
+  - item: olive_oil
+    role: fat
+    qty_ml: 10
+
+notes: "Platillo francés clásico con champiñones y crema"

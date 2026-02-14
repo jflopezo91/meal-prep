@@ -1,0 +1,58 @@
+# Recipe: Arroz Salteado con Cerdo
+# Based on R008 from Excel data
+# Fixed carb - always rice
+
+id: arroz_salteado_cerdo
+name: "Arroz salteado con cerdo"
+meal_types: [lunch]
+
+tags:
+  primary_protein: pork
+
+# Fixed carb - always rice
+carbs:
+  strategy: fixed
+  default: rice
+
+ingredients:
+  # Protein
+  - item: pork
+    role: protein
+    qty: "@portion"
+    notes: "Bondiola"
+
+  # Vegetables
+  - item: carrot
+    role: veg
+    qty_g: 80
+
+  - item: bell_pepper
+    role: veg
+    qty_g: 60
+
+  - item: peas
+    role: veg
+    qty_g: 50
+
+  - item: green_beans
+    role: veg
+    qty_g: 50
+
+  - item: broccoli
+    role: veg
+    qty_g: 80
+
+  - item: onion
+    role: veg
+    qty_g: 60
+
+  - item: garlic
+    role: veg
+    qty_g: 10
+
+  # Fat
+  - item: olive_oil
+    role: fat
+    qty_ml: 10
+
+notes: "Arroz frito estilo asiático con cerdo"
