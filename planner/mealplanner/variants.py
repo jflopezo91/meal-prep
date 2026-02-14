@@ -60,14 +60,11 @@ def expand_variants(
             )
             
         elif strategy == CarbStrategy.OPTIONAL:
-            # Multiple variants: one for each allowed carb + one for no carb (if desired?)
-            # Usually optional means "pick one of these". 
-            # If "no carb" is also an option for an optional strategy, it should probably be explicit?
-            # For now, let's assume optional means "must pick one from allowed".
-            # If "none" is valid, it should be in allowed list? No, allowed is list of *ingredients*.
-            # Based on Planning doc: "Meals with optional carbs are expanded into internal variants"
+            # Multiple variants: one for each allowed carb + one for no carb
+            # The no-carb variant is needed for unified recipes that support both lunch and dinner
+            # (dinner slots will only use the carb_none variant due to meal_rules)
             
-            # Let's create a variant for each allowed carb
+            # Create a variant for each allowed carb
             for carb_id in recipe.carbs.allowed:
                 variants.append(
                     RecipeVariant(
@@ -77,5 +74,15 @@ def expand_variants(
                         carb_ingredient_id=carb_id,
                     )
                 )
+            
+            # Also create a no-carb variant for dinner compatibility
+            variants.append(
+                RecipeVariant(
+                    base_recipe_id=recipe_id,
+                    variant_id=f"{recipe_id}__carb_none",
+                    recipe=recipe,
+                    carb_ingredient_id=None,
+                )
+            )
 
     return variants

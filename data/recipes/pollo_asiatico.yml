@@ -1,17 +1,19 @@
-# Recipe: Pollo Asiático (Dinner Version)
+# Recipe: Pollo Asiático (Lunch Version)
 # Based on R003 from Excel data
-# No carbs for dinner
+# Note: Dinner version would have strategy: none
 
-id: pollo_asiatico_dinner
+id: pollo_asiatico
 name: "Pollo asiático"
-meal_types: [dinner]
+meal_types: [lunch, dinner]
 
 tags:
   primary_protein: chicken
 
-# No carbs for dinner
+# Variable carb strategy for lunch
 carbs:
-  strategy: none
+  strategy: optional
+  allowed: [rice, potato, yuca, pasta]
+  default: rice
 
 ingredients:
   # Protein
@@ -20,7 +22,7 @@ ingredients:
     qty: "@portion"
     notes: "Pechuga"
 
-  # Vegetables (same as lunch version)
+  # Vegetables
   - item: carrot
     role: veg
     qty_g: 80
@@ -65,3 +67,5 @@ ingredients:
   - item: sesame_oil
     role: fat
     qty_ml: 5
+
+notes: "Para cena, usar la versión sin carbohidratos"

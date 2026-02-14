@@ -166,17 +166,6 @@ class DataLoader:
                         f"Recipe {recipe_id}: default carb must be in allowed list"
                     )
 
-            # Validate meal types vs carb strategy
-            for meal_type in recipe.meal_types:
-                meal_rule = self.rules.meal_rules.get(meal_type)
-                if meal_rule and not meal_rule.allow_carbs:
-                    # This meal doesn't allow carbs
-                    if recipe.carbs.strategy.value != "none":
-                        raise ValueError(
-                            f"Recipe {recipe_id}: meal type {meal_type.value} doesn't allow carbs, "
-                            f"but recipe has carb strategy '{recipe.carbs.strategy.value}'"
-                        )
-
             # Validate protein portions exist
             protein_type = recipe.tags.primary_protein
             if protein_type not in self.rules.protein_portions_g:

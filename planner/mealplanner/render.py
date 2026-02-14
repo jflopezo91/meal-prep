@@ -12,6 +12,15 @@ from .load import DataLoader
 from .config import ProteinType, IngredientKind
 
 
+class IngredientItem(BaseModel):
+    """Ingredient with display name and quantity."""
+    item: str
+    display: str
+    qty: float
+    unit: str
+    role: str
+
+
 class PlanSlot(BaseModel):
     """Output format for a single slot."""
     day: str
@@ -21,6 +30,9 @@ class PlanSlot(BaseModel):
     variantId: str
     protein: str
     carb: str # "none" or carb_id
+    proteinQty: float  # grams of protein
+    carbQty: float | None  # grams of carb (None if carb == "none")
+    ingredients: list[IngredientItem]  # full ingredients list
 
 
 class PlanDerivedStats(BaseModel):
@@ -73,11 +85,58 @@ def render_plan(
         pt = variant.recipe.tags.primary_protein
         protein_counts[pt.value] += 1
         
-        # Track carb
+        # Resolve protein quantity
+        protein_portions = loader.rules.protein_portions_g[pt]
+        protein_qty = getattr(protein_portions, meal, 0)
+        
+        # Track carb and resolve carb quantity
         carb = "none"
+        carb_qty = None
         if variant.carb_ingredient_id:
             carb = variant.carb_ingredient_id
             carb_counts[carb] = carb_counts.get(carb, 0) + 1
+            # Get carb quantity from ingredients.yml
+            if carb in loader.ingredients:
+                carb_qty = loader.ingredients[carb].default_qty_g or 0
+        
+        # Build ingredients list
+        ingredients_list = []
+        for ing in variant.recipe.ingredients:
+            if ing.item not in loader.ingredients:
+                continue
+            
+            ingredient_def = loader.ingredients[ing.item]
+            
+            # Resolve quantity
+            if ing.qty == "@portion":
+                qty = protein_qty
+            elif ing.qty_g is not None:
+                qty = ing.qty_g
+            elif ing.qty_ml is not None:
+                qty = ing.qty_ml
+            elif ing.qty_units is not None:
+                qty = ing.qty_units
+            else:
+                qty = 0
+            
+            ingredients_list.append(IngredientItem(
+                item=ing.item,
+                display=ingredient_def.display,
+                qty=qty,
+                unit=ingredient_def.unit,
+                role=ing.role
+            ))
+        
+        # Add carb ingredient if present
+        if variant.carb_ingredient_id and variant.carb_ingredient_id in loader.ingredients:
+            carb_def = loader.ingredients[variant.carb_ingredient_id]
+            ingredients_list.append(IngredientItem(
+                item=variant.carb_ingredient_id,
+                display=carb_def.display,
+                qty=carb_qty or 0,
+                unit=carb_def.unit,
+                role="carb"
+            ))
             
         slots.append(PlanSlot(
             day=day,
@@ -86,7 +145,10 @@ def render_plan(
             recipeName=variant.recipe.name,
             variantId=variant.variant_id,
             protein=pt.value,
-            carb=carb
+            carb=carb,
+            proteinQty=protein_qty,
+            carbQty=carb_qty,
+            ingredients=ingredients_list
         ))
         
     # 2. Create Plan object

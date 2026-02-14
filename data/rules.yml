@@ -30,23 +30,6 @@ protein_portions_g:
     lunch: 3   # Assuming if egg is used in lunch/dinner, it follows units
     dinner: 3
 
-# Global carb portions by meal
-# All weights are RAW (uncooked)
-carb_portions_g:
-  lunch_default: 90
-  dinner_default: 0  # No carbs at dinner
-  
-  # Specific overrides for certain carbs
-  overrides:
-    potato: 120
-    yuca: 70
-    platano_verde: 40
-    platano_maduro: 45
-    arepa: 0.5  # units (half arepa)
-    lentils: 60
-    pasta: 100
-    corn: 100
-
 # Planning constraints
 constraints:
   # Weekly protein distribution (total across all meals)

@@ -180,14 +180,6 @@ class ProteinPortions(BaseModel):
     dinner: Optional[float] = None
 
 
-class CarbPortions(BaseModel):
-    """Carb portion configuration."""
-
-    lunch_default: float
-    dinner_default: float
-    overrides: dict[str, float] = Field(default_factory=dict)
-
-
 class Constraints(BaseModel):
     """Planning constraints."""
 
@@ -204,7 +196,6 @@ class Rules(BaseModel):
     week: WeekConfig
     meal_rules: dict[MealType, MealRules]
     protein_portions_g: dict[ProteinType, ProteinPortions]
-    carb_portions_g: CarbPortions
     constraints: Constraints
 
 

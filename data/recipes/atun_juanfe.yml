@@ -1,9 +1,9 @@
 # Recipe: Atún a la JuanFe (Lunch Version)
 # Based on R006 from Excel data
 
-id: atun_juanfe_lunch
+id: atun_juanfe
 name: "Atún a la JuanFe"
-meal_types: [lunch]
+meal_types: [lunch, dinner]
 
 tags:
   primary_protein: fish

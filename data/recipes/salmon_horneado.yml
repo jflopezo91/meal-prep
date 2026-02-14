@@ -1,17 +1,19 @@
-# Recipe: Salmón Horneado (Dinner Version)
+# Recipe: Salmón Horneado
 # Based on R007 from Excel data
-# No carbs for dinner
+# Can be used for lunch or dinner
 
-id: salmon_horneado_dinner
+id: salmon_horneado
 name: "Salmón horneado"
-meal_types: [dinner]
+meal_types: [lunch, dinner]
 
 tags:
   primary_protein: fish
 
-# No carbs for dinner
+# Variable carb strategy for lunch
 carbs:
-  strategy: none
+  strategy: optional
+  allowed: [rice, potato, yuca, pasta, platano_verde, corn, platano_maduro]
+  default: rice
 
 ingredients:
   # Protein
@@ -19,7 +21,7 @@ ingredients:
     role: protein
     qty: "@portion"
 
-  # Vegetables
+  # Vegetables (asparagus OR carrot + zucchini)
   - item: asparagus
     role: veg
     qty_g: 150

@@ -1,17 +1,18 @@
-# Recipe: Chicken Fricassée (Dinner Version)
+# Recipe: Chicken Fricassée (Lunch Version)
 # Based on R004 from Excel data
-# No carbs for dinner
 
-id: chicken_fricassee_dinner
+id: chicken_fricassee
 name: "Chicken Fricassée"
-meal_types: [dinner]
+meal_types: [lunch, dinner]
 
 tags:
   primary_protein: chicken
 
-# No carbs for dinner
+# Variable carb strategy for lunch
 carbs:
-  strategy: none
+  strategy: optional
+  allowed: [rice, potato, pasta]
+  default: rice
 
 ingredients:
   # Protein
@@ -58,3 +59,5 @@ ingredients:
   - item: olive_oil
     role: fat
     qty_ml: 10
+
+notes: "Platillo francés clásico con champiñones y crema"

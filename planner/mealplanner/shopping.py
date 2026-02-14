@@ -69,17 +69,13 @@ def generate_shopping_list(
         if variant.carb_ingredient_id:
             carb_id = variant.carb_ingredient_id
             
-            # Resolve carb portion
-            # 1. Check overrides
-            if carb_id in loader.rules.carb_portions_g.overrides:
-                qty = loader.rules.carb_portions_g.overrides[carb_id]
-            else:
-                # 2. Use meal default
-                default_field = f"{meal_name}_default"
-                qty = getattr(loader.rules.carb_portions_g, default_field, 0)
+            # Resolve carb portion from ingredients.yml
+            if carb_id in loader.ingredients:
+                ingredient = loader.ingredients[carb_id]
+                qty = ingredient.default_qty_g or 0
                 
-            if qty > 0:
-                aggregated[carb_id] += qty
+                if qty > 0:
+                    aggregated[carb_id] += qty
                 
     # 4. Remove pantry items
     for pantry_item in loader.pantry:
