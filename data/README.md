@@ -55,33 +55,27 @@ For recipes that can be used at multiple meals with different carb strategies:
 
 ## Current Recipes
 
-Based on Excel data (R001-R014):
+The following recipes are currently implemented:
 
-1. **pollo_toscano_lunch.yml** - Pollo toscano (optional carbs)
-2. **pollo_guiso_habichuelas_dinner.yml** - Pollo con guiso (no carbs)
-3. **pollo_asiatico_lunch.yml** - Pollo asiático (optional carbs)
-4. **pollo_asiatico_dinner.yml** - Pollo asiático (no carbs)
-5. **arroz_con_pollo.yml** - Arroz con pollo (fixed: rice)
-6. **salmon_horneado_lunch.yml** - Salmón horneado (optional carbs)
-7. **salmon_horneado_dinner.yml** - Salmón horneado (no carbs)
-
-## TODO: Remaining Recipes to Create
-
-From your Excel data (R006-R014):
-- R006: Atún a la JuanFe (lunch/dinner variants)
-- R008: Arroz salteado con cerdo (lunch, fixed rice)
-- R009: Carne encebollada (lunch/breakfast variants)
-- R010: Sudado de carne (lunch, fixed potato)
-- R011: Lentejas (lunch, fixed lentils)
-- R012: Atún con guisito (dinner, no carbs)
-- R013: Pasta Tefy (lunch, fixed pasta)
-- R014: Pescado encocado (lunch, optional carbs)
-- R004: Chicken Fricassée (lunch/dinner variants)
+1.  **arroz_con_pollo.yml** - Arroz con pollo (fixed: rice)
+2.  **arroz_salteado_cerdo.yml** - Arroz salteado con cerdo (fixed: rice)
+3.  **atun_guisito_dinner.yml** - Atún con guisito (dinner, no carbs)
+4.  **atun_juanfe.yml** - Atún a la JuanFe (lunch/dinner variants)
+5.  **carne_encebollada_lunch.yml** - Carne encebollada (lunch)
+6.  **chicken_fricassee.yml** - Chicken Fricassée (lunch/dinner variants)
+7.  **lentejas.yml** - Lentejas (fixed: lentils)
+8.  **pasta_tefy.yml** - Pasta Tefy (fixed: pasta)
+9.  **pescado_encocado.yml** - Pescado encocado (lunch, optional carbs)
+10. **pollo_asiatico.yml** - Pollo asiático (lunch/dinner variants)
+11. **pollo_guiso_habichuelas_dinner.yml** - Pollo con guiso (no carbs)
+12. **pollo_toscano_lunch.yml** - Pollo toscano (optional carbs)
+13. **salmon_horneado.yml** - Salmón horneado (lunch/dinner variants)
+14. **sudado_carne.yml** - Sudado de carne (lunch, fixed: potato)
 
 ## Key Design Decisions
 
 1. **All measurements are RAW**: Simplifies shopping and preparation
-2. **Separate files for meal variants**: Clearer than conditional logic
+2. **Flexible Meal Variants**: Recipes can handle different roles (lunch/dinner) via tags and carb strategies.
 3. **Protein portions resolved at planning time**: Using `@portion` sentinel
 4. **Carb portions from global rules**: Consistent across all recipes
 5. **Canonical ingredient IDs**: Lowercase with underscores for consistency
@@ -91,7 +85,9 @@ From your Excel data (R006-R014):
 Before running the planner, validate the data structure:
 
 ```bash
-python -m planner.cli validate-data
+# From the project root
+export PYTHONPATH=$PYTHONPATH:$(pwd)/planner
+python3 -m mealplanner.cli validate-data data
 ```
 
 This will check:

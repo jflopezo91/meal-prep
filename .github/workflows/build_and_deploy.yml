@@ -39,11 +39,28 @@ jobs:
         # Use run number as seed for variety, but deterministic for same run
         SEED=${{ github.run_number }}
         echo "Generating plan with seed $SEED"
-        python -m mealplanner.cli generate-plan ../data ../public --seed $SEED
+        # Generate into site/public so they are included in the build
+        # mkdir -p ../site/public  # Ensure directory exists (though cli probably handles it)
+        python -m mealplanner.cli generate-plan ../data ../site/public --seed $SEED
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '20'
+
+    - name: Install Site Dependencies
+      run: |
+        cd site
+        npm ci
+
+    - name: Build Site
+      run: |
+        cd site
+        npm run build
 
     - name: Deploy to GitHub Pages
       if: success()
       uses: peaceiris/actions-gh-pages@v3
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./public
+        publish_dir: ./site/dist
