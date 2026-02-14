@@ -26,7 +26,7 @@ python3 -m venv .venv
 source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 
 # Install dependencies
-pip install -r planner/requirements.txt  # Or manually: pip install pyyaml pydantic ortools
+pip install -e planner
 ```
 
 ### 2. Setup the UI (React)
@@ -39,25 +39,17 @@ cd ..
 ## Workflow: How to Generate a Weekly Plan
 
 ### Step 1: Generate the Plan
-Run the planner command to solve for a new week. You can use a seed for reproducibility.
+Run the planner command to solve for a new week. This will write the data directly to the UI's public folder.
 
 ```bash
-# From the project root
-.venv/bin/python3 -m mealplanner.cli generate-plan data public --seed 123
+# Generate a plan using a seed for reproducibility
+.venv/bin/mealplanner generate-plan data site/public --seed 123
 ```
 
 This command will:
 1.  Read configuration from `data/`.
 2.  Solve for a valid schedule satisfying all rules in `data/rules.yml`.
-3.  Output `plan.json` and `shopping_list.json` to the `public/` directory.
-
-### Step 2: Update the UI Data
-Copy the generated JSON files to the UI's public folder so the React app can read them.
-
-```bash
-cp public/plan.json site/public/
-cp public/shopping_list.json site/public/
-```
+3.  Output `plan.json` and `shopping_list.json` directly to `site/public/`.
 
 ### Step 3: View the Plan
 Start the local development server to view your meal plan and shopping list.
@@ -78,4 +70,4 @@ Open the URL shown (usually `http://localhost:5173`) in your browser.
 ## Troubleshooting
 
 -   **Optimization Failed**: If the solver cannot find a solution, try relaxing constraints in `data/rules.yml` (e.g., increase `max_recipe_uses_per_week` or `fish_dinner_max_per_week`).
--   **UI Not Updating**: Ensure you copied the latest JSON files to `site/public/` after generating a new plan.
+-   **UI Not Updating**: Ensure you pointed the `generate-plan` command to `site/public` correctly in Step 1.
