@@ -8,6 +8,7 @@ An automated meal planning system that generates optimal weekly menus based on n
 -   **Data-First Configuration**: Define everything in YAML (`data/recipes/*.yml`, `data/ingredients.yml`, `data/rules.yml`).
 -   **Automated Shopping List**: Aggregates ingredients from the generated plan, grouping them by category (Protein, Produce, Pantry, etc.).
 -   **Modern UI**: A responsive React + Tailwind CSS web application to view your weekly schedule and check off grocery items.
+-   **Dark Mode**: Sleek Slate-900 based dark theme with persistent user preference.
 -   **Flexible**: Supports fixed vs. optional carbs and custom dietary rules.
 
 ## Prerequisites
@@ -51,7 +52,7 @@ This command will:
 2.  Solve for a valid schedule satisfying all rules in `data/rules.yml`.
 3.  Output `plan.json` and `shopping_list.json` directly to `site/public/`.
 
-### Step 3: View the Plan
+### Step 2: View the Plan
 Start the local development server to view your meal plan and shopping list.
 
 ```bash
