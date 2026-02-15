@@ -1,6 +1,6 @@
 {
-  "seed": 6,
-  "generated_at": "2026-02-15T15:50:19.271198",
+  "seed": 7,
+  "generated_at": "2026-02-15T15:50:37.905750",
   "slots": [
     {
       "day": "mon",
@@ -11,7 +11,7 @@
       "protein": "fish",
       "carb": "pasta",
       "proteinQty": 280.0,
-      "carbQty": 100.0,
+      "carbQty": 40.0,
       "ingredients": [
         {
           "item": "fish_tuna_canned",
@@ -86,7 +86,7 @@
         {
           "item": "pasta",
           "display": "Pasta",
-          "qty": 100.0,
+          "qty": 40.0,
           "unit": "g",
           "role": "carb"
         }
@@ -322,7 +322,7 @@
       "protein": "pork",
       "carb": "rice",
       "proteinQty": 280.0,
-      "carbQty": 90.0,
+      "carbQty": 40.0,
       "ingredients": [
         {
           "item": "pork",
@@ -390,7 +390,7 @@
         {
           "item": "rice",
           "display": "Arroz",
-          "qty": 90.0,
+          "qty": 40.0,
           "unit": "g",
           "role": "carb"
         }

@@ -212,7 +212,7 @@
       {
         "item": "pasta",
         "display": "Pasta",
-        "quantity": 100.0,
+        "quantity": 40.0,
         "unit": "g",
         "section": "carb",
         "notes": null
@@ -228,7 +228,7 @@
       {
         "item": "rice",
         "display": "Arroz",
-        "quantity": 90.0,
+        "quantity": 40.0,
         "unit": "g",
         "section": "carb",
         "notes": null
