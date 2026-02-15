@@ -128,6 +128,10 @@ function App() {
           <div className="flex items-center gap-4">
             <div className="text-xs text-slate-400 font-mono hidden sm:block">
               Seed: {plan.seed}
+              <br />
+              <span className="text-[10px] opacity-75">
+                {new Date(plan.generated_at).toLocaleString()}
+              </span>
             </div>
             <button
               onClick={toggleTheme}
