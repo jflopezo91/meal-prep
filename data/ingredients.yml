@@ -73,7 +73,7 @@ rice:
   unit: g
   section: carb
   kind: carb
-  default_qty_g: 90
+  default_qty_g: 40
   max_times_week: 7
 
 potato:
@@ -89,7 +89,7 @@ platano_verde:
   unit: g
   section: carb
   kind: carb
-  default_qty_g: 40
+  default_qty_g: 100
   max_times_week: 2
 
 platano_maduro:
@@ -97,7 +97,7 @@ platano_maduro:
   unit: g
   section: carb
   kind: carb
-  default_qty_g: 45
+  default_qty_g: 80
   max_times_week: 2
 
 yuca:
@@ -129,7 +129,7 @@ pasta:
   unit: g
   section: carb
   kind: carb
-  default_qty_g: 100
+  default_qty_g: 40
   max_times_week: 1
   notes: "Tornillos u otra forma"
 
@@ -138,7 +138,7 @@ lentils:
   unit: g
   section: carb
   kind: carb
-  default_qty_g: 60
+  default_qty_g: 55
   max_times_week: 1
 
 # ============================================================================
