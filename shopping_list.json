@@ -4,7 +4,7 @@
       {
         "item": "fish_tuna_canned",
         "display": "Atún en lata",
-        "quantity": 235.0,
+        "quantity": 280.0,
         "unit": "g",
         "section": "protein",
         "notes": null
@@ -12,7 +12,7 @@
       {
         "item": "chicken",
         "display": "Pollo",
-        "quantity": 770.0,
+        "quantity": 660.0,
         "unit": "g",
         "section": "protein",
         "notes": null
@@ -20,7 +20,7 @@
       {
         "item": "beef",
         "display": "Carne de res",
-        "quantity": 690.0,
+        "quantity": 840.0,
         "unit": "g",
         "section": "protein",
         "notes": null
@@ -28,7 +28,7 @@
       {
         "item": "fish_salmon",
         "display": "Salmón",
-        "quantity": 235.0,
+        "quantity": 100.0,
         "unit": "g",
         "section": "protein",
         "notes": null
@@ -36,7 +36,7 @@
       {
         "item": "pork",
         "display": "Cerdo",
-        "quantity": 235.0,
+        "quantity": 280.0,
         "unit": "g",
         "section": "protein",
         "notes": null
@@ -44,7 +44,7 @@
       {
         "item": "fish_tilapia",
         "display": "Tilapia",
-        "quantity": 235.0,
+        "quantity": 280.0,
         "unit": "g",
         "section": "protein",
         "notes": null
@@ -52,7 +52,7 @@
       {
         "item": "fish_tuna_fillet",
         "display": "Atún en filete",
-        "quantity": 470.0,
+        "quantity": 200.0,
         "unit": "g",
         "section": "protein",
         "notes": null

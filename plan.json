@@ -1,6 +1,6 @@
 {
-  "seed": 5,
-  "generated_at": "2026-02-15T05:13:10.798753",
+  "seed": 6,
+  "generated_at": "2026-02-15T15:50:19.271198",
   "slots": [
     {
       "day": "mon",
@@ -10,13 +10,13 @@
       "variantId": "pasta_tefy__carb_pasta",
       "protein": "fish",
       "carb": "pasta",
-      "proteinQty": 235.0,
+      "proteinQty": 280.0,
       "carbQty": 100.0,
       "ingredients": [
         {
           "item": "fish_tuna_canned",
           "display": "Atún en lata",
-          "qty": 235.0,
+          "qty": 280.0,
           "unit": "g",
           "role": "protein"
         },
@@ -100,13 +100,13 @@
       "variantId": "pollo_asiatico__carb_none",
       "protein": "chicken",
       "carb": "none",
-      "proteinQty": 140.0,
+      "proteinQty": 100.0,
       "carbQty": null,
       "ingredients": [
         {
           "item": "chicken",
           "display": "Pollo",
-          "qty": 140.0,
+          "qty": 100.0,
           "unit": "g",
           "role": "protein"
         },
@@ -197,13 +197,13 @@
       "variantId": "sudado_carne__carb_potato",
       "protein": "beef",
       "carb": "potato",
-      "proteinQty": 230.0,
+      "proteinQty": 280.0,
       "carbQty": 120.0,
       "ingredients": [
         {
           "item": "beef",
           "display": "Carne de res",
-          "qty": 230.0,
+          "qty": 280.0,
           "unit": "g",
           "role": "protein"
         },
@@ -259,13 +259,13 @@
       "variantId": "salmon_horneado__carb_none",
       "protein": "fish",
       "carb": "none",
-      "proteinQty": 235.0,
+      "proteinQty": 100.0,
       "carbQty": null,
       "ingredients": [
         {
           "item": "fish_salmon",
           "display": "Salmón",
-          "qty": 235.0,
+          "qty": 100.0,
           "unit": "g",
           "role": "protein"
         },
@@ -321,13 +321,13 @@
       "variantId": "arroz_salteado_cerdo__carb_rice",
       "protein": "pork",
       "carb": "rice",
-      "proteinQty": 235.0,
+      "proteinQty": 280.0,
       "carbQty": 90.0,
       "ingredients": [
         {
           "item": "pork",
           "display": "Cerdo",
-          "qty": 235.0,
+          "qty": 280.0,
           "unit": "g",
           "role": "protein"
         },
@@ -404,13 +404,13 @@
       "variantId": "pollo_guiso_habichuelas_dinner__carb_none",
       "protein": "chicken",
       "carb": "none",
-      "proteinQty": 140.0,
+      "proteinQty": 100.0,
       "carbQty": null,
       "ingredients": [
         {
           "item": "chicken",
           "display": "Pollo",
-          "qty": 140.0,
+          "qty": 100.0,
           "unit": "g",
           "role": "protein"
         },
@@ -459,13 +459,13 @@
       "variantId": "pescado_encocado__carb_none",
       "protein": "fish",
       "carb": "none",
-      "proteinQty": 235.0,
+      "proteinQty": 280.0,
       "carbQty": null,
       "ingredients": [
         {
           "item": "fish_tilapia",
           "display": "Tilapia",
-          "qty": 235.0,
+          "qty": 280.0,
           "unit": "g",
           "role": "protein"
         },
@@ -514,13 +514,13 @@
       "variantId": "atun_juanfe__carb_none",
       "protein": "fish",
       "carb": "none",
-      "proteinQty": 235.0,
+      "proteinQty": 100.0,
       "carbQty": null,
       "ingredients": [
         {
           "item": "fish_tuna_fillet",
           "display": "Atún en filete",
-          "qty": 235.0,
+          "qty": 100.0,
           "unit": "g",
           "role": "protein"
         },
@@ -583,13 +583,13 @@
       "variantId": "carne_encebollada_lunch__carb_none",
       "protein": "beef",
       "carb": "none",
-      "proteinQty": 230.0,
+      "proteinQty": 280.0,
       "carbQty": null,
       "ingredients": [
         {
           "item": "beef",
           "display": "Carne de res",
-          "qty": 230.0,
+          "qty": 280.0,
           "unit": "g",
           "role": "protein"
         },
@@ -638,13 +638,13 @@
       "variantId": "pollo_asiatico__carb_none",
       "protein": "chicken",
       "carb": "none",
-      "proteinQty": 140.0,
+      "proteinQty": 100.0,
       "carbQty": null,
       "ingredients": [
         {
           "item": "chicken",
           "display": "Pollo",
-          "qty": 140.0,
+          "qty": 100.0,
           "unit": "g",
           "role": "protein"
         },
@@ -735,13 +735,13 @@
       "variantId": "chicken_fricassee__carb_none",
       "protein": "chicken",
       "carb": "none",
-      "proteinQty": 210.0,
+      "proteinQty": 260.0,
       "carbQty": null,
       "ingredients": [
         {
           "item": "chicken",
           "display": "Pollo",
-          "qty": 210.0,
+          "qty": 260.0,
           "unit": "g",
           "role": "protein"
         },
@@ -818,13 +818,13 @@
       "variantId": "atun_juanfe__carb_none",
       "protein": "fish",
       "carb": "none",
-      "proteinQty": 235.0,
+      "proteinQty": 100.0,
       "carbQty": null,
       "ingredients": [
         {
           "item": "fish_tuna_fillet",
           "display": "Atún en filete",
-          "qty": 235.0,
+          "qty": 100.0,
           "unit": "g",
           "role": "protein"
         },
@@ -887,13 +887,13 @@
       "variantId": "carne_encebollada_lunch__carb_none",
       "protein": "beef",
       "carb": "none",
-      "proteinQty": 230.0,
+      "proteinQty": 280.0,
       "carbQty": null,
       "ingredients": [
         {
           "item": "beef",
           "display": "Carne de res",
-          "qty": 230.0,
+          "qty": 280.0,
           "unit": "g",
           "role": "protein"
         },
@@ -942,13 +942,13 @@
       "variantId": "chicken_fricassee__carb_none",
       "protein": "chicken",
       "carb": "none",
-      "proteinQty": 140.0,
+      "proteinQty": 100.0,
       "carbQty": null,
       "ingredients": [
         {
           "item": "chicken",
           "display": "Pollo",
-          "qty": 140.0,
+          "qty": 100.0,
           "unit": "g",
           "role": "protein"
         },
