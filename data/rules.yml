@@ -15,17 +15,17 @@ meal_rules:
 # All weights are RAW (uncooked)
 protein_portions_g:
   chicken:
-    lunch: 210
-    dinner: 140  # Reduced for dinner (assumes pre-workout protein)
+    lunch: 260
+    dinner: 100  # Reduced for dinner (assumes pre-workout protein)
   beef:
-    lunch: 230
-    dinner: 230
+    lunch: 280
+    dinner: 100
   pork:
-    lunch: 235
-    dinner: 200
+    lunch: 280
+    dinner: 100
   fish:
-    lunch: 235
-    dinner: 235
+    lunch: 280
+    dinner: 100
   egg:
     lunch: 3   # Assuming if egg is used in lunch/dinner, it follows units
     dinner: 3
