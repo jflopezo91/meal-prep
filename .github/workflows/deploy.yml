@@ -1,0 +1,31 @@
+name: Deploy to Pages
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: 'Run ID from the Generate Plan workflow'
+        required: true
+        type: string
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: read
+
+    steps:
+    - name: Download site build artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: site-build
+        path: site-dist/
+        run-id: ${{ inputs.run_id }}
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v4
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./site-dist

@@ -1,312 +1,22 @@
 {
   "seed": 42,
-  "generated_at": "2026-02-14T16:35:58.401167",
+  "generated_at": "2026-02-27T19:19:10.627942",
   "slots": [
     {
       "day": "mon",
-      "meal": "lunch",
-      "recipeId": "arroz_con_pollo",
-      "recipeName": "Arroz con pollo",
-      "variantId": "arroz_con_pollo__carb_rice",
-      "protein": "chicken",
-      "carb": "rice",
-      "proteinQty": 210.0,
-      "carbQty": 90.0,
-      "ingredients": [
-        {
-          "item": "chicken",
-          "display": "Pollo",
-          "qty": 210.0,
-          "unit": "g",
-          "role": "protein"
-        },
-        {
-          "item": "carrot",
-          "display": "Zanahoria",
-          "qty": 80.0,
-          "unit": "g",
-          "role": "veg"
-        },
-        {
-          "item": "bell_pepper",
-          "display": "Pimentón",
-          "qty": 60.0,
-          "unit": "g",
-          "role": "veg"
-        },
-        {
-          "item": "peas",
-          "display": "Arverja",
-          "qty": 50.0,
-          "unit": "g",
-          "role": "veg"
-        },
-        {
-          "item": "green_beans",
-          "display": "Habichuela",
-          "qty": 50.0,
-          "unit": "g",
-          "role": "veg"
-        },
-        {
-          "item": "cilantro",
-          "display": "Cilantro",
-          "qty": 10.0,
-          "unit": "g",
-          "role": "herb"
-        },
-        {
-          "item": "bay_leaf",
-          "display": "Laurel",
-          "qty": 2.0,
-          "unit": "units",
-          "role": "spice"
-        },
-        {
-          "item": "garlic",
-          "display": "Ajo",
-          "qty": 10.0,
-          "unit": "g",
-          "role": "veg"
-        },
-        {
-          "item": "onion",
-          "display": "Cebolla cabezona",
-          "qty": 80.0,
-          "unit": "g",
-          "role": "veg"
-        },
-        {
-          "item": "green_onion",
-          "display": "Cebolla larga",
-          "qty": 20.0,
-          "unit": "g",
-          "role": "veg"
-        },
-        {
-          "item": "sausage",
-          "display": "Salchicha",
-          "qty": 50.0,
-          "unit": "g",
-          "role": "protein_extra"
-        },
-        {
-          "item": "tomato_sauce",
-          "display": "Salsa de tomate",
-          "qty": 50.0,
-          "unit": "ml",
-          "role": "condiment"
-        },
-        {
-          "item": "achiote",
-          "display": "Achiote",
-          "qty": 5.0,
-          "unit": "g",
-          "role": "condiment"
-        },
-        {
-          "item": "olive_oil",
-          "display": "Aceite de oliva",
-          "qty": 10.0,
-          "unit": "ml",
-          "role": "fat"
-        },
-        {
-          "item": "rice",
-          "display": "Arroz",
-          "qty": 90.0,
-          "unit": "g",
-          "role": "carb"
-        }
-      ]
-    },
-    {
-      "day": "mon",
-      "meal": "dinner",
-      "recipeId": "pollo_guiso_habichuelas_dinner",
-      "recipeName": "Pollo con guiso y habichuelas",
-      "variantId": "pollo_guiso_habichuelas_dinner__carb_none",
-      "protein": "chicken",
-      "carb": "none",
-      "proteinQty": 140.0,
-      "carbQty": null,
-      "ingredients": [
-        {
-          "item": "chicken",
-          "display": "Pollo",
-          "qty": 140.0,
-          "unit": "g",
-          "role": "protein"
-        },
-        {
-          "item": "tomato",
-          "display": "Tomate",
-          "qty": 150.0,
-          "unit": "g",
-          "role": "veg"
-        },
-        {
-          "item": "onion",
-          "display": "Cebolla cabezona",
-          "qty": 80.0,
-          "unit": "g",
-          "role": "veg"
-        },
-        {
-          "item": "green_beans",
-          "display": "Habichuela",
-          "qty": 120.0,
-          "unit": "g",
-          "role": "veg"
-        },
-        {
-          "item": "garlic",
-          "display": "Ajo",
-          "qty": 10.0,
-          "unit": "g",
-          "role": "veg"
-        },
-        {
-          "item": "olive_oil",
-          "display": "Aceite de oliva",
-          "qty": 10.0,
-          "unit": "ml",
-          "role": "fat"
-        }
-      ]
-    },
-    {
-      "day": "tue",
-      "meal": "lunch",
-      "recipeId": "carne_encebollada_lunch",
-      "recipeName": "Carne encebollada",
-      "variantId": "carne_encebollada_lunch__carb_none",
-      "protein": "beef",
-      "carb": "none",
-      "proteinQty": 230.0,
-      "carbQty": null,
-      "ingredients": [
-        {
-          "item": "beef",
-          "display": "Carne de res",
-          "qty": 230.0,
-          "unit": "g",
-          "role": "protein"
-        },
-        {
-          "item": "onion",
-          "display": "Cebolla cabezona",
-          "qty": 200.0,
-          "unit": "g",
-          "role": "veg"
-        },
-        {
-          "item": "tomato",
-          "display": "Tomate",
-          "qty": 100.0,
-          "unit": "g",
-          "role": "veg"
-        },
-        {
-          "item": "garlic",
-          "display": "Ajo",
-          "qty": 10.0,
-          "unit": "g",
-          "role": "veg"
-        },
-        {
-          "item": "green_onion",
-          "display": "Cebolla larga",
-          "qty": 20.0,
-          "unit": "g",
-          "role": "veg"
-        },
-        {
-          "item": "olive_oil",
-          "display": "Aceite de oliva",
-          "qty": 10.0,
-          "unit": "ml",
-          "role": "fat"
-        }
-      ]
-    },
-    {
-      "day": "tue",
-      "meal": "dinner",
-      "recipeId": "salmon_horneado",
-      "recipeName": "Salmón horneado",
-      "variantId": "salmon_horneado__carb_none",
-      "protein": "fish",
-      "carb": "none",
-      "proteinQty": 235.0,
-      "carbQty": null,
-      "ingredients": [
-        {
-          "item": "fish_salmon",
-          "display": "Salmón",
-          "qty": 235.0,
-          "unit": "g",
-          "role": "protein"
-        },
-        {
-          "item": "asparagus",
-          "display": "Espárragos",
-          "qty": 150.0,
-          "unit": "g",
-          "role": "veg"
-        },
-        {
-          "item": "lemon",
-          "display": "Limón",
-          "qty": 0.5,
-          "unit": "units",
-          "role": "condiment"
-        },
-        {
-          "item": "garlic",
-          "display": "Ajo",
-          "qty": 10.0,
-          "unit": "g",
-          "role": "veg"
-        },
-        {
-          "item": "green_onion",
-          "display": "Cebolla larga",
-          "qty": 15.0,
-          "unit": "g",
-          "role": "veg"
-        },
-        {
-          "item": "rosemary",
-          "display": "Romero",
-          "qty": 3.0,
-          "unit": "g",
-          "role": "herb"
-        },
-        {
-          "item": "olive_oil",
-          "display": "Aceite de oliva",
-          "qty": 10.0,
-          "unit": "ml",
-          "role": "fat"
-        }
-      ]
-    },
-    {
-      "day": "wed",
       "meal": "lunch",
       "recipeId": "lentejas",
       "recipeName": "Lentejas",
       "variantId": "lentejas__carb_lentils",
       "protein": "pork",
       "carb": "lentils",
-      "proteinQty": 235.0,
-      "carbQty": 60.0,
+      "proteinQty": 280.0,
+      "carbQty": 55.0,
       "ingredients": [
         {
           "item": "sausage",
           "display": "Salchicha",
-          "qty": 235.0,
+          "qty": 280.0,
           "unit": "g",
           "role": "protein"
         },
@@ -355,7 +65,262 @@
         {
           "item": "lentils",
           "display": "Lentejas",
-          "qty": 60.0,
+          "qty": 55.0,
+          "unit": "g",
+          "role": "carb"
+        }
+      ]
+    },
+    {
+      "day": "mon",
+      "meal": "dinner",
+      "recipeId": "chicken_fricassee",
+      "recipeName": "Chicken Fricassée",
+      "variantId": "chicken_fricassee__carb_none",
+      "protein": "chicken",
+      "carb": "none",
+      "proteinQty": 100.0,
+      "carbQty": null,
+      "ingredients": [
+        {
+          "item": "chicken",
+          "display": "Pollo",
+          "qty": 100.0,
+          "unit": "g",
+          "role": "protein"
+        },
+        {
+          "item": "mushroom",
+          "display": "Champiñones",
+          "qty": 150.0,
+          "unit": "g",
+          "role": "veg"
+        },
+        {
+          "item": "onion",
+          "display": "Cebolla cabezona",
+          "qty": 80.0,
+          "unit": "g",
+          "role": "veg"
+        },
+        {
+          "item": "green_onion",
+          "display": "Cebolla larga",
+          "qty": 20.0,
+          "unit": "g",
+          "role": "veg"
+        },
+        {
+          "item": "garlic",
+          "display": "Ajo",
+          "qty": 10.0,
+          "unit": "g",
+          "role": "veg"
+        },
+        {
+          "item": "parsley",
+          "display": "Perejil",
+          "qty": 5.0,
+          "unit": "g",
+          "role": "herb"
+        },
+        {
+          "item": "thyme",
+          "display": "Tomillo",
+          "qty": 2.0,
+          "unit": "g",
+          "role": "herb"
+        },
+        {
+          "item": "bay_leaf",
+          "display": "Laurel",
+          "qty": 2.0,
+          "unit": "units",
+          "role": "spice"
+        },
+        {
+          "item": "heavy_cream",
+          "display": "Crema de leche",
+          "qty": 80.0,
+          "unit": "ml",
+          "role": "dairy"
+        },
+        {
+          "item": "olive_oil",
+          "display": "Aceite de oliva",
+          "qty": 10.0,
+          "unit": "ml",
+          "role": "fat"
+        }
+      ]
+    },
+    {
+      "day": "tue",
+      "meal": "lunch",
+      "recipeId": "carne_encebollada_lunch",
+      "recipeName": "Carne encebollada",
+      "variantId": "carne_encebollada_lunch__carb_platano_maduro",
+      "protein": "beef",
+      "carb": "platano_maduro",
+      "proteinQty": 280.0,
+      "carbQty": 80.0,
+      "ingredients": [
+        {
+          "item": "beef",
+          "display": "Carne de res",
+          "qty": 280.0,
+          "unit": "g",
+          "role": "protein"
+        },
+        {
+          "item": "onion",
+          "display": "Cebolla cabezona",
+          "qty": 200.0,
+          "unit": "g",
+          "role": "veg"
+        },
+        {
+          "item": "tomato",
+          "display": "Tomate",
+          "qty": 100.0,
+          "unit": "g",
+          "role": "veg"
+        },
+        {
+          "item": "garlic",
+          "display": "Ajo",
+          "qty": 10.0,
+          "unit": "g",
+          "role": "veg"
+        },
+        {
+          "item": "green_onion",
+          "display": "Cebolla larga",
+          "qty": 20.0,
+          "unit": "g",
+          "role": "veg"
+        },
+        {
+          "item": "olive_oil",
+          "display": "Aceite de oliva",
+          "qty": 10.0,
+          "unit": "ml",
+          "role": "fat"
+        },
+        {
+          "item": "platano_maduro",
+          "display": "Plátano maduro",
+          "qty": 80.0,
+          "unit": "g",
+          "role": "carb"
+        }
+      ]
+    },
+    {
+      "day": "tue",
+      "meal": "dinner",
+      "recipeId": "atun_guisito_dinner",
+      "recipeName": "Atún con guisito",
+      "variantId": "atun_guisito_dinner__carb_none",
+      "protein": "fish",
+      "carb": "none",
+      "proteinQty": 100.0,
+      "carbQty": null,
+      "ingredients": [
+        {
+          "item": "fish_tuna_canned",
+          "display": "Atún en lata",
+          "qty": 100.0,
+          "unit": "g",
+          "role": "protein"
+        },
+        {
+          "item": "onion",
+          "display": "Cebolla cabezona",
+          "qty": 80.0,
+          "unit": "g",
+          "role": "veg"
+        },
+        {
+          "item": "tomato",
+          "display": "Tomate",
+          "qty": 120.0,
+          "unit": "g",
+          "role": "veg"
+        },
+        {
+          "item": "asparagus",
+          "display": "Espárragos",
+          "qty": 100.0,
+          "unit": "g",
+          "role": "veg"
+        },
+        {
+          "item": "olive_oil",
+          "display": "Aceite de oliva",
+          "qty": 10.0,
+          "unit": "ml",
+          "role": "fat"
+        }
+      ]
+    },
+    {
+      "day": "wed",
+      "meal": "lunch",
+      "recipeId": "pescado_encocado",
+      "recipeName": "Pescado encocado",
+      "variantId": "pescado_encocado__carb_rice",
+      "protein": "fish",
+      "carb": "rice",
+      "proteinQty": 280.0,
+      "carbQty": 40.0,
+      "ingredients": [
+        {
+          "item": "fish_tilapia",
+          "display": "Tilapia",
+          "qty": 280.0,
+          "unit": "g",
+          "role": "protein"
+        },
+        {
+          "item": "onion",
+          "display": "Cebolla cabezona",
+          "qty": 80.0,
+          "unit": "g",
+          "role": "veg"
+        },
+        {
+          "item": "green_onion",
+          "display": "Cebolla larga",
+          "qty": 20.0,
+          "unit": "g",
+          "role": "veg"
+        },
+        {
+          "item": "bell_pepper",
+          "display": "Pimentón",
+          "qty": 80.0,
+          "unit": "g",
+          "role": "veg"
+        },
+        {
+          "item": "coconut_cream",
+          "display": "Crema de coco",
+          "qty": 100.0,
+          "unit": "ml",
+          "role": "condiment"
+        },
+        {
+          "item": "olive_oil",
+          "display": "Aceite de oliva",
+          "qty": 10.0,
+          "unit": "ml",
+          "role": "fat"
+        },
+        {
+          "item": "rice",
+          "display": "Arroz",
+          "qty": 40.0,
           "unit": "g",
           "role": "carb"
         }
@@ -364,18 +329,336 @@
     {
       "day": "wed",
       "meal": "dinner",
-      "recipeId": "pollo_asiatico",
-      "recipeName": "Pollo asiático",
-      "variantId": "pollo_asiatico__carb_none",
+      "recipeId": "chicken_fricassee",
+      "recipeName": "Chicken Fricassée",
+      "variantId": "chicken_fricassee__carb_none",
       "protein": "chicken",
       "carb": "none",
-      "proteinQty": 140.0,
+      "proteinQty": 100.0,
       "carbQty": null,
       "ingredients": [
         {
           "item": "chicken",
           "display": "Pollo",
-          "qty": 140.0,
+          "qty": 100.0,
+          "unit": "g",
+          "role": "protein"
+        },
+        {
+          "item": "mushroom",
+          "display": "Champiñones",
+          "qty": 150.0,
+          "unit": "g",
+          "role": "veg"
+        },
+        {
+          "item": "onion",
+          "display": "Cebolla cabezona",
+          "qty": 80.0,
+          "unit": "g",
+          "role": "veg"
+        },
+        {
+          "item": "green_onion",
+          "display": "Cebolla larga",
+          "qty": 20.0,
+          "unit": "g",
+          "role": "veg"
+        },
+        {
+          "item": "garlic",
+          "display": "Ajo",
+          "qty": 10.0,
+          "unit": "g",
+          "role": "veg"
+        },
+        {
+          "item": "parsley",
+          "display": "Perejil",
+          "qty": 5.0,
+          "unit": "g",
+          "role": "herb"
+        },
+        {
+          "item": "thyme",
+          "display": "Tomillo",
+          "qty": 2.0,
+          "unit": "g",
+          "role": "herb"
+        },
+        {
+          "item": "bay_leaf",
+          "display": "Laurel",
+          "qty": 2.0,
+          "unit": "units",
+          "role": "spice"
+        },
+        {
+          "item": "heavy_cream",
+          "display": "Crema de leche",
+          "qty": 80.0,
+          "unit": "ml",
+          "role": "dairy"
+        },
+        {
+          "item": "olive_oil",
+          "display": "Aceite de oliva",
+          "qty": 10.0,
+          "unit": "ml",
+          "role": "fat"
+        }
+      ]
+    },
+    {
+      "day": "thu",
+      "meal": "lunch",
+      "recipeId": "pollo_asiatico",
+      "recipeName": "Pollo asiático",
+      "variantId": "pollo_asiatico__carb_yuca",
+      "protein": "chicken",
+      "carb": "yuca",
+      "proteinQty": 260.0,
+      "carbQty": 70.0,
+      "ingredients": [
+        {
+          "item": "chicken",
+          "display": "Pollo",
+          "qty": 260.0,
+          "unit": "g",
+          "role": "protein"
+        },
+        {
+          "item": "carrot",
+          "display": "Zanahoria",
+          "qty": 80.0,
+          "unit": "g",
+          "role": "veg"
+        },
+        {
+          "item": "zucchini",
+          "display": "Zucchini",
+          "qty": 100.0,
+          "unit": "g",
+          "role": "veg"
+        },
+        {
+          "item": "bell_pepper",
+          "display": "Pimentón",
+          "qty": 80.0,
+          "unit": "g",
+          "role": "veg"
+        },
+        {
+          "item": "broccoli",
+          "display": "Brócoli",
+          "qty": 100.0,
+          "unit": "g",
+          "role": "veg"
+        },
+        {
+          "item": "green_onion",
+          "display": "Cebolla larga",
+          "qty": 20.0,
+          "unit": "g",
+          "role": "veg"
+        },
+        {
+          "item": "garlic",
+          "display": "Ajo",
+          "qty": 10.0,
+          "unit": "g",
+          "role": "veg"
+        },
+        {
+          "item": "ginger",
+          "display": "Jengibre",
+          "qty": 10.0,
+          "unit": "g",
+          "role": "veg"
+        },
+        {
+          "item": "honey",
+          "display": "Miel",
+          "qty": 15.0,
+          "unit": "ml",
+          "role": "condiment"
+        },
+        {
+          "item": "soy_sauce",
+          "display": "Salsa de soya",
+          "qty": 20.0,
+          "unit": "ml",
+          "role": "condiment"
+        },
+        {
+          "item": "sesame_seeds",
+          "display": "Ajonjolí",
+          "qty": 5.0,
+          "unit": "g",
+          "role": "garnish"
+        },
+        {
+          "item": "sesame_oil",
+          "display": "Aceite de ajonjolí",
+          "qty": 5.0,
+          "unit": "ml",
+          "role": "fat"
+        },
+        {
+          "item": "yuca",
+          "display": "Yuca",
+          "qty": 70.0,
+          "unit": "g",
+          "role": "carb"
+        }
+      ]
+    },
+    {
+      "day": "thu",
+      "meal": "dinner",
+      "recipeId": "atun_juanfe",
+      "recipeName": "Atún a la JuanFe",
+      "variantId": "atun_juanfe__carb_none",
+      "protein": "fish",
+      "carb": "none",
+      "proteinQty": 100.0,
+      "carbQty": null,
+      "ingredients": [
+        {
+          "item": "fish_tuna_fillet",
+          "display": "Atún en filete",
+          "qty": 100.0,
+          "unit": "g",
+          "role": "protein"
+        },
+        {
+          "item": "asparagus",
+          "display": "Espárragos",
+          "qty": 120.0,
+          "unit": "g",
+          "role": "veg"
+        },
+        {
+          "item": "green_onion",
+          "display": "Cebolla larga",
+          "qty": 20.0,
+          "unit": "g",
+          "role": "veg"
+        },
+        {
+          "item": "garlic",
+          "display": "Ajo",
+          "qty": 10.0,
+          "unit": "g",
+          "role": "veg"
+        },
+        {
+          "item": "ginger",
+          "display": "Jengibre",
+          "qty": 10.0,
+          "unit": "g",
+          "role": "veg"
+        },
+        {
+          "item": "soy_sauce",
+          "display": "Salsa de soya",
+          "qty": 20.0,
+          "unit": "ml",
+          "role": "condiment"
+        },
+        {
+          "item": "sesame_oil",
+          "display": "Aceite de ajonjolí",
+          "qty": 5.0,
+          "unit": "ml",
+          "role": "fat"
+        },
+        {
+          "item": "sesame_seeds",
+          "display": "Ajonjolí",
+          "qty": 5.0,
+          "unit": "g",
+          "role": "garnish"
+        }
+      ]
+    },
+    {
+      "day": "fri",
+      "meal": "lunch",
+      "recipeId": "carne_encebollada_lunch",
+      "recipeName": "Carne encebollada",
+      "variantId": "carne_encebollada_lunch__carb_platano_maduro",
+      "protein": "beef",
+      "carb": "platano_maduro",
+      "proteinQty": 280.0,
+      "carbQty": 80.0,
+      "ingredients": [
+        {
+          "item": "beef",
+          "display": "Carne de res",
+          "qty": 280.0,
+          "unit": "g",
+          "role": "protein"
+        },
+        {
+          "item": "onion",
+          "display": "Cebolla cabezona",
+          "qty": 200.0,
+          "unit": "g",
+          "role": "veg"
+        },
+        {
+          "item": "tomato",
+          "display": "Tomate",
+          "qty": 100.0,
+          "unit": "g",
+          "role": "veg"
+        },
+        {
+          "item": "garlic",
+          "display": "Ajo",
+          "qty": 10.0,
+          "unit": "g",
+          "role": "veg"
+        },
+        {
+          "item": "green_onion",
+          "display": "Cebolla larga",
+          "qty": 20.0,
+          "unit": "g",
+          "role": "veg"
+        },
+        {
+          "item": "olive_oil",
+          "display": "Aceite de oliva",
+          "qty": 10.0,
+          "unit": "ml",
+          "role": "fat"
+        },
+        {
+          "item": "platano_maduro",
+          "display": "Plátano maduro",
+          "qty": 80.0,
+          "unit": "g",
+          "role": "carb"
+        }
+      ]
+    },
+    {
+      "day": "fri",
+      "meal": "dinner",
+      "recipeId": "pollo_asiatico",
+      "recipeName": "Pollo asiático",
+      "variantId": "pollo_asiatico__carb_none",
+      "protein": "chicken",
+      "carb": "none",
+      "proteinQty": 100.0,
+      "carbQty": null,
+      "ingredients": [
+        {
+          "item": "chicken",
+          "display": "Pollo",
+          "qty": 100.0,
           "unit": "g",
           "role": "protein"
         },
@@ -459,78 +742,57 @@
       ]
     },
     {
-      "day": "thu",
+      "day": "sat",
       "meal": "lunch",
-      "recipeId": "pasta_tefy",
-      "recipeName": "Pasta Tefy",
-      "variantId": "pasta_tefy__carb_pasta",
+      "recipeId": "salmon_horneado",
+      "recipeName": "Salmón horneado",
+      "variantId": "salmon_horneado__carb_corn",
       "protein": "fish",
-      "carb": "pasta",
-      "proteinQty": 235.0,
+      "carb": "corn",
+      "proteinQty": 280.0,
       "carbQty": 100.0,
       "ingredients": [
         {
-          "item": "fish_tuna_canned",
-          "display": "Atún en lata",
-          "qty": 235.0,
+          "item": "fish_salmon",
+          "display": "Salmón",
+          "qty": 280.0,
           "unit": "g",
           "role": "protein"
         },
         {
-          "item": "eggplant",
-          "display": "Berenjena",
-          "qty": 120.0,
+          "item": "asparagus",
+          "display": "Espárragos",
+          "qty": 150.0,
           "unit": "g",
           "role": "veg"
         },
         {
-          "item": "zucchini",
-          "display": "Zucchini",
-          "qty": 100.0,
-          "unit": "g",
-          "role": "veg"
-        },
-        {
-          "item": "yellow_zucchini",
-          "display": "Zucchini amarillo",
-          "qty": 100.0,
-          "unit": "g",
-          "role": "veg"
-        },
-        {
-          "item": "onion",
-          "display": "Cebolla cabezona",
-          "qty": 60.0,
-          "unit": "g",
-          "role": "veg"
-        },
-        {
-          "item": "tomato",
-          "display": "Tomate",
-          "qty": 100.0,
-          "unit": "g",
-          "role": "veg"
-        },
-        {
-          "item": "olives",
-          "display": "Aceitunas",
-          "qty": 30.0,
-          "unit": "g",
-          "role": "other"
-        },
-        {
-          "item": "tomato_paste",
-          "display": "Pasta de tomate",
-          "qty": 50.0,
-          "unit": "g",
+          "item": "lemon",
+          "display": "Limón",
+          "qty": 0.5,
+          "unit": "units",
           "role": "condiment"
         },
         {
-          "item": "parmesan",
-          "display": "Queso parmesano",
-          "qty": 20.0,
+          "item": "garlic",
+          "display": "Ajo",
+          "qty": 10.0,
           "unit": "g",
-          "role": "dairy"
+          "role": "veg"
+        },
+        {
+          "item": "green_onion",
+          "display": "Cebolla larga",
+          "qty": 15.0,
+          "unit": "g",
+          "role": "veg"
+        },
+        {
+          "item": "rosemary",
+          "display": "Romero",
+          "qty": 3.0,
+          "unit": "g",
+          "role": "herb"
         },
         {
           "item": "olive_oil",
@@ -540,8 +802,8 @@
           "role": "fat"
         },
         {
-          "item": "pasta",
-          "display": "Pasta",
+          "item": "corn",
+          "display": "Maíz tierno",
           "qty": 100.0,
           "unit": "g",
           "role": "carb"
@@ -549,43 +811,57 @@
       ]
     },
     {
-      "day": "thu",
+      "day": "sat",
       "meal": "dinner",
-      "recipeId": "atun_guisito_dinner",
-      "recipeName": "Atún con guisito",
-      "variantId": "atun_guisito_dinner__carb_none",
+      "recipeId": "salmon_horneado",
+      "recipeName": "Salmón horneado",
+      "variantId": "salmon_horneado__carb_none",
       "protein": "fish",
       "carb": "none",
-      "proteinQty": 235.0,
+      "proteinQty": 100.0,
       "carbQty": null,
       "ingredients": [
         {
-          "item": "fish_tuna_canned",
-          "display": "Atún en lata",
-          "qty": 235.0,
+          "item": "fish_salmon",
+          "display": "Salmón",
+          "qty": 100.0,
           "unit": "g",
           "role": "protein"
         },
         {
-          "item": "onion",
-          "display": "Cebolla cabezona",
-          "qty": 80.0,
-          "unit": "g",
-          "role": "veg"
-        },
-        {
-          "item": "tomato",
-          "display": "Tomate",
-          "qty": 120.0,
-          "unit": "g",
-          "role": "veg"
-        },
-        {
           "item": "asparagus",
           "display": "Espárragos",
-          "qty": 100.0,
+          "qty": 150.0,
           "unit": "g",
           "role": "veg"
+        },
+        {
+          "item": "lemon",
+          "display": "Limón",
+          "qty": 0.5,
+          "unit": "units",
+          "role": "condiment"
+        },
+        {
+          "item": "garlic",
+          "display": "Ajo",
+          "qty": 10.0,
+          "unit": "g",
+          "role": "veg"
+        },
+        {
+          "item": "green_onion",
+          "display": "Cebolla larga",
+          "qty": 15.0,
+          "unit": "g",
+          "role": "veg"
+        },
+        {
+          "item": "rosemary",
+          "display": "Romero",
+          "qty": 3.0,
+          "unit": "g",
+          "role": "herb"
         },
         {
           "item": "olive_oil",
@@ -597,20 +873,20 @@
       ]
     },
     {
-      "day": "fri",
+      "day": "sun",
       "meal": "lunch",
       "recipeId": "sudado_carne",
       "recipeName": "Sudado de carne",
       "variantId": "sudado_carne__carb_potato",
       "protein": "beef",
       "carb": "potato",
-      "proteinQty": 230.0,
+      "proteinQty": 280.0,
       "carbQty": 120.0,
       "ingredients": [
         {
           "item": "beef",
           "display": "Carne de res",
-          "qty": 230.0,
+          "qty": 280.0,
           "unit": "g",
           "role": "protein"
         },
@@ -659,20 +935,20 @@
       ]
     },
     {
-      "day": "fri",
+      "day": "sun",
       "meal": "dinner",
       "recipeId": "pollo_guiso_habichuelas_dinner",
       "recipeName": "Pollo con guiso y habichuelas",
       "variantId": "pollo_guiso_habichuelas_dinner__carb_none",
       "protein": "chicken",
       "carb": "none",
-      "proteinQty": 140.0,
+      "proteinQty": 100.0,
       "carbQty": null,
       "ingredients": [
         {
           "item": "chicken",
           "display": "Pollo",
-          "qty": 140.0,
+          "qty": 100.0,
           "unit": "g",
           "role": "protein"
         },
@@ -712,268 +988,6 @@
           "role": "fat"
         }
       ]
-    },
-    {
-      "day": "sat",
-      "meal": "lunch",
-      "recipeId": "pescado_encocado",
-      "recipeName": "Pescado encocado",
-      "variantId": "pescado_encocado__carb_none",
-      "protein": "fish",
-      "carb": "none",
-      "proteinQty": 235.0,
-      "carbQty": null,
-      "ingredients": [
-        {
-          "item": "fish_tilapia",
-          "display": "Tilapia",
-          "qty": 235.0,
-          "unit": "g",
-          "role": "protein"
-        },
-        {
-          "item": "onion",
-          "display": "Cebolla cabezona",
-          "qty": 80.0,
-          "unit": "g",
-          "role": "veg"
-        },
-        {
-          "item": "green_onion",
-          "display": "Cebolla larga",
-          "qty": 20.0,
-          "unit": "g",
-          "role": "veg"
-        },
-        {
-          "item": "bell_pepper",
-          "display": "Pimentón",
-          "qty": 80.0,
-          "unit": "g",
-          "role": "veg"
-        },
-        {
-          "item": "coconut_cream",
-          "display": "Crema de coco",
-          "qty": 100.0,
-          "unit": "ml",
-          "role": "condiment"
-        },
-        {
-          "item": "olive_oil",
-          "display": "Aceite de oliva",
-          "qty": 10.0,
-          "unit": "ml",
-          "role": "fat"
-        }
-      ]
-    },
-    {
-      "day": "sat",
-      "meal": "dinner",
-      "recipeId": "atun_guisito_dinner",
-      "recipeName": "Atún con guisito",
-      "variantId": "atun_guisito_dinner__carb_none",
-      "protein": "fish",
-      "carb": "none",
-      "proteinQty": 235.0,
-      "carbQty": null,
-      "ingredients": [
-        {
-          "item": "fish_tuna_canned",
-          "display": "Atún en lata",
-          "qty": 235.0,
-          "unit": "g",
-          "role": "protein"
-        },
-        {
-          "item": "onion",
-          "display": "Cebolla cabezona",
-          "qty": 80.0,
-          "unit": "g",
-          "role": "veg"
-        },
-        {
-          "item": "tomato",
-          "display": "Tomate",
-          "qty": 120.0,
-          "unit": "g",
-          "role": "veg"
-        },
-        {
-          "item": "asparagus",
-          "display": "Espárragos",
-          "qty": 100.0,
-          "unit": "g",
-          "role": "veg"
-        },
-        {
-          "item": "olive_oil",
-          "display": "Aceite de oliva",
-          "qty": 10.0,
-          "unit": "ml",
-          "role": "fat"
-        }
-      ]
-    },
-    {
-      "day": "sun",
-      "meal": "lunch",
-      "recipeId": "sudado_carne",
-      "recipeName": "Sudado de carne",
-      "variantId": "sudado_carne__carb_potato",
-      "protein": "beef",
-      "carb": "potato",
-      "proteinQty": 230.0,
-      "carbQty": 120.0,
-      "ingredients": [
-        {
-          "item": "beef",
-          "display": "Carne de res",
-          "qty": 230.0,
-          "unit": "g",
-          "role": "protein"
-        },
-        {
-          "item": "tomato",
-          "display": "Tomate",
-          "qty": 250.0,
-          "unit": "g",
-          "role": "veg"
-        },
-        {
-          "item": "onion",
-          "display": "Cebolla cabezona",
-          "qty": 80.0,
-          "unit": "g",
-          "role": "veg"
-        },
-        {
-          "item": "green_onion",
-          "display": "Cebolla larga",
-          "qty": 20.0,
-          "unit": "g",
-          "role": "veg"
-        },
-        {
-          "item": "garlic",
-          "display": "Ajo",
-          "qty": 10.0,
-          "unit": "g",
-          "role": "veg"
-        },
-        {
-          "item": "olive_oil",
-          "display": "Aceite de oliva",
-          "qty": 10.0,
-          "unit": "ml",
-          "role": "fat"
-        },
-        {
-          "item": "potato",
-          "display": "Papa",
-          "qty": 120.0,
-          "unit": "g",
-          "role": "carb"
-        }
-      ]
-    },
-    {
-      "day": "sun",
-      "meal": "dinner",
-      "recipeId": "pollo_asiatico",
-      "recipeName": "Pollo asiático",
-      "variantId": "pollo_asiatico__carb_none",
-      "protein": "chicken",
-      "carb": "none",
-      "proteinQty": 140.0,
-      "carbQty": null,
-      "ingredients": [
-        {
-          "item": "chicken",
-          "display": "Pollo",
-          "qty": 140.0,
-          "unit": "g",
-          "role": "protein"
-        },
-        {
-          "item": "carrot",
-          "display": "Zanahoria",
-          "qty": 80.0,
-          "unit": "g",
-          "role": "veg"
-        },
-        {
-          "item": "zucchini",
-          "display": "Zucchini",
-          "qty": 100.0,
-          "unit": "g",
-          "role": "veg"
-        },
-        {
-          "item": "bell_pepper",
-          "display": "Pimentón",
-          "qty": 80.0,
-          "unit": "g",
-          "role": "veg"
-        },
-        {
-          "item": "broccoli",
-          "display": "Brócoli",
-          "qty": 100.0,
-          "unit": "g",
-          "role": "veg"
-        },
-        {
-          "item": "green_onion",
-          "display": "Cebolla larga",
-          "qty": 20.0,
-          "unit": "g",
-          "role": "veg"
-        },
-        {
-          "item": "garlic",
-          "display": "Ajo",
-          "qty": 10.0,
-          "unit": "g",
-          "role": "veg"
-        },
-        {
-          "item": "ginger",
-          "display": "Jengibre",
-          "qty": 10.0,
-          "unit": "g",
-          "role": "veg"
-        },
-        {
-          "item": "honey",
-          "display": "Miel",
-          "qty": 15.0,
-          "unit": "ml",
-          "role": "condiment"
-        },
-        {
-          "item": "soy_sauce",
-          "display": "Salsa de soya",
-          "qty": 20.0,
-          "unit": "ml",
-          "role": "condiment"
-        },
-        {
-          "item": "sesame_seeds",
-          "display": "Ajonjolí",
-          "qty": 5.0,
-          "unit": "g",
-          "role": "garnish"
-        },
-        {
-          "item": "sesame_oil",
-          "display": "Aceite de ajonjolí",
-          "qty": 5.0,
-          "unit": "ml",
-          "role": "fat"
-        }
-      ]
     }
   ],
   "derived": {
@@ -985,10 +999,12 @@
       "egg": 0
     },
     "carb_counts": {
-      "rice": 1,
       "lentils": 1,
-      "pasta": 1,
-      "potato": 2
+      "platano_maduro": 2,
+      "rice": 1,
+      "yuca": 1,
+      "corn": 1,
+      "potato": 1
     }
   }
 }

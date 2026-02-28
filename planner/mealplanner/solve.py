@@ -158,26 +158,77 @@ def add_carb_frequency_constraints(
             model.model.Add(sum(relevant_vars) <= int(limit))
 
 
+def add_lunch_carb_required(model: PlannerModel, rules: Rules) -> None:
+    """Implement constraint: All lunch slots must have a carb variant.
+    
+    For each lunch slot, block the carb_none variants so the solver
+    must pick a variant that includes a carbohydrate.
+    """
+    for slot in model.slots:
+        if slot.meal == MealType.LUNCH:
+            no_carb_vars = []
+            for variant in model.variants:
+                if not variant.is_carb_variant:
+                    if variant.variant_id in model.vars[slot.id]:
+                        no_carb_vars.append(model.vars[slot.id][variant.variant_id])
+            if no_carb_vars:
+                model.model.Add(sum(no_carb_vars) == 0)
+
+
+def add_no_consecutive_same_carb(
+    model: PlannerModel, rules: Rules
+) -> None:
+    """Implement constraint: No same carb on consecutive-day lunches.
+    
+    For each pair of consecutive days and for each carb type, at most
+    one of the two lunch slots can use that carb.
+    """
+    # Collect lunch slots ordered by day index
+    lunch_slots = sorted(
+        [s for s in model.slots if s.meal == MealType.LUNCH],
+        key=lambda s: s.day_index,
+    )
+    
+    # Collect all distinct carb IDs from variants
+    carb_ids = {v.carb_ingredient_id for v in model.variants if v.carb_ingredient_id}
+    
+    for i in range(len(lunch_slots) - 1):
+        slot_a = lunch_slots[i]
+        slot_b = lunch_slots[i + 1]
+        
+        for carb_id in carb_ids:
+            vars_a = []
+            vars_b = []
+            for variant in model.variants:
+                if variant.carb_ingredient_id == carb_id:
+                    if variant.variant_id in model.vars[slot_a.id]:
+                        vars_a.append(model.vars[slot_a.id][variant.variant_id])
+                    if variant.variant_id in model.vars[slot_b.id]:
+                        vars_b.append(model.vars[slot_b.id][variant.variant_id])
+            
+            if vars_a and vars_b:
+                model.model.Add(sum(vars_a) + sum(vars_b) <= 1)
+
+
 def add_recipe_frequency_constraints(model: PlannerModel, rules: Rules) -> None:
     """Implement constraint 7: Max once per week per base recipe."""
     
     # Group variants by base recipe
-    variants_by_recipe = {}
+    base_recipes: dict[str, list[RecipeVariant]] = {}
     for variant in model.variants:
-        if variant.base_recipe_id not in variants_by_recipe:
-            variants_by_recipe[variant.base_recipe_id] = []
-        variants_by_recipe[variant.base_recipe_id].append(variant)
+        base_recipes.setdefault(variant.base_recipe_id, []).append(variant)
         
-    for recipe_id, variants in variants_by_recipe.items():
-        relevant_vars = []
+    for base_id, variants in base_recipes.items():
+        all_vars = []
         for slot in model.slots:
-            slot_vars = model.vars[slot.id]
             for variant in variants:
-                if variant.variant_id in slot_vars:
-                    relevant_vars.append(slot_vars[variant.variant_id])
+                if variant.variant_id in model.vars[slot.id]:
+                    all_vars.append(model.vars[slot.id][variant.variant_id])
                     
-        if relevant_vars:
-            model.model.Add(sum(relevant_vars) <= rules.constraints.max_recipe_uses_per_week)
+        if all_vars:
+            model.model.Add(
+                sum(all_vars) <= rules.constraints.max_recipe_uses_per_week
+            )
 
 
 def solve_plan(loader: DataLoader, seed: int = 42) -> MealPlanSolution:
@@ -194,6 +245,8 @@ def solve_plan(loader: DataLoader, seed: int = 42) -> MealPlanSolution:
     add_consecutive_protein_constraints(planner_model, loader.rules)
     add_fish_dinner_constraints(planner_model, loader.rules)
     add_meal_carb_rules(planner_model, loader.rules)
+    add_lunch_carb_required(planner_model, loader.rules)
+    add_no_consecutive_same_carb(planner_model, loader.rules)
     add_carb_frequency_constraints(planner_model, loader.ingredients)
     add_recipe_frequency_constraints(planner_model, loader.rules)
     
