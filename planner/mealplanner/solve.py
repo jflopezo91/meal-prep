@@ -253,6 +253,7 @@ def solve_plan(loader: DataLoader, seed: int = 42) -> MealPlanSolution:
     # 4. Solve
     solver = cp_model.CpSolver()
     solver.parameters.random_seed = seed
+    solver.parameters.num_workers = 1  # single-thread for deterministic results
     
     status = solver.Solve(planner_model.model)
     
