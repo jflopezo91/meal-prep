@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       run_id:
-        description: 'Run ID from the Generate Plan workflow'
+        description: 'Run ID from the Generate Plan or Build Frontend workflow'
         required: true
         type: string
 

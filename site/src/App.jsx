@@ -17,6 +17,22 @@ const DAYS = {
 
 const MEALS = ['lunch', 'dinner'];
 
+function formatLocalDateTime(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat(undefined, {
+    dateStyle: 'medium',
+    timeStyle: 'short'
+  }).format(date);
+}
+
+function getGarbageCollectorLabel(date = new Date()) {
+  return date.getDate() % 2 === 0 ? 'J' : 'T';
+}
+
 function App() {
   const [plan, setPlan] = useState(null);
   const [shoppingList, setShoppingList] = useState(null);
@@ -111,6 +127,8 @@ function App() {
     return plan?.slots.find(s => s.day === day && s.meal === meal);
   };
 
+  const garbageCollector = getGarbageCollectorLabel();
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans pb-20 transition-colors duration-200">
       {/* Header */}
@@ -130,7 +148,11 @@ function App() {
               Seed: {plan.seed}
               <br />
               <span className="text-[10px] opacity-75">
-                {new Date(plan.generated_at).toLocaleString()}
+                {formatLocalDateTime(plan.generated_at)}
+              </span>
+              <br />
+              <span className="text-[10px] opacity-75">
+                Garbage Collector: {garbageCollector}
               </span>
             </div>
             <button

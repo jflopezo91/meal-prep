@@ -1,0 +1,35 @@
+name: Build Frontend
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Build Site
+      run: |
+        cd site
+        npm ci
+        npm run build
+
+    - name: Upload site build
+      uses: actions/upload-artifact@v4
+      with:
+        name: site-build
+        path: site/dist/
+        retention-days: 30
+
+    - name: Summary
+      run: |
+        echo "### Frontend build ready" >> "$GITHUB_STEP_SUMMARY"
+        echo "" >> "$GITHUB_STEP_SUMMARY"
+        echo "Artifact \`site-build\` is ready. Run **Deploy to Pages** with this workflow run ID to publish frontend-only changes." >> "$GITHUB_STEP_SUMMARY"

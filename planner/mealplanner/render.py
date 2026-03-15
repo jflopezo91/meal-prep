@@ -1,7 +1,7 @@
 """Plan rendering and output generation."""
 
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 from pydantic import BaseModel
@@ -154,7 +154,7 @@ def render_plan(
     # 2. Create Plan object
     plan = PlanOutput(
         seed=seed,
-        generated_at=datetime.now().isoformat(),
+        generated_at=datetime.now(timezone.utc).isoformat(),
         slots=slots,
         derived=PlanDerivedStats(
             protein_counts=protein_counts,
