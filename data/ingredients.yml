@@ -170,6 +170,12 @@ onion:
   section: vegetable
   kind: other
 
+red_onion:
+  display: "Cebolla morada"
+  unit: g
+  section: vegetable
+  kind: other
+
 green_onion:
   display: "Cebolla larga"
   unit: g
@@ -206,8 +212,26 @@ bell_pepper:
   section: vegetable
   kind: other
 
+red_bell_pepper:
+  display: "Pimentón rojo"
+  unit: g
+  section: vegetable
+  kind: other
+
+green_bell_pepper:
+  display: "Pimentón verde"
+  unit: g
+  section: vegetable
+  kind: other
+
 broccoli:
   display: "Brócoli"
+  unit: g
+  section: vegetable
+  kind: other
+
+celery:
+  display: "Apio"
   unit: g
   section: vegetable
   kind: other
@@ -291,6 +315,18 @@ olive_oil:
 sesame_oil:
   display: "Aceite de ajonjolí"
   unit: ml
+  section: fat
+  kind: other
+
+achiote_oil:
+  display: "Aceite con achiote"
+  unit: ml
+  section: fat
+  kind: other
+
+butter:
+  display: "Mantequilla"
+  unit: g
   section: fat
   kind: other
 
@@ -390,6 +426,18 @@ thyme:
   section: spice
   kind: other
 
+cumin:
+  display: "Comino"
+  unit: g
+  section: spice
+  kind: other
+
+paprika:
+  display: "Paprika"
+  unit: g
+  section: spice
+  kind: other
+
 rosemary:
   display: "Romero"
   unit: g
@@ -400,6 +448,12 @@ lemon:
   display: "Limón"
   unit: units
   section: other
+  kind: other
+
+green_apple:
+  display: "Manzana verde"
+  unit: g
+  section: produce
   kind: other
 
 salt:
@@ -414,6 +468,12 @@ pepper:
   section: spice
   kind: other
 
+black_pepper:
+  display: "Pimienta negra"
+  unit: g
+  section: spice
+  kind: other
+
 bread:
   display: "Pan"
   unit: units
@@ -421,4 +481,3 @@ bread:
   kind: carb
   default_qty_g: 2
   max_times_week: 2
-
