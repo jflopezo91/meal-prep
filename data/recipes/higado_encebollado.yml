@@ -48,7 +48,6 @@ ingredients:
     role: spice
     qty_g: 2
 
-  - item: black_pepper
-    role: spice
+
 
 notes: "Hígado encebollado"
