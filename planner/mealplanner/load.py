@@ -17,6 +17,19 @@ from .config import (
 )
 
 
+class ValidationErrorGroup(ValueError):
+    """Collection of validation errors reported together."""
+
+    def __init__(self, errors: list[str]):
+        self.errors = errors
+        super().__init__(self._format_message())
+
+    def _format_message(self) -> str:
+        count = len(self.errors)
+        joined = "\n".join(f"- {error}" for error in self.errors)
+        return f"Found {count} validation error(s):\n{joined}"
+
+
 class DataLoader:
     """Loads and validates YAML configuration files."""
 
@@ -80,14 +93,23 @@ class DataLoader:
             raise FileNotFoundError(f"Recipes directory not found: {recipes_dir}")
 
         self.recipes = {}
-        for recipe_file in recipes_dir.glob("*.yml"):
-            recipe = self.load_recipe_file(recipe_file)
+        errors: list[str] = []
+        for recipe_file in sorted(recipes_dir.glob("*.yml")):
+            try:
+                recipe = self.load_recipe_file(recipe_file)
+            except Exception as exc:
+                errors.append(f"{recipe_file.name}: {exc}")
+                continue
 
             # Check for duplicate IDs
             if recipe.id in self.recipes:
-                raise ValueError(f"Duplicate recipe ID: {recipe.id}")
+                errors.append(f"{recipe_file.name}: Duplicate recipe ID: {recipe.id}")
+                continue
 
             self.recipes[recipe.id] = recipe
+
+        if errors:
+            raise ValidationErrorGroup(errors)
 
     def load_recipe_file(self, recipe_file: Path) -> Recipe:
         """Load and schema-validate a single recipe file."""
@@ -113,14 +135,22 @@ class DataLoader:
         if not self.rules:
             raise ValueError("Rules must be loaded before cross-validation")
 
+        errors: list[str] = []
+
         # Validate pantry ingredient IDs
         for ing_id in self.pantry:
             if ing_id not in self.ingredients:
-                raise ValueError(f"Pantry references unknown ingredient: {ing_id}")
+                errors.append(f"Pantry references unknown ingredient: {ing_id}")
 
         # Validate recipes
         for recipe_id, recipe in self.recipes.items():
-            self.validate_recipe(recipe_id, recipe)
+            try:
+                self.validate_recipe(recipe_id, recipe)
+            except Exception as exc:
+                errors.append(str(exc))
+
+        if errors:
+            raise ValidationErrorGroup(errors)
 
     def validate_recipe(self, recipe_id: str, recipe: Recipe) -> None:
         """Validate a single recipe against loaded ingredients and rules."""

@@ -1,4 +1,5 @@
 from pathlib import Path
+import shutil
 
 import pytest
 import yaml
@@ -58,3 +59,26 @@ def test_validate_recipe_file_rejects_multiple_quantity_fields(tmp_path: Path) -
 
     with pytest.raises(ValueError, match="exactly one of qty, qty_g, qty_ml, or qty_units"):
         validate_recipe_file(bad_path, DATA_DIR)
+
+
+def test_validate_data_reports_multiple_recipe_errors(tmp_path: Path) -> None:
+    temp_data_dir = tmp_path / "data"
+    shutil.copytree(DATA_DIR, temp_data_dir)
+
+    recipe_one = temp_data_dir / "recipes" / "pollo_asiatico.yml"
+    recipe_one_data = yaml.safe_load(recipe_one.read_text())
+    recipe_one_data["ingredients"][0]["item"] = "missing_ingredient_one"
+    recipe_one.write_text(yaml.safe_dump(recipe_one_data, sort_keys=False))
+
+    recipe_two = temp_data_dir / "recipes" / "sudado_carne.yml"
+    recipe_two_data = yaml.safe_load(recipe_two.read_text())
+    recipe_two_data["ingredients"][0]["item"] = "missing_ingredient_two"
+    recipe_two.write_text(yaml.safe_dump(recipe_two_data, sort_keys=False))
+
+    with pytest.raises(ValueError) as exc_info:
+        load_data(temp_data_dir)
+
+    message = str(exc_info.value)
+    assert "missing_ingredient_one" in message
+    assert "missing_ingredient_two" in message
+    assert "Found 2 validation error(s)" in message
