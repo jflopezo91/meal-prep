@@ -24,10 +24,30 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Check out requested ref
+    - name: Check out validation tooling
+      uses: actions/checkout@v4
+
+    - name: Check out PR content
+      if: ${{ inputs.pr_number != '' }}
       uses: actions/checkout@v4
       with:
-        ref: ${{ inputs.pr_number != '' && format('refs/pull/{0}/head', inputs.pr_number) || github.ref }}
+        ref: ${{ format('refs/pull/{0}/head', inputs.pr_number) }}
+        path: pr-branch
+
+    - name: Set validation paths
+      id: paths
+      run: |
+        if [ -n "${{ inputs.pr_number }}" ]; then
+          echo "data_dir=pr-branch/data" >> "$GITHUB_OUTPUT"
+          if [ -n "${{ inputs.recipe_file }}" ]; then
+            echo "recipe_file=pr-branch/${{ inputs.recipe_file }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "recipe_file=" >> "$GITHUB_OUTPUT"
+          fi
+        else
+          echo "data_dir=data" >> "$GITHUB_OUTPUT"
+          echo "recipe_file=${{ inputs.recipe_file }}" >> "$GITHUB_OUTPUT"
+        fi
 
     - name: Set up Python
       uses: actions/setup-python@v5
@@ -45,7 +65,7 @@ jobs:
       continue-on-error: true
       run: |
         set +e
-        mealplanner validate-data data 2>&1 | tee validate_data.log
+        mealplanner validate-data "${{ steps.paths.outputs.data_dir }}" 2>&1 | tee validate_data.log
         status=${PIPESTATUS[0]}
         set -e
         {
@@ -57,11 +77,11 @@ jobs:
 
     - name: Validate single recipe when requested
       id: validate_recipe
-      if: ${{ inputs.recipe_file != '' }}
+      if: ${{ steps.paths.outputs.recipe_file != '' }}
       continue-on-error: true
       run: |
         set +e
-        mealplanner validate-recipe "${{ inputs.recipe_file }}" 2>&1 | tee validate_recipe.log
+        mealplanner validate-recipe "${{ steps.paths.outputs.recipe_file }}" --data-dir "${{ steps.paths.outputs.data_dir }}" 2>&1 | tee validate_recipe.log
         status=${PIPESTATUS[0]}
         set -e
         {
@@ -183,6 +203,7 @@ jobs:
         else
           echo "- PR: current ref" >> "$GITHUB_STEP_SUMMARY"
         fi
+        echo "- Data dir: \`${{ steps.paths.outputs.data_dir }}\`" >> "$GITHUB_STEP_SUMMARY"
         if [ -n "${{ inputs.recipe_file }}" ]; then
           echo "- Single recipe: \`${{ inputs.recipe_file }}\`" >> "$GITHUB_STEP_SUMMARY"
         else
@@ -197,7 +218,7 @@ jobs:
           exit 1
         fi
 
-        if [ -n "${{ inputs.recipe_file }}" ] && [ "${{ steps.validate_recipe.outcome }}" = "failure" ]; then
+        if [ -n "${{ steps.paths.outputs.recipe_file }}" ] && [ "${{ steps.validate_recipe.outcome }}" = "failure" ]; then
           echo "Single recipe validation failed" >&2
           exit 1
         fi
