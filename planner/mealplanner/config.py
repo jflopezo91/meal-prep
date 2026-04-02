@@ -144,6 +144,7 @@ class Recipe(BaseModel):
     carbs: RecipeCarbs
     ingredients: list[RecipeIngredient]
     notes: Optional[str] = None
+    extend_to_dinner: bool = False
 
     @field_validator("ingredients")
     @classmethod

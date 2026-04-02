@@ -231,6 +231,54 @@ def add_recipe_frequency_constraints(model: PlannerModel, rules: Rules) -> None:
             )
 
 
+def add_extend_to_dinner_constraints(model: PlannerModel, rules: Rules) -> None:
+    """Link lunch and dinner slots for extend_to_dinner recipes.
+    
+    If a recipe with extend_to_dinner is assigned for lunch on day X,
+    the same base recipe must also be assigned for dinner on day X,
+    and vice versa (they always appear as a pair or not at all).
+    """
+    # Identify extendable base recipe IDs
+    extendable_ids = {
+        v.base_recipe_id for v in model.variants
+        if v.recipe.extend_to_dinner
+    }
+    
+    if not extendable_ids:
+        return
+    
+    for day_idx in range(len(rules.week.days)):
+        lunch_slot = next(
+            s for s in model.slots
+            if s.day_index == day_idx and s.meal == MealType.LUNCH
+        )
+        dinner_slot = next(
+            s for s in model.slots
+            if s.day_index == day_idx and s.meal == MealType.DINNER
+        )
+        
+        for base_id in extendable_ids:
+            # Collect lunch vars for this base recipe
+            lunch_vars = [
+                model.vars[lunch_slot.id][v.variant_id]
+                for v in model.variants
+                if v.base_recipe_id == base_id
+                and v.variant_id in model.vars[lunch_slot.id]
+            ]
+            # Collect dinner vars for this base recipe
+            dinner_vars = [
+                model.vars[dinner_slot.id][v.variant_id]
+                for v in model.variants
+                if v.base_recipe_id == base_id
+                and v.variant_id in model.vars[dinner_slot.id]
+            ]
+            
+            if lunch_vars and dinner_vars:
+                # lunch_used == dinner_used
+                # Both are 0 (recipe not used) or both are 1 (paired)
+                model.model.Add(sum(lunch_vars) == sum(dinner_vars))
+
+
 def solve_plan(loader: DataLoader, seed: int = 42) -> MealPlanSolution:
     """Generate a meal plan."""
     
@@ -249,6 +297,7 @@ def solve_plan(loader: DataLoader, seed: int = 42) -> MealPlanSolution:
     add_no_consecutive_same_carb(planner_model, loader.rules)
     add_carb_frequency_constraints(planner_model, loader.ingredients)
     add_recipe_frequency_constraints(planner_model, loader.rules)
+    add_extend_to_dinner_constraints(planner_model, loader.rules)
     
     # 4. Solve
     solver = cp_model.CpSolver()

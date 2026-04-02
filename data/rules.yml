@@ -2,7 +2,7 @@
 # All measurements are for RAW ingredients unless otherwise specified
 
 week:
-  days: [mon, tue, wed, thu, fri, sat, sun]
+  days: [mon, tue, wed, thu, fri]
   meals: [lunch, dinner]
 
 meal_rules:
@@ -35,12 +35,11 @@ constraints:
   # Weekly protein distribution (total across all meals)
   # Adjust these based on your dietary goals
   weekly_protein_counts:
-    chicken: 5
-    fish: 5
-    beef: 3
+    chicken: 4
+    fish: 3
+    beef: 2
     pork: 1
-    # Total: 14 meals (2 meals × 7 days)
-    # Total: 21 meals (3 meals × 7 days)
+    # Total: 10 meals (2 meals × 5 weekdays)
 
   # No same protein on consecutive days (per meal type)
   no_consecutive_same_protein: true

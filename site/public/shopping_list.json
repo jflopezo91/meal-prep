@@ -2,25 +2,17 @@
   "sections": {
     "protein": [
       {
-        "item": "sausage",
-        "display": "Salchicha",
-        "quantity": 280.0,
-        "unit": "g",
-        "section": "protein",
-        "notes": null
-      },
-      {
         "item": "chicken",
         "display": "Pollo",
-        "quantity": 660.0,
+        "quantity": 720.0,
         "unit": "g",
         "section": "protein",
         "notes": null
       },
       {
-        "item": "beef",
-        "display": "Carne de res",
-        "quantity": 840.0,
+        "item": "sausage",
+        "display": "Salchicha",
+        "quantity": 330.0,
         "unit": "g",
         "section": "protein",
         "notes": null
@@ -28,23 +20,15 @@
       {
         "item": "fish_tuna_canned",
         "display": "Atún en lata",
+        "quantity": 200.0,
+        "unit": "g",
+        "section": "protein",
+        "notes": null
+      },
+      {
+        "item": "beef",
+        "display": "Carne de res",
         "quantity": 380.0,
-        "unit": "g",
-        "section": "protein",
-        "notes": null
-      },
-      {
-        "item": "fish_tilapia",
-        "display": "Tilapia",
-        "quantity": 280.0,
-        "unit": "g",
-        "section": "protein",
-        "notes": null
-      },
-      {
-        "item": "fish_tuna_fillet",
-        "display": "Atún en filete",
-        "quantity": 100.0,
         "unit": "g",
         "section": "protein",
         "notes": null
@@ -52,7 +36,7 @@
       {
         "item": "fish_salmon",
         "display": "Salmón",
-        "quantity": 100.0,
+        "quantity": 280.0,
         "unit": "g",
         "section": "protein",
         "notes": null
@@ -62,55 +46,7 @@
       {
         "item": "carrot",
         "display": "Zanahoria",
-        "quantity": 160.0,
-        "unit": "g",
-        "section": "vegetable",
-        "notes": null
-      },
-      {
-        "item": "tomato",
-        "display": "Tomate",
-        "quantity": 1070.0,
-        "unit": "g",
-        "section": "vegetable",
-        "notes": null
-      },
-      {
-        "item": "green_beans",
-        "display": "Habichuela",
         "quantity": 240.0,
-        "unit": "g",
-        "section": "vegetable",
-        "notes": null
-      },
-      {
-        "item": "asparagus",
-        "display": "Espárragos",
-        "quantity": 370.0,
-        "unit": "g",
-        "section": "vegetable",
-        "notes": null
-      },
-      {
-        "item": "bell_pepper",
-        "display": "Pimentón",
-        "quantity": 160.0,
-        "unit": "g",
-        "section": "vegetable",
-        "notes": null
-      },
-      {
-        "item": "ginger",
-        "display": "Jengibre",
-        "quantity": 20.0,
-        "unit": "g",
-        "section": "vegetable",
-        "notes": null
-      },
-      {
-        "item": "mushroom",
-        "display": "Champiñones",
-        "quantity": 300.0,
         "unit": "g",
         "section": "vegetable",
         "notes": null
@@ -118,7 +54,15 @@
       {
         "item": "zucchini",
         "display": "Zucchini",
-        "quantity": 200.0,
+        "quantity": 100.0,
+        "unit": "g",
+        "section": "vegetable",
+        "notes": null
+      },
+      {
+        "item": "bell_pepper",
+        "display": "Pimentón",
+        "quantity": 140.0,
         "unit": "g",
         "section": "vegetable",
         "notes": null
@@ -132,97 +76,51 @@
         "notes": null
       },
       {
-        "item": "eggplant",
-        "display": "Berenjena",
-        "quantity": 120.0,
-        "unit": "g",
-        "section": "vegetable",
-        "notes": null
-      },
-      {
-        "item": "yellow_zucchini",
-        "display": "Zucchini amarillo",
-        "quantity": 100.0,
-        "unit": "g",
-        "section": "vegetable",
-        "notes": null
-      }
-    ],
-    "carb": [
-      {
-        "item": "lentils",
-        "display": "Lentejas",
-        "quantity": 55.0,
-        "unit": "g",
-        "section": "carb",
-        "notes": null
-      },
-      {
-        "item": "platano_maduro",
-        "display": "Plátano maduro",
-        "quantity": 160.0,
-        "unit": "g",
-        "section": "carb",
-        "notes": null
-      },
-      {
-        "item": "potato",
-        "display": "Papa",
-        "quantity": 240.0,
-        "unit": "g",
-        "section": "carb",
-        "notes": null
-      },
-      {
-        "item": "rice",
-        "display": "Arroz",
-        "quantity": 40.0,
-        "unit": "g",
-        "section": "carb",
-        "notes": null
-      },
-      {
-        "item": "pasta",
-        "display": "Pasta",
-        "quantity": 40.0,
-        "unit": "g",
-        "section": "carb",
-        "notes": null
-      }
-    ],
-    "dairy": [
-      {
-        "item": "coconut_cream",
-        "display": "Crema de coco",
-        "quantity": 100.0,
-        "unit": "ml",
-        "section": "dairy",
-        "notes": null
-      },
-      {
-        "item": "heavy_cream",
-        "display": "Crema de leche",
-        "quantity": 160.0,
-        "unit": "ml",
-        "section": "dairy",
-        "notes": null
-      },
-      {
-        "item": "parmesan",
-        "display": "Queso parmesano",
-        "quantity": 20.0,
-        "unit": "g",
-        "section": "dairy",
-        "notes": null
-      }
-    ],
-    "fat": [
-      {
-        "item": "sesame_seeds",
-        "display": "Ajonjolí",
+        "item": "ginger",
+        "display": "Jengibre",
         "quantity": 10.0,
         "unit": "g",
-        "section": "fat",
+        "section": "vegetable",
+        "notes": null
+      },
+      {
+        "item": "mushroom",
+        "display": "Champiñones",
+        "quantity": 150.0,
+        "unit": "g",
+        "section": "vegetable",
+        "notes": null
+      },
+      {
+        "item": "tomato",
+        "display": "Tomate",
+        "quantity": 990.0,
+        "unit": "g",
+        "section": "vegetable",
+        "notes": null
+      },
+      {
+        "item": "asparagus",
+        "display": "Espárragos",
+        "quantity": 350.0,
+        "unit": "g",
+        "section": "vegetable",
+        "notes": null
+      },
+      {
+        "item": "peas",
+        "display": "Arverja",
+        "quantity": 50.0,
+        "unit": "g",
+        "section": "vegetable",
+        "notes": null
+      },
+      {
+        "item": "green_beans",
+        "display": "Habichuela",
+        "quantity": 170.0,
+        "unit": "g",
+        "section": "vegetable",
         "notes": null
       }
     ],
@@ -236,19 +134,65 @@
         "notes": null
       },
       {
-        "item": "olives",
-        "display": "Aceitunas",
-        "quantity": 30.0,
-        "unit": "g",
+        "item": "tomato_sauce",
+        "display": "Salsa de tomate",
+        "quantity": 50.0,
+        "unit": "ml",
         "section": "condiment",
         "notes": null
       },
       {
-        "item": "tomato_paste",
-        "display": "Pasta de tomate",
-        "quantity": 50.0,
+        "item": "achiote",
+        "display": "Achiote",
+        "quantity": 5.0,
         "unit": "g",
         "section": "condiment",
+        "notes": null
+      }
+    ],
+    "fat": [
+      {
+        "item": "sesame_seeds",
+        "display": "Ajonjolí",
+        "quantity": 5.0,
+        "unit": "g",
+        "section": "fat",
+        "notes": null
+      }
+    ],
+    "carb": [
+      {
+        "item": "rice",
+        "display": "Arroz",
+        "quantity": 120.0,
+        "unit": "g",
+        "section": "carb",
+        "notes": null
+      },
+      {
+        "item": "lentils",
+        "display": "Lentejas",
+        "quantity": 55.0,
+        "unit": "g",
+        "section": "carb",
+        "notes": null
+      },
+      {
+        "item": "potato",
+        "display": "Papa",
+        "quantity": 120.0,
+        "unit": "g",
+        "section": "carb",
+        "notes": null
+      }
+    ],
+    "dairy": [
+      {
+        "item": "heavy_cream",
+        "display": "Crema de leche",
+        "quantity": 80.0,
+        "unit": "ml",
+        "section": "dairy",
         "notes": null
       }
     ]

@@ -7,6 +7,7 @@ from typing import Any
 from .config import (
     Ingredient,
     IngredientsConfig,
+    MealType,
     Recipe,
     Rules,
     PantryConfig,
@@ -181,6 +182,13 @@ class DataLoader:
                     raise ValueError(
                         f"Recipe {recipe_id}: no portion defined for {protein_type.value} "
                         f"at {meal_type.value}"
+                    )
+
+            # Validate extend_to_dinner flag
+            if recipe.extend_to_dinner:
+                if MealType.LUNCH not in recipe.meal_types or MealType.DINNER not in recipe.meal_types:
+                    raise ValueError(
+                        f"Recipe {recipe_id}: extend_to_dinner requires both lunch and dinner in meal_types"
                     )
 
 

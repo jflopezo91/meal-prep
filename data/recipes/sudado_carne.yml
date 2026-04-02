@@ -1,17 +1,19 @@
 # Recipe: Sudado de Carne
 # Based on R010 from Excel data
-# Fixed carb - always potato
+# Lunch with potato, extends to dinner (no carb)
 
 id: sudado_carne
 name: "Sudado de carne"
-meal_types: [lunch]
+meal_types: [lunch, dinner]
+extend_to_dinner: true
 
 tags:
   primary_protein: beef
 
-# Fixed carb - always potato
+# Optional carb - potato for lunch, none for dinner (via variant system)
 carbs:
-  strategy: fixed
+  strategy: optional
+  allowed: [potato]
   default: potato
 
 ingredients:
@@ -44,4 +46,4 @@ ingredients:
     role: fat
     qty_ml: 10
 
-notes: "Sudado tradicional colombiano con abundante tomate y papa"
+notes: "Sudado tradicional colombiano con abundante tomate y papa. Se prepara extra para la cena sin carbohidrato."

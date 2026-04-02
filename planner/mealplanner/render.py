@@ -33,6 +33,7 @@ class PlanSlot(BaseModel):
     proteinQty: float  # grams of protein
     carbQty: float | None  # grams of carb (None if carb == "none")
     ingredients: list[IngredientItem]  # full ingredients list
+    extendedFromLunch: bool = False  # True if dinner is extension of lunch
 
 
 class PlanDerivedStats(BaseModel):
@@ -138,6 +139,12 @@ def render_plan(
                 role="carb"
             ))
             
+        # Check if this is a dinner slot extended from lunch
+        is_extended = (
+            meal == "dinner"
+            and variant.recipe.extend_to_dinner
+        )
+        
         slots.append(PlanSlot(
             day=day,
             meal=meal,
@@ -148,7 +155,8 @@ def render_plan(
             carb=carb,
             proteinQty=protein_qty,
             carbQty=carb_qty,
-            ingredients=ingredients_list
+            ingredients=ingredients_list,
+            extendedFromLunch=is_extended
         ))
         
     # 2. Create Plan object
