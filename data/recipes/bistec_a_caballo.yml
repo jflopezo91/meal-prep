@@ -1,0 +1,99 @@
+# Recipe: Bistec a caballo
+
+id: bistec_a_caballo
+name: "Bistec a caballo"
+meal_types: [lunch]
+
+tags:
+  primary_protein: beef
+
+carbs:
+  strategy: fixed
+  default: potato
+
+ingredients:
+  # Protein
+  - item: beef
+    role: protein
+    qty: "@portion"
+    notes: "2 filetes"
+
+  - item: egg
+    role: protein
+    qty_g: 50
+    notes: "1 huevo frito"
+
+  # Vegetables (base)
+  - item: garlic
+    role: veg
+    qty_g: 10
+    notes: "3 dientes"
+
+  # Fat (base)
+  - item: olive_oil
+    role: fat
+    qty_ml: 10
+
+  # Spices (base)
+  - item: thyme
+    role: spice
+    qty_g: 1
+
+  - item: salt
+    role: spice
+    qty_g: 2
+
+  # --- Salsa ---
+  # Vegetables
+  - item: tomato
+    role: veg
+    qty_g: 120
+
+  - item: onion
+    role: veg
+    qty_g: 80
+    notes: "En plumas"
+
+  - item: green_onion
+    role: veg
+    qty_g: 10
+    notes: "1/2 tallo"
+
+  - item: garlic
+    role: veg
+    qty_g: 5
+    notes: "1 diente"
+
+  # Fat
+  - item: butter
+    role: fat
+    qty_g: 7
+    notes: "Media cucharada"
+
+
+  # Spices
+  - item: cumin
+    role: spice
+    qty_g: 1
+
+  - item: paprika
+    role: spice
+    qty_g: 1
+
+  - item: black_pepper
+    role: spice
+    qty_g: 1
+
+  - item: salt
+    role: spice
+    qty_g: 2
+
+  - item: bay_leaf
+    role: spice
+    qty_g: 1
+
+  - item: thyme
+    role: spice
+    qty_g: 1
+
+notes: "Bistec tradicional servido con huevo frito y salsa criolla hecha con los jugos de la carne"
