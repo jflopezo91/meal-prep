@@ -1,0 +1,45 @@
+# Recipe: Ensalada de pollo con manzana
+
+id: ensalada_pollo_manzana
+name: "Ensalada de pollo con manzana"
+meal_types: [lunch]
+
+tags:
+  primary_protein: chicken
+
+carbs:
+  strategy: optional
+  allowed: [rice, potato, yuca, platano_verde, platano_maduro]
+  default: potato
+
+ingredients:
+  # Protein
+  - item: chicken
+    role: protein
+    qty: "@portion"
+    notes: "Pechuga"
+
+  # Vegetables
+  - item: red_onion
+    role: veg
+    qty_g: 220
+
+  - item: red_bell_pepper
+    role: veg
+    qty_g: 120
+
+  - item: green_bell_pepper
+    role: veg
+    qty_g: 130
+
+  - item: celery
+    role: veg
+    qty_g: 120
+
+  # Fruit
+  - item: green_apple
+    role: other
+    qty_g: 180
+    notes: "1 manzana verde con cáscara"
+
+notes: "Ensalada fresca con pollo, vegetales crujientes y manzana"

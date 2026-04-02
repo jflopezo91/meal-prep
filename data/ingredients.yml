@@ -20,6 +20,13 @@ beef:
   kind: protein
   notes: "Lomo fino u otros cortes"
 
+liver:
+  display: "Higado de res"
+  unit: g
+  section: protein
+  kind: protein
+  notes: "Higado de res"
+
 pork:
   display: "Cerdo"
   unit: g

@@ -1,0 +1,71 @@
+# Recipe: Brocoli con carne de res
+
+id: brocoli_con_carne
+name: "Brócoli con carne de res"
+meal_types: [lunch]
+
+tags:
+  primary_protein: beef
+
+# Variable carb strategy - can choose from allowed carbs
+carbs:
+  strategy: optional
+  allowed: [rice, potato, yuca, platano_verde, platano_maduro]
+  default: platano_verde
+
+ingredients:
+  # Protein
+  - item: beef
+    role: protein
+    qty: "@portion"
+    notes: "En tiras"
+
+  # Vegetables
+  - item: broccoli
+    role: veg
+    qty_g: 200
+
+  - item: carrot
+    role: veg
+    qty_g: 80
+
+  - item: bell_pepper
+    role: veg
+    qty_g: 60
+    notes: "Pimentón amarillo"
+
+  - item: bell_pepper
+    role: veg
+    qty_g: 60
+    notes: "Pimentón rojo"
+
+  - item: onion
+    role: veg
+    qty_g: 80
+    notes: "Cebolla cabezona"
+
+  - item: green_onion
+    role: veg
+    qty_g: 30
+    notes: "Cebolla larga"
+
+  - item: garlic
+    role: veg
+    qty_g: 10
+
+  - item: ginger
+    role: veg
+    qty_g: 10
+
+  # Fat
+  - item: sesame_seeds
+    role: fat
+    qty_ml: 5
+    notes: "Ajonjolí"
+
+  # Sauces & others
+  - item: soy_sauce
+    role: other
+    qty_ml: 15
+
+notes: "Salteado estilo asiático con vegetales y carne de res"
