@@ -1,0 +1,54 @@
+# Recipe: Higado Encebollado
+# Fixed carb - always rice
+
+id: higado_encebollado
+name: "Higado Encebollado"
+meal_types: [lunch]
+
+tags:
+  primary_protein: beef
+
+# Fixed carb - always rice
+carbs:
+  strategy: fixed
+  default: rice
+
+ingredients:
+  # Protein
+  - item: liver
+    role: protein
+    qty: "@portion"
+    notes: "Hígado"
+
+  # Vegetables
+  - item: onion
+    role: veg
+    qty_g: 80
+    notes: "1 cebolla cabezona"
+
+  - item: garlic
+    role: veg
+    qty_g: 10
+
+  - item: cilantro
+    role: veg
+    qty_g: 10
+
+# Fat
+  - item: achiote_oil
+    role: fat
+    qty_ml: 10
+
+  - item: butter
+    role: fat
+    qty_g: 10
+
+# Spices & others
+  - item: cumin
+    role: spice
+    qty_g: 2
+
+  - item: black_pepper
+    role: spice
+
+notes: "Hígado encebollado"
