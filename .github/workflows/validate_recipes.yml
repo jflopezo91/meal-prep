@@ -14,6 +14,11 @@ on:
         default: ""
         type: string
 
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
 jobs:
   validate:
     runs-on: ubuntu-latest
@@ -36,18 +41,88 @@ jobs:
         pip install -e .[dev]
 
     - name: Validate recipe data set
+      id: validate_data
+      continue-on-error: true
       run: mealplanner validate-data data
 
     - name: Validate single recipe when requested
+      id: validate_recipe
       if: ${{ inputs.recipe_file != '' }}
+      continue-on-error: true
       run: mealplanner validate-recipe "${{ inputs.recipe_file }}"
 
     - name: Run validator tests
+      id: run_tests
+      continue-on-error: true
       run: |
         cd planner
         pytest
 
+    - name: Comment on PR
+      if: ${{ always() && inputs.pr_number != '' }}
+      uses: actions/github-script@v7
+      env:
+        VALIDATE_DATA_OUTCOME: ${{ steps.validate_data.outcome }}
+        VALIDATE_RECIPE_OUTCOME: ${{ steps.validate_recipe.outcome }}
+        RUN_TESTS_OUTCOME: ${{ steps.run_tests.outcome }}
+      with:
+        script: |
+          const prNumber = Number(context.payload.inputs.pr_number)
+          const recipeFile = context.payload.inputs.recipe_file || ''
+          const dataOutcome = process.env.VALIDATE_DATA_OUTCOME || 'skipped'
+          const recipeOutcome = recipeFile ? (process.env.VALIDATE_RECIPE_OUTCOME || 'skipped') : 'skipped'
+          const testsOutcome = process.env.RUN_TESTS_OUTCOME || 'skipped'
+
+          const toStatus = (outcome) => {
+            if (outcome === 'success') return 'PASS'
+            if (outcome === 'failure') return 'FAIL'
+            return 'SKIPPED'
+          }
+
+          const marker = '<!-- mealplanner-validate-recipes -->'
+          const lines = [
+            marker,
+            '## Recipe Validation',
+            '',
+            `- Dataset validation: ${toStatus(dataOutcome)}`,
+            `- Validator tests: ${toStatus(testsOutcome)}`,
+          ]
+
+          if (recipeFile) {
+            lines.push(`- Single recipe \`${recipeFile}\`: ${toStatus(recipeOutcome)}`)
+          }
+
+          lines.push('')
+          lines.push(`Workflow run: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`)
+
+          const body = lines.join('\n')
+          const { data: comments } = await github.rest.issues.listComments({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: prNumber,
+            per_page: 100,
+          })
+
+          const existing = comments.find((comment) => comment.body && comment.body.includes(marker))
+
+          if (existing) {
+            await github.rest.issues.updateComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: existing.id,
+              body,
+            })
+          } else {
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body,
+            })
+          }
+
     - name: Summary
+      if: ${{ always() }}
       run: |
         echo "### Recipe validation completed" >> "$GITHUB_STEP_SUMMARY"
         echo "" >> "$GITHUB_STEP_SUMMARY"
@@ -60,4 +135,22 @@ jobs:
           echo "- Single recipe: \`${{ inputs.recipe_file }}\`" >> "$GITHUB_STEP_SUMMARY"
         else
           echo "- Single recipe: not requested" >> "$GITHUB_STEP_SUMMARY"
+        fi
+
+    - name: Fail workflow if validation failed
+      if: ${{ always() }}
+      run: |
+        if [ "${{ steps.validate_data.outcome }}" = "failure" ]; then
+          echo "Dataset validation failed" >&2
+          exit 1
+        fi
+
+        if [ -n "${{ inputs.recipe_file }}" ] && [ "${{ steps.validate_recipe.outcome }}" = "failure" ]; then
+          echo "Single recipe validation failed" >&2
+          exit 1
+        fi
+
+        if [ "${{ steps.run_tests.outcome }}" = "failure" ]; then
+          echo "Validator tests failed" >&2
+          exit 1
         fi
