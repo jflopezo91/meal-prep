@@ -43,40 +43,86 @@ jobs:
     - name: Validate recipe data set
       id: validate_data
       continue-on-error: true
-      run: mealplanner validate-data data
+      run: |
+        set +e
+        mealplanner validate-data data 2>&1 | tee validate_data.log
+        status=${PIPESTATUS[0]}
+        set -e
+        {
+          echo 'log<<EOF'
+          tail -n 40 validate_data.log
+          echo EOF
+        } >> "$GITHUB_OUTPUT"
+        exit "$status"
 
     - name: Validate single recipe when requested
       id: validate_recipe
       if: ${{ inputs.recipe_file != '' }}
       continue-on-error: true
-      run: mealplanner validate-recipe "${{ inputs.recipe_file }}"
+      run: |
+        set +e
+        mealplanner validate-recipe "${{ inputs.recipe_file }}" 2>&1 | tee validate_recipe.log
+        status=${PIPESTATUS[0]}
+        set -e
+        {
+          echo 'log<<EOF'
+          tail -n 40 validate_recipe.log
+          echo EOF
+        } >> "$GITHUB_OUTPUT"
+        exit "$status"
 
     - name: Run validator tests
       id: run_tests
       continue-on-error: true
       run: |
+        set +e
         cd planner
-        pytest
+        pytest 2>&1 | tee ../run_tests.log
+        status=${PIPESTATUS[0]}
+        set -e
+        {
+          echo 'log<<EOF'
+          tail -n 60 ../run_tests.log
+          echo EOF
+        } >> "$GITHUB_OUTPUT"
+        exit "$status"
 
     - name: Comment on PR
       if: ${{ always() && inputs.pr_number != '' }}
       uses: actions/github-script@v7
       env:
         VALIDATE_DATA_OUTCOME: ${{ steps.validate_data.outcome }}
+        VALIDATE_DATA_LOG: ${{ steps.validate_data.outputs.log }}
         VALIDATE_RECIPE_OUTCOME: ${{ steps.validate_recipe.outcome }}
+        VALIDATE_RECIPE_LOG: ${{ steps.validate_recipe.outputs.log }}
         RUN_TESTS_OUTCOME: ${{ steps.run_tests.outcome }}
+        RUN_TESTS_LOG: ${{ steps.run_tests.outputs.log }}
       with:
         script: |
           const prNumber = Number(context.payload.inputs.pr_number)
           const recipeFile = context.payload.inputs.recipe_file || ''
           const dataOutcome = process.env.VALIDATE_DATA_OUTCOME || 'skipped'
+          const dataLog = process.env.VALIDATE_DATA_LOG || ''
           const recipeOutcome = recipeFile ? (process.env.VALIDATE_RECIPE_OUTCOME || 'skipped') : 'skipped'
+          const recipeLog = process.env.VALIDATE_RECIPE_LOG || ''
           const testsOutcome = process.env.RUN_TESTS_OUTCOME || 'skipped'
+          const testsLog = process.env.RUN_TESTS_LOG || ''
 
           const toStatus = (outcome) => {
             if (outcome === 'success') return 'PASS'
             if (outcome === 'failure') return 'FAIL'
             return 'SKIPPED'
+          }
+
+          const addFailureDetails = (lines, title, outcome, log) => {
+            if (outcome !== 'failure' || !log.trim()) return
+            lines.push('')
+            lines.push(`<details><summary>${title}</summary>`)
+            lines.push('')
+            lines.push('```text')
+            lines.push(log.trim())
+            lines.push('```')
+            lines.push('</details>')
           }
 
           const marker = '<!-- mealplanner-validate-recipes -->'
@@ -91,6 +137,12 @@ jobs:
           if (recipeFile) {
             lines.push(`- Single recipe \`${recipeFile}\`: ${toStatus(recipeOutcome)}`)
           }
+
+          addFailureDetails(lines, 'Dataset validation failure', dataOutcome, dataLog)
+          if (recipeFile) {
+            addFailureDetails(lines, `Single recipe failure: ${recipeFile}`, recipeOutcome, recipeLog)
+          }
+          addFailureDetails(lines, 'Validator test failure', testsOutcome, testsLog)
 
           lines.push('')
           lines.push(`Workflow run: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`)
