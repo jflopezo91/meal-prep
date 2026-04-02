@@ -2,7 +2,8 @@
 
 id: ensalada_pollo_manzana
 name: "Ensalada de pollo con manzana"
-meal_types: [lunch]
+meal_types: [lunch, dinner]
+extend_to_dinner: true
 
 tags:
   primary_protein: chicken

@@ -3,14 +3,16 @@
 
 id: higado_encebollado
 name: "Higado Encebollado"
-meal_types: [lunch]
+meal_types: [lunch, dinner]
+extend_to_dinner: true
 
 tags:
   primary_protein: beef
 
 # Fixed carb - always rice
 carbs:
-  strategy: fixed
+  strategy: optional
+  allowed: [rice]
   default: rice
 
 ingredients:

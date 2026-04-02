@@ -3,7 +3,8 @@
 
 id: pollo_toscano_lunch
 name: "Pollo toscano"
-meal_types: [lunch]
+meal_types: [lunch, dinner]
+extend_to_dinner: true
 
 tags:
   primary_protein: chicken

@@ -5,6 +5,7 @@
 id: pollo_asiatico
 name: "Pollo asiático"
 meal_types: [lunch, dinner]
+extend_to_dinner: true
 
 tags:
   primary_protein: chicken

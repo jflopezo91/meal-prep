@@ -4,14 +4,16 @@
 
 id: pasta_tefy
 name: "Pasta Tefy"
-meal_types: [lunch]
+meal_types: [lunch, dinner]
+extend_to_dinner: true
 
 tags:
   primary_protein: fish
 
 # Fixed carb - pasta
 carbs:
-  strategy: fixed
+  strategy: optional
+  allowed: [pasta]
   default: pasta
 
 ingredients:

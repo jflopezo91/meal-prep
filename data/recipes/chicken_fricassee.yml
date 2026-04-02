@@ -4,6 +4,7 @@
 id: chicken_fricassee
 name: "Chicken Fricassée"
 meal_types: [lunch, dinner]
+extend_to_dinner: true
 
 tags:
   primary_protein: chicken

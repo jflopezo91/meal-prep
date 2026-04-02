@@ -49,4 +49,4 @@ constraints:
   fish_dinner_max_consecutive: 2  # Max consecutive days with fish at dinner
 
   # Recipe usage
-  max_recipe_uses_per_week: 2  # Each recipe can only be used once per week
+  max_recipe_uses_per_week: 1  # Each base recipe can only appear on one day per week

@@ -2,7 +2,8 @@
 
 id: brocoli_con_carne
 name: "Brócoli con carne de res"
-meal_types: [lunch]
+meal_types: [lunch, dinner]
+extend_to_dinner: true
 
 tags:
   primary_protein: beef

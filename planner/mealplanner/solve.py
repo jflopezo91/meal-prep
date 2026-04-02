@@ -219,12 +219,35 @@ def add_recipe_frequency_constraints(model: PlannerModel, rules: Rules) -> None:
         base_recipes.setdefault(variant.base_recipe_id, []).append(variant)
         
     for base_id, variants in base_recipes.items():
+        is_extendable = any(variant.recipe.extend_to_dinner for variant in variants)
+
+        if is_extendable:
+            day_uses = []
+            for day_idx in range(len(rules.week.days)):
+                lunch_slot = next(
+                    s for s in model.slots
+                    if s.day_index == day_idx and s.meal == MealType.LUNCH
+                )
+                lunch_vars = [
+                    model.vars[lunch_slot.id][variant.variant_id]
+                    for variant in variants
+                    if variant.variant_id in model.vars[lunch_slot.id]
+                ]
+                if lunch_vars:
+                    day_uses.append(sum(lunch_vars))
+
+            if day_uses:
+                model.model.Add(
+                    sum(day_uses) <= rules.constraints.max_recipe_uses_per_week
+                )
+            continue
+
         all_vars = []
         for slot in model.slots:
             for variant in variants:
                 if variant.variant_id in model.vars[slot.id]:
                     all_vars.append(model.vars[slot.id][variant.variant_id])
-                    
+
         if all_vars:
             model.model.Add(
                 sum(all_vars) <= rules.constraints.max_recipe_uses_per_week

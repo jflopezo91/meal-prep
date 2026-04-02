@@ -2,13 +2,15 @@
 
 id: bistec_a_caballo
 name: "Bistec a caballo"
-meal_types: [lunch]
+meal_types: [lunch, dinner]
+extend_to_dinner: true
 
 tags:
   primary_protein: beef
 
 carbs:
-  strategy: fixed
+  strategy: optional
+  allowed: [potato]
   default: potato
 
 ingredients:
