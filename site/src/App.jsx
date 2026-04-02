@@ -16,6 +16,19 @@ const DAYS = {
 };
 
 const MEALS = ['lunch', 'dinner'];
+const WEEKEND_DAYS = new Set(['sat', 'sun']);
+const WEEKEND_COPY = {
+  sat: {
+    badge: 'Saturday',
+    title: 'Eat outside',
+    description: 'No cooking planned. Leave room for a lunch out, a casual dinner, or whatever sounds good that day.'
+  },
+  sun: {
+    badge: 'Sunday',
+    title: 'Kitchen off',
+    description: 'Recovery day. Keep it flexible with leftovers, takeout, or a spontaneous plan before the next prep cycle.'
+  }
+};
 
 function formatLocalDateTime(value) {
   const date = new Date(value);
@@ -127,6 +140,8 @@ function App() {
     return plan?.slots.find(s => s.day === day && s.meal === meal);
   };
 
+  const isWeekend = (day) => WEEKEND_DAYS.has(day);
+
   const garbageCollector = getGarbageCollectorLabel();
 
   return (
@@ -185,18 +200,41 @@ function App() {
                   </div>
 
                   <div className="p-4 space-y-4 flex-1 flex flex-col justify-center">
-                    {MEALS.map(meal => {
-                      const slot = getSlot(day, meal);
-                      if (!slot) return null;
+                    {isWeekend(day) ? (
+                      <div className="flex-1 rounded-2xl border border-dashed border-amber-300/80 dark:border-amber-700/60 bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50 dark:from-amber-950/40 dark:via-orange-950/30 dark:to-rose-950/30 p-5 flex flex-col justify-between min-h-[220px]">
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-amber-700 dark:text-amber-300">
+                            {WEEKEND_COPY[day].badge}
+                          </span>
+                          <div className="rounded-full bg-white/80 dark:bg-slate-900/60 p-2 text-amber-500 dark:text-amber-300 shadow-sm">
+                            <Sun size={18} />
+                          </div>
+                        </div>
 
-                      return (
-                        <MealCard
-                          key={`${day}-${meal}`}
-                          slot={slot}
-                          onClick={() => setSelectedSlot(slot)}
-                        />
-                      );
-                    })}
+                        <div className="space-y-3">
+                          <h3 className="text-xl font-bold text-slate-900 dark:text-white">
+                            {WEEKEND_COPY[day].title}
+                          </h3>
+                          <p className="text-sm leading-6 text-slate-600 dark:text-slate-300">
+                            {WEEKEND_COPY[day].description}
+                          </p>
+                        </div>
+
+                      </div>
+                    ) : (
+                      MEALS.map(meal => {
+                        const slot = getSlot(day, meal);
+                        if (!slot) return null;
+
+                        return (
+                          <MealCard
+                            key={`${day}-${meal}`}
+                            slot={slot}
+                            onClick={() => setSelectedSlot(slot)}
+                          />
+                        );
+                      })
+                    )}
                   </div>
                 </div>
               ))}
