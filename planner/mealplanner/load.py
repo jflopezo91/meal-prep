@@ -1,8 +1,9 @@
 """Data loading and validation module."""
 
-import yaml
 from pathlib import Path
 from typing import Any
+
+import yaml
 
 from .config import (
     Ingredient,
@@ -80,16 +81,32 @@ class DataLoader:
 
         self.recipes = {}
         for recipe_file in recipes_dir.glob("*.yml"):
-            with open(recipe_file) as f:
-                data = yaml.safe_load(f)
-
-            recipe = Recipe(**data)
+            recipe = self.load_recipe_file(recipe_file)
 
             # Check for duplicate IDs
             if recipe.id in self.recipes:
                 raise ValueError(f"Duplicate recipe ID: {recipe.id}")
 
             self.recipes[recipe.id] = recipe
+
+    def load_recipe_file(self, recipe_file: Path) -> Recipe:
+        """Load and schema-validate a single recipe file."""
+        with open(recipe_file) as f:
+            data = yaml.safe_load(f)
+
+        recipe = Recipe(**data)
+        self.validate_recipe_filename(recipe_file, recipe)
+        return recipe
+
+    def validate_recipe_filename(self, recipe_file: Path, recipe: Recipe) -> None:
+        """Validate filename conventions for contributor-submitted recipes."""
+        if recipe_file.suffix != ".yml":
+            raise ValueError(f"Recipe {recipe.id}: file must use .yml extension")
+
+        if recipe_file.stem != recipe.id:
+            raise ValueError(
+                f"Recipe {recipe.id}: filename '{recipe_file.name}' must match id '{recipe.id}.yml'"
+            )
 
     def cross_validate(self) -> None:
         """Cross-validate references between files."""
@@ -103,93 +120,132 @@ class DataLoader:
 
         # Validate recipes
         for recipe_id, recipe in self.recipes.items():
-            # Validate ingredient references
-            for ing in recipe.ingredients:
-                if ing.item not in self.ingredients:
-                    raise ValueError(
-                        f"Recipe {recipe_id} references unknown ingredient: {ing.item}"
-                    )
+            self.validate_recipe(recipe_id, recipe)
 
-                # Validate @portion is only on protein
-                if ing.qty == "@portion":
-                    ingredient = self.ingredients[ing.item]
-                    if ingredient.kind != IngredientKind.PROTEIN:
-                        raise ValueError(
-                            f"Recipe {recipe_id}: @portion can only be used on protein "
-                            f"ingredients, but {ing.item} is {ingredient.kind}"
-                        )
+    def validate_recipe(self, recipe_id: str, recipe: Recipe) -> None:
+        """Validate a single recipe against loaded ingredients and rules."""
+        if not self.rules:
+            raise ValueError("Rules must be loaded before recipe validation")
 
-            # Validate carb strategy
-            if recipe.carbs.strategy.value == "none":
-                # No carbs allowed
-                if recipe.carbs.allowed or recipe.carbs.default:
-                    raise ValueError(
-                        f"Recipe {recipe_id}: strategy 'none' cannot have allowed or default carbs"
-                    )
-            elif recipe.carbs.strategy.value == "fixed":
-                # Must have default carb
-                if not recipe.carbs.default:
-                    raise ValueError(
-                        f"Recipe {recipe_id}: strategy 'fixed' requires default carb"
-                    )
-                # Validate default is a carb
-                if recipe.carbs.default not in self.ingredients:
-                    raise ValueError(
-                        f"Recipe {recipe_id}: default carb {recipe.carbs.default} not found"
-                    )
-                if self.ingredients[recipe.carbs.default].kind != IngredientKind.CARB:
-                    raise ValueError(
-                        f"Recipe {recipe_id}: default {recipe.carbs.default} is not a carb"
-                    )
-            elif recipe.carbs.strategy.value == "optional":
-                # Must have allowed list and default
-                if not recipe.carbs.allowed:
-                    raise ValueError(
-                        f"Recipe {recipe_id}: strategy 'optional' requires allowed carbs list"
-                    )
-                if not recipe.carbs.default:
-                    raise ValueError(
-                        f"Recipe {recipe_id}: strategy 'optional' requires default carb"
-                    )
-                # Validate all allowed are carbs
-                for carb_id in recipe.carbs.allowed:
-                    if carb_id not in self.ingredients:
-                        raise ValueError(
-                            f"Recipe {recipe_id}: allowed carb {carb_id} not found"
-                        )
-                    if self.ingredients[carb_id].kind != IngredientKind.CARB:
-                        raise ValueError(
-                            f"Recipe {recipe_id}: allowed {carb_id} is not a carb"
-                        )
-                # Validate default is in allowed
-                if recipe.carbs.default not in recipe.carbs.allowed:
-                    raise ValueError(
-                        f"Recipe {recipe_id}: default carb must be in allowed list"
-                    )
-
-            # Validate protein portions exist
-            protein_type = recipe.tags.primary_protein
-            if protein_type not in self.rules.protein_portions_g:
+        # Validate ingredient references
+        for ing in recipe.ingredients:
+            if ing.item not in self.ingredients:
                 raise ValueError(
-                    f"Recipe {recipe_id}: protein type {protein_type.value} not found in rules"
+                    f"Recipe {recipe_id} references unknown ingredient: {ing.item}"
                 )
 
-            # Validate protein portions for allowed meals
-            portions = self.rules.protein_portions_g[protein_type]
-            for meal_type in recipe.meal_types:
-                portion_value = getattr(portions, meal_type.value, None)
-                if portion_value is None:
+            # Validate @portion is only on protein
+            if ing.qty == "@portion":
+                ingredient = self.ingredients[ing.item]
+                if ingredient.kind != IngredientKind.PROTEIN:
                     raise ValueError(
-                        f"Recipe {recipe_id}: no portion defined for {protein_type.value} "
-                        f"at {meal_type.value}"
+                        f"Recipe {recipe_id}: @portion can only be used on protein "
+                        f"ingredients, but {ing.item} is {ingredient.kind}"
                     )
 
-            # Validate extend_to_dinner flag
-            if recipe.extend_to_dinner:
-                if MealType.LUNCH not in recipe.meal_types or MealType.DINNER not in recipe.meal_types:
+        # Validate carb strategy
+        if recipe.carbs.strategy.value == "none":
+            # No carbs allowed
+            if recipe.carbs.allowed or recipe.carbs.default:
+                raise ValueError(
+                    f"Recipe {recipe_id}: strategy 'none' cannot have allowed or default carbs"
+                )
+        elif recipe.carbs.strategy.value == "fixed":
+            # Must have default carb
+            if not recipe.carbs.default:
+                raise ValueError(
+                    f"Recipe {recipe_id}: strategy 'fixed' requires default carb"
+                )
+            # Validate default is a carb
+            if recipe.carbs.default not in self.ingredients:
+                raise ValueError(
+                    f"Recipe {recipe_id}: default carb {recipe.carbs.default} not found"
+                )
+            if self.ingredients[recipe.carbs.default].kind != IngredientKind.CARB:
+                raise ValueError(
+                    f"Recipe {recipe_id}: default {recipe.carbs.default} is not a carb"
+                )
+        elif recipe.carbs.strategy.value == "optional":
+            # Must have allowed list and default
+            if not recipe.carbs.allowed:
+                raise ValueError(
+                    f"Recipe {recipe_id}: strategy 'optional' requires allowed carbs list"
+                )
+            if not recipe.carbs.default:
+                raise ValueError(
+                    f"Recipe {recipe_id}: strategy 'optional' requires default carb"
+                )
+            # Validate all allowed are carbs
+            for carb_id in recipe.carbs.allowed:
+                if carb_id not in self.ingredients:
                     raise ValueError(
-                        f"Recipe {recipe_id}: extend_to_dinner requires both lunch and dinner in meal_types"
+                        f"Recipe {recipe_id}: allowed carb {carb_id} not found"
                     )
+                if self.ingredients[carb_id].kind != IngredientKind.CARB:
+                    raise ValueError(
+                        f"Recipe {recipe_id}: allowed {carb_id} is not a carb"
+                    )
+            # Validate default is in allowed
+            if recipe.carbs.default not in recipe.carbs.allowed:
+                raise ValueError(
+                    f"Recipe {recipe_id}: default carb must be in allowed list"
+                )
+
+        # Validate protein portions exist
+        protein_type = recipe.tags.primary_protein
+        if protein_type not in self.rules.protein_portions_g:
+            raise ValueError(
+                f"Recipe {recipe_id}: protein type {protein_type.value} not found in rules"
+            )
+
+        # Validate protein portions for allowed meals
+        portions = self.rules.protein_portions_g[protein_type]
+        for meal_type in recipe.meal_types:
+            portion_value = getattr(portions, meal_type.value, None)
+            if portion_value is None:
+                raise ValueError(
+                    f"Recipe {recipe_id}: no portion defined for {protein_type.value} "
+                    f"at {meal_type.value}"
+                )
+
+        # Validate extend_to_dinner flag
+        if recipe.extend_to_dinner:
+            if (
+                MealType.LUNCH not in recipe.meal_types
+                or MealType.DINNER not in recipe.meal_types
+            ):
+                raise ValueError(
+                    f"Recipe {recipe_id}: extend_to_dinner requires both lunch and "
+                    "dinner in meal_types"
+                )
+
+
+def infer_data_dir(recipe_file: Path) -> Path:
+    """Infer the data directory for a recipe file from its location."""
+    candidate_dirs = [recipe_file.parent.parent, recipe_file.parent]
+    for candidate in candidate_dirs:
+        if (candidate / "ingredients.yml").exists() and (candidate / "rules.yml").exists():
+            return candidate
+    raise FileNotFoundError(
+        f"Could not infer data directory for recipe file: {recipe_file}"
+    )
+
+
+def validate_recipe_file(
+    recipe_file: Path | str, data_dir: Path | str | None = None
+) -> tuple[DataLoader, Recipe]:
+    """Load and validate a single recipe file against the shared data definitions."""
+    recipe_path = Path(recipe_file)
+    resolved_data_dir = infer_data_dir(recipe_path) if data_dir is None else Path(data_dir)
+
+    loader = DataLoader(resolved_data_dir)
+    loader.load_ingredients()
+    loader.load_rules()
+    loader.load_pantry()
+
+    recipe = loader.load_recipe_file(recipe_path)
+    loader.validate_recipe(recipe.id, recipe)
+    return loader, recipe
 
 
 def load_data(data_dir: Path | str) -> DataLoader:

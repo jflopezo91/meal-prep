@@ -88,6 +88,7 @@ Before running the planner, validate the data structure:
 # From the project root
 export PYTHONPATH=$PYTHONPATH:$(pwd)/planner
 python3 -m mealplanner.cli validate-data data
+python3 -m mealplanner.cli validate-recipe data/recipes/pollo_asiatico.yml
 ```
 
 This will check:
@@ -96,3 +97,6 @@ This will check:
 - Correct carb strategies
 - Protein portion rules
 - Constraint consistency
+- Filename matches recipe `id`
+- Exactly one quantity field per ingredient line
+- Ingredient role uses a supported value

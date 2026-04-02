@@ -47,6 +47,13 @@ Run the planner command to solve for a new week. This will write the data direct
 .venv/bin/mealplanner generate-plan data site/public --seed 123
 ```
 
+To validate recipe changes before generating a plan:
+
+```bash
+.venv/bin/mealplanner validate-data data
+.venv/bin/mealplanner validate-recipe data/recipes/pollo_asiatico.yml
+```
+
 This command will:
 1.  Read configuration from `data/`.
 2.  Solve for a valid schedule satisfying all rules in `data/rules.yml`.
@@ -67,6 +74,7 @@ Open the URL shown (usually `http://localhost:5173`) in your browser.
 -   **`data/ingredients.yml`**: Master list of ingredients with units and categories.
 -   **`data/pantry.yml`**: Items you already have (excluded from shopping list).
 -   **`data/recipes/*.yml`**: Individual recipe definitions (ingredients, tags, meal types).
+-   **`.github/workflows/validate_recipes.yml`**: Manual workflow to validate repo data or a specific PR on demand.
 
 ## Troubleshooting
 

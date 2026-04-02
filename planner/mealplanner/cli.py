@@ -4,7 +4,7 @@ import sys
 import json
 from pathlib import Path
 
-from .load import load_data
+from .load import load_data, validate_recipe_file
 from .solve import solve_plan
 from .shopping import generate_shopping_list
 from .render import render_plan
@@ -60,12 +60,32 @@ def generate_plan(data_dir: Path, output_dir: Path, seed: int) -> int:
         return 1
 
 
+def validate_recipe(recipe_file: Path, data_dir: Path | None = None) -> int:
+    """Validate a single recipe file."""
+    try:
+        print(f"Validating recipe {recipe_file}...")
+        loader, recipe = validate_recipe_file(recipe_file, data_dir)
+
+        print(f"✓ Loaded shared ingredients from {loader.data_dir}")
+        print(f"✓ Recipe id: {recipe.id}")
+        print(f"✓ Recipe name: {recipe.name}")
+        print(f"✓ Meals: {', '.join(meal.value for meal in recipe.meal_types)}")
+        print(f"✓ Ingredients: {len(recipe.ingredients)}")
+        print("\n✓ Recipe validation passed!")
+        return 0
+
+    except Exception as e:
+        print(f"\n✗ Recipe validation failed: {e}", file=sys.stderr)
+        return 1
+
+
 def main() -> None:
     """Main CLI entry point."""
     if len(sys.argv) < 2:
         print("Usage: mealplanner <command> [args]")
         print("\nCommands:")
         print("  validate-data <data_dir>")
+        print("  validate-recipe <recipe_file> [--data-dir DATA_DIR]")
         print("  generate-plan <data_dir> <output_dir> [--seed SEED]")
         sys.exit(1)
 
@@ -77,6 +97,21 @@ def main() -> None:
             sys.exit(1)
         data_dir = Path(sys.argv[2])
         sys.exit(validate_data(data_dir))
+
+    elif command == "validate-recipe":
+        if len(sys.argv) < 3:
+            print("Usage: mealplanner validate-recipe <recipe_file> [--data-dir DATA_DIR]")
+            sys.exit(1)
+
+        recipe_file = Path(sys.argv[2])
+        data_dir = None
+
+        if "--data-dir" in sys.argv:
+            idx = sys.argv.index("--data-dir")
+            if idx + 1 < len(sys.argv):
+                data_dir = Path(sys.argv[idx + 1])
+
+        sys.exit(validate_recipe(recipe_file, data_dir))
 
     elif command == "generate-plan":
         if len(sys.argv) < 4:

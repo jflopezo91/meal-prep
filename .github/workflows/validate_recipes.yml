@@ -1,0 +1,63 @@
+name: Validate Recipes
+
+on:
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: "Optional PR number to validate"
+        required: false
+        default: ""
+        type: string
+      recipe_file:
+        description: "Optional single recipe path to validate (for example data/recipes/pollo_asiatico.yml)"
+        required: false
+        default: ""
+        type: string
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out requested ref
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ inputs.pr_number != '' && format('refs/pull/{0}/head', inputs.pr_number) || github.ref }}
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.10"
+
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        cd planner
+        pip install -e .[dev]
+
+    - name: Validate recipe data set
+      run: mealplanner validate-data data
+
+    - name: Validate single recipe when requested
+      if: ${{ inputs.recipe_file != '' }}
+      run: mealplanner validate-recipe "${{ inputs.recipe_file }}"
+
+    - name: Run validator tests
+      run: |
+        cd planner
+        pytest
+
+    - name: Summary
+      run: |
+        echo "### Recipe validation completed" >> "$GITHUB_STEP_SUMMARY"
+        echo "" >> "$GITHUB_STEP_SUMMARY"
+        if [ -n "${{ inputs.pr_number }}" ]; then
+          echo "- PR: #${{ inputs.pr_number }}" >> "$GITHUB_STEP_SUMMARY"
+        else
+          echo "- PR: current ref" >> "$GITHUB_STEP_SUMMARY"
+        fi
+        if [ -n "${{ inputs.recipe_file }}" ]; then
+          echo "- Single recipe: \`${{ inputs.recipe_file }}\`" >> "$GITHUB_STEP_SUMMARY"
+        else
+          echo "- Single recipe: not requested" >> "$GITHUB_STEP_SUMMARY"
+        fi

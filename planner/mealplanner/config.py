@@ -3,7 +3,7 @@
 from enum import Enum
 from typing import Literal, Optional
 
-from pydantic import BaseModel, Field, field_validator, RootModel
+from pydantic import BaseModel, Field, RootModel, field_validator, model_validator
 
 
 # ============================================================================
@@ -92,6 +92,27 @@ class RecipeIngredient(BaseModel):
     notes: Optional[str] = None
     optional: bool = False
 
+    @field_validator("role")
+    @classmethod
+    def validate_role(cls, v: str) -> str:
+        """Validate ingredient role against the supported contributor vocabulary."""
+        allowed_roles = {
+            "protein",
+            "protein_extra",
+            "veg",
+            "fat",
+            "condiment",
+            "garnish",
+            "herb",
+            "spice",
+            "dairy",
+            "other",
+        }
+        if v not in allowed_roles:
+            allowed = ", ".join(sorted(allowed_roles))
+            raise ValueError(f"role must be one of: {allowed}")
+        return v
+
     @field_validator("qty")
     @classmethod
     def validate_portion_sentinel(cls, v: Optional[str]) -> Optional[str]:
@@ -99,6 +120,17 @@ class RecipeIngredient(BaseModel):
         if v is not None and v != "@portion":
             raise ValueError("qty field must be '@portion' or None")
         return v
+
+    @model_validator(mode="after")
+    def validate_exactly_one_quantity_field(self) -> "RecipeIngredient":
+        """Require a single quantity source for each ingredient line."""
+        quantity_fields = [self.qty, self.qty_g, self.qty_ml, self.qty_units]
+        quantity_count = sum(value is not None for value in quantity_fields)
+        if quantity_count != 1:
+            raise ValueError(
+                "ingredient must define exactly one of qty, qty_g, qty_ml, or qty_units"
+            )
+        return self
 
 
 class RecipeTags(BaseModel):
