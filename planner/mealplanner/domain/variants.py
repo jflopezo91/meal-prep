@@ -122,8 +122,9 @@ def materialize_variant(
     The single place that decides how a variant becomes slot content; generation output
     (plan_output.py) and manual swaps (swap.py) both use it.
     """
-    pt = variant.recipe.tags.primary_protein
-    protein_qty = getattr(rules.protein_portions_g[pt], meal, 0)
+    pt = variant.recipe.tags.protein_group
+    protein_item = next(ing.item for ing in variant.recipe.ingredients if ing.qty == "@portion")
+    protein_qty = rules.protein_portion(pt, protein_item, meal)
 
     carb: Optional[str] = None
     carb_qty: Optional[float] = None
