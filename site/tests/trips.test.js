@@ -8,7 +8,7 @@ import { createStaticReader } from '../src/readers/static.js';
 import { deriveCoverage, validateTrip } from '../src/readers/shared.js';
 import { createPlanEditor } from '../src/editing/planEditor.js';
 import { runTripAction } from '../src/editing/tripActions.js';
-import { GROUP_LABEL, countChecked, coverageSummary, createTripBody, addWeekBody, groupItems, groupItemsByShelfLife, removeWeekPath, swapImpactEntries, freeGroups, addPlan, addedMessage, weekRemoval, addableWeeks, weekGroupsLabel, weekSelectable, itemCheckKey, readTripChecks, sortTrips, tripStorageKey, writeTripChecks, cellKey, cellOf, cellAt, tripCells, toBuyCells, boughtCells, tripChanged, nothingToBuy, cellsSummary, totalsForCells, selectionStorageKey, readUnselected, writeUnselected, selectedCells, toggleUnselected, purchaseBody } from '../src/tripModel.js';
+import { GROUP_LABEL, countChecked, coverageSummary, createTripBody, addWeekBody, groupItems, groupItemsByShelfLife, removeWeekPath, swapImpactEntries, freeGroups, addPlan, addedMessage, weekRemoval, addableWeeks, weekGroupsLabel, weekSelectable, itemCheckKey, readTripChecks, sortTrips, tripStorageKey, writeTripChecks, cellKey, cellOf, cellAt, tripCells, toBuyCells, boughtCells, tripChanged, nothingToBuy, cellsSummary, totalsForCells, selectionStorageKey, readUnselected, writeUnselected, selectedCells, toggleUnselected, purchaseBody, ingredientUses, groupUsesByWeek } from '../src/tripModel.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const examples = path.resolve(here, '../../docs/migration-to-cloud/examples');
@@ -599,4 +599,31 @@ test('Shop now: a group header ticks or unticks all of that group, and the summa
   assert.deepEqual(toggleGroupUnselected(['x'], pending, 'long_lasting').sort(), ['p1|long_lasting', 'p2|long_lasting', 'x']);
   assert.deepEqual(buyingSummary(pending.slice(0, 3)), [{ group: 'long_lasting', weeks: 2 }, { group: 'fresh', weeks: 1 }]);
   assert.deepEqual(buyingSummary([]), []);
+});
+
+test('ingredientUses filters by ticked cells, sums per slot, sorts by date then meal and matches quantity_by_plan', () => {
+  const ing = (id, quantity, unit = 'g') => ({ ingredient_id: id, display: id, quantity, unit, role: 'protein' });
+  const slot = (date, day, meal, recipe_name, ingredients) => ({ date, day, meal, recipe_name, ingredients });
+  const plans = [
+    { plan_id: 'p2', week_start: '2026-11-02', week_end: '2026-11-08', slots: [slot('2026-11-02', 'mon', 'dinner', 'C', [ing('sal', 40)])] },
+    { plan_id: 'p1', week_start: '2026-10-26', week_end: '2026-11-01', slots: [
+      slot('2026-10-30', 'fri', 'dinner', 'B', [ing('sal', 50), ing('rice', 100)]),
+      slot('2026-10-30', 'fri', 'lunch', 'A', [ing('sal', 100), ing('sal', 30), ing('sal', 2, 'units')]),
+      slot('2026-10-29', 'thu', 'lunch', 'D', [ing('rice', 10)]),
+    ] },
+  ];
+  const all = [cellKey('p1', 'fresh'), cellKey('p2', 'fresh')];
+  const uses = ingredientUses(plans, 'sal', 'fresh', new Set(all), 'g');
+  assert.deepEqual(uses.map(u => [u.date, u.meal, u.recipe_name, u.quantity]), [['2026-10-30', 'lunch', 'A', 130], ['2026-10-30', 'dinner', 'B', 50], ['2026-11-02', 'dinner', 'C', 40]]);
+  assert.equal(uses.reduce((sum, u) => sum + u.quantity, 0), 220);
+  // Same total as totalsForCells for the same cells.
+  const item = { ingredient_id: 'sal', unit: 'g', shelf_life: 'fresh', quantity_by_plan: { p1: 180, p2: 40 } };
+  assert.equal(totalsForCells([item], all)[0].quantity, 220);
+  // Only ticked cells count; the other shelf life does not match.
+  assert.deepEqual(ingredientUses(plans, 'sal', 'fresh', [cellKey('p2', 'fresh')], 'g').map(u => u.recipe_name), ['C']);
+  assert.deepEqual(ingredientUses(plans, 'sal', 'long_lasting', all, 'g'), []);
+  assert.deepEqual(ingredientUses(plans, 'nope', 'fresh', all), []);
+  assert.equal(ingredientUses(plans, 'sal', 'fresh', all, 'units').length, 1);
+  const weeks = groupUsesByWeek(uses);
+  assert.deepEqual(weeks.map(w => [w.plan_id, w.uses.length]), [['p1', 2], ['p2', 1]]);
 });
