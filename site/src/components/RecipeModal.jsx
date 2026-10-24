@@ -5,6 +5,8 @@ export function RecipeModal({ slot, onClose, onSwap = null }) {
     if (!slot) return null;
 
     const { recipeName, protein, carb, meal, day, proteinQty, proteinUnit, carbQty, carbUnit, ingredients } = slot;
+    // Name what is bought (e.g. Salchicha); the protein type (pork) is how the weekly rules count it.
+    const proteinName = ingredients.find(ing => ing.role === 'protein')?.display ?? protein;
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
@@ -34,7 +36,8 @@ export function RecipeModal({ slot, onClose, onSwap = null }) {
                             </div>
                             <div className="flex-1">
                                 <span className="block text-xs text-gray-500 dark:text-slate-400 uppercase">Protein</span>
-                                <span className="font-medium capitalize text-slate-900 dark:text-white">{protein}</span>
+                                <span className="font-medium text-slate-900 dark:text-white">{proteinName}</span>
+                                {proteinName.toLowerCase() !== protein && <span className="block text-xs text-gray-500 dark:text-slate-400 capitalize">{protein}</span>}
                             </div>
                             <span className="font-mono font-bold text-lg text-slate-900 dark:text-white">{proteinQty} {proteinUnit}</span>
                         </div>

@@ -80,6 +80,7 @@ function CardMenu({ label, actions }) {
 
 export function MealCard({ slot, onClick, highlighted = false, onSwap = null }) {
     const { recipeName, protein, carb, meal, proteinQty, proteinUnit, carbQty, carbUnit } = slot;
+    const proteinName = slot.ingredients?.find(ing => ing.role === 'protein')?.display ?? 'Protein';
 
     const colorClass = PROTEIN_COLORS[protein] || PROTEIN_COLORS.default;
     const Icon = PROTEIN_ICONS[protein] || PROTEIN_ICONS.default;
@@ -115,7 +116,7 @@ export function MealCard({ slot, onClick, highlighted = false, onSwap = null }) 
 
             <div className="mt-auto pt-2 text-xs space-y-1">
                 <div className="flex items-center justify-between">
-                    <span className="opacity-70">Protein:</span>
+                    <span className="opacity-70 truncate">{proteinName}:</span>
                     <span className="font-mono font-bold">{proteinQty} {proteinUnit}</span>
                 </div>
                 {carb !== 'none' && carbQty !== null && carbQty !== undefined && (

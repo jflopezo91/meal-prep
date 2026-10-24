@@ -61,10 +61,11 @@ function GroupName({ group, hint = false, className }) {
   );
 }
 
-// Weeks x Long-lasting/Fresh. Normally shows To buy / Bought (a bought cell asks to undo in editing mode).
+// Weeks x Long-lasting/Fresh. Normally shows To buy / Bought (a bought cell asks to undo in editing mode);
+// after a partial Shop now choice, to-buy cells read Buying now or Later.
 // While shopping (`picking`), each to-buy cell is a tick box: Buying now, or Later. Column headers tick a whole group.
-function CoverageGrid({ trip, onOpenWeek, onUndo, undoKey, picking }) {
-  const off = new Set(picking?.unselected ?? []);
+function CoverageGrid({ trip, onOpenWeek, onUndo, undoKey, picking, unselected = [], partial = false }) {
+  const off = new Set(picking?.unselected ?? unselected);
   return (
     <table className="w-full text-sm border-separate border-spacing-x-1 border-spacing-y-1 -mx-1" aria-label="Weeks covered by this list" data-testid="coverage-grid">
       <thead>
@@ -105,9 +106,14 @@ function CoverageGrid({ trip, onOpenWeek, onUndo, undoKey, picking }) {
                   </td>
                 );
               }
-              const tone = bought ? 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400' : cn('border', style.soft);
-              const body = <><span className="font-medium">{bought ? '✓ Bought' : 'To buy'}</span>{changed}</>;
-              const label = `${where}: ${bought ? 'bought' : 'to buy'}${cell.changed_since_shopping ? ', changed since shopping' : ''}`;
+              // Outside Shop now, a partial selection shows which to-buy cells are for this trip and which wait.
+              const later = !bought && partial && off.has(key);
+              const status = bought ? '✓ Bought' : later ? 'Later' : partial ? 'Buying now' : 'To buy';
+              const tone = bought ? 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
+                : later ? 'border-2 border-dashed border-slate-300 dark:border-slate-600 text-slate-500 dark:text-slate-400'
+                : cn('border', style.soft, partial && 'border-2 font-semibold');
+              const body = <><span className="font-medium">{status}</span>{changed}</>;
+              const label = `${where}: ${status.replace('✓ ', '').toLowerCase()}${cell.changed_since_shopping ? ', changed since shopping' : ''}`;
               return (
                 <td key={group} className="align-middle" data-state={cell.state}>
                   {bought && onUndo && !picking
@@ -204,9 +210,9 @@ function TripDetail({ trip, mode, exportedAt, onBack, onOpenWeek, renderControls
             {editable ? <li>Back home, tap <span className="font-medium">Mark as bought</span>. Those weeks move to Already bought.</li> : <li>Back home, mark it as bought in the home app.</li>}
           </ol>
         )}
-        <CoverageGrid trip={trip} onOpenWeek={onOpenWeek} onUndo={editable ? setUndoCell : undefined} undoKey={undoCell?.key}
+        <CoverageGrid trip={trip} onOpenWeek={onOpenWeek} onUndo={editable ? setUndoCell : undefined} undoKey={undoCell?.key} unselected={unselected} partial={partial}
           picking={shopOpen ? { pending, unselected, onToggle: key => saveUnselected(toggleUnselected(unselected, key)), onGroup: group => saveUnselected(toggleGroupUnselected(unselected, pending, group)) } : null} />
-        {shopOpen && (
+        {(shopOpen || partial) && pending.length > 0 && (
           <p className="text-sm text-slate-800 dark:text-slate-100" aria-live="polite" data-testid="buying-summary">
             {chosen.length === 0 ? 'Nothing ticked yet.' : <>Buying now: {buyingSummary(chosen).map((entry, index) => <span key={entry.group}>{index > 0 && ' · '}<GroupName group={entry.group} className="inline" /> {entry.weeks} {entry.weeks === 1 ? 'week' : 'weeks'}</span>)} · {shownItems.length} items</>}
           </p>
@@ -224,7 +230,7 @@ function TripDetail({ trip, mode, exportedAt, onBack, onOpenWeek, renderControls
       ) : (
         <>
           <div className="flex items-center justify-between sticky top-16 z-20 bg-slate-50/95 dark:bg-slate-950/95 backdrop-blur py-2" data-testid="trip-progress">
-            <p className="text-sm text-slate-600 dark:text-slate-300">To buy. Checkmarks stay on this device.</p>
+            <p className="text-sm text-slate-600 dark:text-slate-300">{partial ? 'Buying now' : 'Everything to buy'}. Checkmarks stay on this device.</p>
             <span className="text-sm font-semibold px-3 py-1 rounded-full bg-slate-900 text-white dark:bg-slate-700" aria-live="polite">{checked} of {shownItems.length}</span>
           </div>
           {partial && <p className="text-sm text-slate-600 dark:text-slate-300" data-testid="partial-note">Showing only what you ticked in Shop now ({chosen.length} of {pending.length}). Open Shop now to change it.</p>}
