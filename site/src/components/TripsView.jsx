@@ -2,7 +2,7 @@ import { Suspense, useEffect, useState } from 'react';
 import { ArrowLeft, Check, Leaf, Package, Plus, ShoppingCart } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { formatWeekRange } from '../dates.js';
-import { cellKey, cellOf, countChecked, formatQuantity, groupItemsByShelfLife, groupLabel, itemCheckKey, readTripChecks, readUnselected, buyingSummary, selectedCells, toggleGroupUnselected, selectionStorageKey, sortTrips, toBuyCells, toggleUnselected, totalsForCells, tripChanged, tripStorageKey, writeTripChecks, writeUnselected } from '../tripModel.js';
+import { cellKey, cellOf, countChecked, formatQuantity, groupItemsByShelfLife, groupLabel, groupUsesByWeek, ingredientUses, itemCheckKey, readTripChecks, readUnselected, buyingSummary, selectedCells, toggleGroupUnselected, selectionStorageKey, sortTrips, toBuyCells, toggleUnselected, totalsForCells, tripChanged, tripStorageKey, writeTripChecks, writeUnselected } from '../tripModel.js';
 
 const card = 'bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800';
 const shortDate = value => new Intl.DateTimeFormat(undefined, { timeZone: 'UTC', month: 'short', day: 'numeric' }).format(new Date(`${value}T00:00:00Z`));
@@ -130,7 +130,32 @@ function CoverageGrid({ trip, onOpenWeek, onUndo, undoKey, picking, unselected =
   );
 }
 
-function ItemGroups({ groups, checks, onToggle }) {
+const cap = text => text.charAt(0).toUpperCase() + text.slice(1);
+const usedIn = count => `Used in ${count} ${count === 1 ? 'meal' : 'meals'}`;
+
+// Week-grouped meals that use an item, with the quantity each one takes.
+function UsesList({ uses }) {
+  return (
+    <div className="pl-[3.75rem] pr-4 pb-3 space-y-2 text-sm text-slate-600 dark:text-slate-300" data-testid="item-uses">
+      {groupUsesByWeek(uses).map(week => (
+        <div key={week.plan_id}>
+          <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">{compactRange(week.week_start, week.week_end)}</p>
+          <ul>
+            {week.uses.map(use => (
+              <li key={`${use.date}|${use.meal}`} className="flex items-baseline justify-between gap-3 py-0.5">
+                <span className="min-w-0 break-words">{cap(use.day)} · {cap(use.meal)} · {use.recipe_name}</span>
+                <span className="font-mono text-xs shrink-0">{formatQuantity(use.quantity, use.unit)}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ItemGroups({ groups, checks, onToggle, usesFor }) {
+  const [openKey, setOpenKey] = useState(null);
   return groups.map(shelfGroup => (
     <div key={shelfGroup.group} role="group" aria-label={shelfGroup.label} data-group={shelfGroup.group} className="space-y-3">
       <h3 className="flex items-baseline justify-between gap-2 px-1 pt-2 text-lg font-bold text-slate-900 dark:text-white"><GroupName group={shelfGroup.group} className="text-lg" />{onToggle && <span className="text-sm font-mono font-semibold text-slate-500 dark:text-slate-400">{shelfGroup.checked}/{shelfGroup.total}</span>}</h3>
@@ -148,14 +173,22 @@ function ItemGroups({ groups, checks, onToggle }) {
                   </li>
                 );
               }
+              const uses = usesFor?.(item) ?? [];
+              const itemKey = itemCheckKey(item);
+              const open = openKey === itemKey;
               return (
-                <li key={itemCheckKey(item)}>
+                <li key={itemKey} className={cn(on && 'opacity-50 bg-slate-50 dark:bg-slate-900/60')}>
                   <button type="button" role="checkbox" aria-checked={on} onClick={() => onToggle(item)}
-                    className={cn('w-full min-h-14 px-4 py-3 flex items-center gap-4 text-left select-none transition-opacity', on && 'opacity-50 bg-slate-50 dark:bg-slate-900/60')}>
+                    className="w-full min-h-14 px-4 py-3 flex items-center gap-4 text-left select-none">
                     <span className={cn('w-7 h-7 rounded-md border-2 flex items-center justify-center shrink-0', on ? 'bg-green-500 border-green-500 text-white' : 'border-slate-300 dark:border-slate-600')}>{on && <Check size={18} strokeWidth={3} />}</span>
                     <span className="flex-1 min-w-0"><span className={cn('block text-base font-medium text-slate-900 dark:text-slate-100', on && 'line-through')}>{item.display}</span></span>
                     <span className="font-mono text-sm text-slate-700 dark:text-slate-200 shrink-0">{formatQuantity(item.quantity, item.unit)}</span>
                   </button>
+                  {uses.length > 0 && (
+                    <button type="button" aria-expanded={open} aria-label={usedIn(uses.length)} onClick={() => setOpenKey(open ? null : itemKey)}
+                      className="block min-h-8 -mt-3 pb-1 pl-[3.75rem] pr-4 text-left text-xs text-indigo-700 dark:text-indigo-300 hover:underline">{uses.length} {uses.length === 1 ? 'meal' : 'meals'}{open ? ' ▴' : ' ▾'}</button>
+                  )}
+                  {open && uses.length > 0 && <UsesList uses={uses} />}
                 </li>
               );
             })}
@@ -166,7 +199,7 @@ function ItemGroups({ groups, checks, onToggle }) {
   ));
 }
 
-function TripDetail({ trip, mode, exportedAt, onBack, onOpenWeek, renderControls, editable }) {
+function TripDetail({ trip, reader, mode, exportedAt, onBack, onOpenWeek, renderControls, editable }) {
   const storageKey = tripStorageKey(mode, trip);
   const cellsKey = selectionStorageKey(mode, trip);
   const [state, setState] = useState(() => ({ key: storageKey, values: readTripChecks(storageKey) }));
@@ -182,9 +215,23 @@ function TripDetail({ trip, mode, exportedAt, onBack, onOpenWeek, renderControls
   const toggle = item => update(current => { const next = { ...current }; const key = itemCheckKey(item); if (next[key]) delete next[key]; else next[key] = true; return next; });
   const saveUnselected = next => { setUnselected(next); writeUnselected(cellsKey, next); };
 
+  // The week plans give each item's per-meal uses. Until they load (or if they fail) the list simply has no usage link.
+  const [planState, setPlanState] = useState({ key: null, plans: null });
+  const plansKey = `${trip.trip_id}:${trip.version}`;
+  useEffect(() => {
+    let live = true;
+    Promise.all(trip.weeks.map(week => reader.getPlan(week.plan_id)))
+      .then(plans => { if (live) setPlanState({ key: plansKey, plans }); })
+      .catch(() => { if (live) setPlanState({ key: plansKey, plans: null }); });
+    return () => { live = false; };
+  }, [reader, trip, plansKey]);
+  const plans = planState.key === plansKey ? planState.plans : null;
+
   const pending = toBuyCells(trip);
   const chosen = selectedCells(trip, unselected);
-  const shownItems = totalsForCells(trip.items, chosen.map(cell => cell.key));
+  const chosenKeys = new Set(chosen.map(cell => cell.key));
+  const shownItems = totalsForCells(trip.items, chosenKeys);
+  const usesFor = plans ? item => ingredientUses(plans, item.ingredient_id, item.shelf_life, chosenKeys, item.unit) : undefined;
   const checked = countChecked(shownItems, checks);
   const shelfGroups = groupItemsByShelfLife(shownItems, checks);
   const boughtGroups = groupItemsByShelfLife(trip.bought_items ?? []);
@@ -235,7 +282,7 @@ function TripDetail({ trip, mode, exportedAt, onBack, onOpenWeek, renderControls
           </div>
           {partial && <p className="text-sm text-slate-600 dark:text-slate-300" data-testid="partial-note">Showing only what you ticked in Shop now ({chosen.length} of {pending.length}). Open Shop now to change it.</p>}
           {chosen.length === 0 && <p role="status" className="text-sm text-slate-600 dark:text-slate-300">Nothing is ticked. Open Shop now and tick what you are buying.</p>}
-          <ItemGroups groups={shelfGroups} checks={checks} onToggle={toggle} />
+          <ItemGroups groups={shelfGroups} checks={checks} onToggle={toggle} usesFor={usesFor} />
         </>
       )}
 
@@ -296,5 +343,5 @@ export function TripsView({ reader, tripId, onSelect, nonce, canEdit, TripContro
       <TripControls key={trip.trip_id} trip={trip} reader={reader} {...extra} onTrip={next => { replaceTrip(next); onChanged?.(); }} onDeleted={() => removeTrip(trip.trip_id)} />
     </Suspense>
   ) : null);
-  return <div data-testid="trip-detail"><TripDetail key={`${trip.trip_id}:${trip.version}`} trip={trip} mode={reader.mode} exportedAt={reader.context?.exported_at} onBack={() => onSelect(null)} onOpenWeek={onOpenWeek} renderControls={renderControls} editable={editable} /></div>;
+  return <div data-testid="trip-detail"><TripDetail key={`${trip.trip_id}:${trip.version}`} trip={trip} reader={reader} mode={reader.mode} exportedAt={reader.context?.exported_at} onBack={() => onSelect(null)} onOpenWeek={onOpenWeek} renderControls={renderControls} editable={editable} /></div>;
 }

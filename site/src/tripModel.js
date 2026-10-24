@@ -230,3 +230,39 @@ export function purchaseBody(expectedVersion, cells) {
   if (!Array.isArray(cells) || !cells.length) throw new Error('Choose at least one week and group.');
   return { expected_version: expectedVersion, cells: cells.map(cell => ({ plan_id: cell.plan_id, group: cell.group })) };
 }
+
+// ---- Where an item is used (per-meal breakdown of a to-buy line) ----
+const MEAL_ORDER = { lunch: 0, dinner: 1 };
+
+// One row per plan slot that uses the ingredient, only for plans whose (plan, shelfLife) cell is in `selectedKeys` (Set or array),
+// so the rows add up to the quantity shown. Several lines of one slot are summed. `unit` (optional) keeps the same-ingredient-other-unit lines apart.
+// Sorted by date, lunch before dinner.
+export function ingredientUses(plans, ingredientId, shelfLife, selectedKeys, unit) {
+  const keys = selectedKeys instanceof Set ? selectedKeys : new Set(selectedKeys ?? []);
+  const rows = [];
+  for (const plan of plans ?? []) {
+    if (!keys.has(cellKey(plan.plan_id, shelfLife))) continue;
+    for (const slot of plan.slots ?? []) {
+      let quantity = 0;
+      let rowUnit;
+      for (const ingredient of slot.ingredients ?? []) {
+        if (ingredient.ingredient_id !== ingredientId || (unit !== undefined && ingredient.unit !== unit)) continue;
+        quantity += ingredient.quantity;
+        rowUnit ??= ingredient.unit;
+      }
+      if (rowUnit === undefined) continue;
+      rows.push({ plan_id: plan.plan_id, week_start: plan.week_start, week_end: plan.week_end, date: slot.date, day: slot.day, meal: slot.meal, recipe_name: slot.recipe_name, quantity: Math.round(quantity * 1e6) / 1e6, unit: rowUnit });
+    }
+  }
+  return rows.sort((a, b) => a.date.localeCompare(b.date) || (MEAL_ORDER[a.meal] ?? 9) - (MEAL_ORDER[b.meal] ?? 9));
+}
+
+// Rows from ingredientUses grouped by week, in order: [{ plan_id, week_start, week_end, uses }].
+export function groupUsesByWeek(uses) {
+  const weeks = new Map();
+  for (const use of uses) {
+    if (!weeks.has(use.plan_id)) weeks.set(use.plan_id, { plan_id: use.plan_id, week_start: use.week_start, week_end: use.week_end, uses: [] });
+    weeks.get(use.plan_id).uses.push(use);
+  }
+  return [...weeks.values()].sort((a, b) => a.week_start.localeCompare(b.week_start));
+}
