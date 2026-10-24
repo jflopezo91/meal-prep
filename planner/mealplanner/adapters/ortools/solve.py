@@ -10,22 +10,29 @@ from ...application.errors import NoFeasiblePlan
 
 
 def add_weekly_protein_constraints(model: PlannerModel, rules: Rules) -> None:
-    """Implement constraint 1: Weekly protein counts."""
-    # Sum of all slots for each protein type must equal the configured count
+    """Implement constraint 1: Weekly protein counts per planned meal."""
+    # Sum of a meal's slots for each protein type must equal that meal's configured count
     
-    for protein_type, count in rules.constraints.weekly_protein_counts.items():
-        relevant_vars = []
-        
-        for slot in model.slots:
-            slot_vars = model.vars[slot.id]
-            for variant in model.variants:
-                if variant.variant_id in slot_vars:
-                    # check if this variant uses this protein
-                    if variant.recipe.tags.protein_group == protein_type:
-                        relevant_vars.append(slot_vars[variant.variant_id])
-                        
-        if relevant_vars:
-            model.model.Add(sum(relevant_vars) == count)
+    for meal in rules.week.meals:
+        for protein_type, count in rules.constraints.weekly_protein_counts[meal].items():
+            _add_protein_count(model, meal, protein_type, count)
+
+
+def _add_protein_count(model: PlannerModel, meal: MealType, protein_type: ProteinType, count: int) -> None:
+    relevant_vars = []
+    
+    for slot in model.slots:
+        if slot.meal != meal:
+            continue
+        slot_vars = model.vars[slot.id]
+        for variant in model.variants:
+            if variant.variant_id in slot_vars:
+                # check if this variant uses this protein
+                if variant.recipe.tags.protein_group == protein_type:
+                    relevant_vars.append(slot_vars[variant.variant_id])
+                    
+    if relevant_vars:
+        model.model.Add(sum(relevant_vars) == count)
 
 
 def add_consecutive_protein_constraints(model: PlannerModel, rules: Rules) -> None:
@@ -67,8 +74,10 @@ def add_consecutive_protein_constraints(model: PlannerModel, rules: Rules) -> No
 
 
 def add_fish_dinner_constraints(model: PlannerModel, rules: Rules) -> None:
-    """Implement constraints 3 & 4: Fish dinner limits."""
-    
+    """Implement constraint 4: Max consecutive fish dinners (none when dinner is not planned)."""
+    if MealType.DINNER not in rules.week.meals:
+        return
+
     # Collect all fish dinner variables by day
     fish_vars_by_day = []
     
@@ -85,10 +94,7 @@ def add_fish_dinner_constraints(model: PlannerModel, rules: Rules) -> None:
         
         fish_vars_by_day.append(sum(day_fish_vars))
         
-    # Constraint 3: Max total fish dinners
-    model.model.Add(sum(fish_vars_by_day) <= rules.constraints.fish_dinner_max_per_week)
-    
-    # Constraint 4: Max consecutive fish dinners (sliding window).
+    # Max consecutive fish dinners (sliding window).
     # A run longer than N is forbidden, i.e. any N+1 consecutive days hold at most N fish dinners.
     max_run = rules.constraints.fish_dinner_max_consecutive
     window_size = max_run + 1
@@ -245,6 +251,9 @@ def add_extend_to_dinner_constraints(model: PlannerModel, rules: Rules) -> None:
     the same base recipe must also be assigned for dinner on day X,
     and vice versa (they always appear as a pair or not at all).
     """
+    if MealType.DINNER not in rules.week.meals:
+        return
+
     # Identify extendable base recipe IDs
     extendable_ids = {
         v.base_recipe_id for v in model.variants

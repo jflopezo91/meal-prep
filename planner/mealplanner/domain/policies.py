@@ -12,15 +12,18 @@ from .catalog import (
 
 
 def validate_weekly_protein_counts(rules: Rules) -> None:
-    """Require configured weekly protein counts to fill all meal slots."""
-    total_meals = len(rules.week.days) * len(rules.week.meals)
-    protein_sum = sum(rules.constraints.weekly_protein_counts.values())
-    if protein_sum != total_meals:
-        raise ValueError(
-            f"Protein counts sum to {protein_sum} but should equal "
-            f"{total_meals} ({len(rules.week.days)} days × "
-            f"{len(rules.week.meals)} meals)"
-        )
+    """Require each planned meal's protein counts to fill that meal on every day."""
+    days = len(rules.week.days)
+    for meal in rules.week.meals:
+        counts = rules.constraints.weekly_protein_counts.get(meal)
+        if counts is None:
+            raise ValueError(f"No weekly protein counts for {meal.value}")
+        protein_sum = sum(counts.values())
+        if protein_sum != days:
+            raise ValueError(
+                f"{meal.value.capitalize()} protein counts sum to {protein_sum} "
+                f"but should equal {days} (one per day)"
+            )
 
 
 def validate_recipe(
@@ -100,6 +103,9 @@ def planner_input_errors(
     for ingredient_id in pantry:
         if ingredient_id not in ingredients:
             errors.append(f"Pantry references unknown ingredient: {ingredient_id}")
+    for ingredient_id in rules.protein_portion_overrides_g:
+        if ingredient_id not in ingredients:
+            errors.append(f"Protein portion override references unknown ingredient: {ingredient_id}")
 
     for recipe_id, recipe in recipes.items():
         try:

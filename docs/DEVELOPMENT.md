@@ -90,6 +90,7 @@ curl -s -X POST -H 'Content-Type: application/json' -d '{"months":["2026-10"]}' 
 |---|---|---|
 | `MEALPLANNER_DB` | unset (read-only JSON) | SQLite file |
 | `MEALPLANNER_TIMEZONE` | `America/Bogota` | Week dates and "today" |
+| `MEALPLANNER_DINNER_ENABLED` | 1 (the Compose files set `0`) | `0` plans lunch only. Dinner settings in `rules.yml` stay but are unused, so `1` brings dinner back without an import. Weeks generated under the other setting fail `slot_coverage`: regenerate them |
 | `MEALPLANNER_SOLVER_TIMEOUT_SECONDS` | 30 | Solver limit per week |
 | `MEALPLANNER_MAX_CONCURRENT_GENERATIONS` | 1 | Extra requests get `503 generation_busy` |
 | `MEALPLANNER_STATIC_DIR` | set by the image | Serve the built frontend |

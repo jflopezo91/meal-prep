@@ -17,6 +17,7 @@ services:
     restart: unless-stopped
     environment:
       MEALPLANNER_TIMEZONE: America/Bogota
+      MEALPLANNER_DINNER_ENABLED: "0"  # lunch only for now; "1" plans dinner again
       MEALPLANNER_PUBLISH_REPO: git@github.com:jflopezo91/meal-plan.git
     ports:
       # Household login exists (phase 6c), but its Secure session cookie needs HTTPS beyond localhost:

@@ -1,9 +1,9 @@
 """Explicit, validated inputs consumed by planner generation services."""
 
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
-from .catalog import Ingredient, Recipe, Rules
+from .catalog import Ingredient, MealType, Recipe, Rules
 from .policies import planner_input_errors, validate_weekly_protein_counts
 
 
@@ -35,6 +35,10 @@ class PlannerInputs:
             raise ValueError(
                 "Invalid planner inputs:\n" + "\n".join(f"- {error}" for error in errors)
             )
+
+    def without_meal(self, meal: MealType) -> "PlannerInputs":
+        """The same inputs with `meal` no longer planned (revalidated for the remaining meals)."""
+        return replace(self, rules=self.rules.without_meal(meal))
 
     def shelf_lives(self) -> dict[str, str]:
         """ingredient_id -> shelf life value ("long_lasting" | "fresh")."""

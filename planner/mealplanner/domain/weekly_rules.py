@@ -17,13 +17,13 @@ Rule code -> solver constraint:
                               slot.meal is in recipe.meal_types
     variant_consistent        model.py/variants.py: variables are the expanded
                               variants (variant_id, base recipe, protein, carb)
-    weekly_protein_count      solve.py add_weekly_protein_constraints (exact counts)
+    weekly_protein_count      solve.py add_weekly_protein_constraints (exact counts
+                              per planned meal)
     consecutive_same_protein  solve.py add_consecutive_protein_constraints
                               (per meal, adjacent days, when the flag is set)
-    fish_dinner_weekly_max    solve.py add_fish_dinner_constraints (constraint 3)
     fish_dinner_consecutive_max
-                              solve.py add_fish_dinner_constraints (constraint 4:
-                              no run of fish dinners longer than the max)
+                              solve.py add_fish_dinner_constraints (no run of
+                              fish dinners longer than the max)
     meal_carbs_forbidden      solve.py add_meal_carb_rules (meal_rules.allow_carbs false)
     lunch_carb_required       solve.py add_lunch_carb_required (hard-coded to lunch)
     consecutive_lunch_same_carb
@@ -43,7 +43,9 @@ Rule code -> solver constraint:
 
 Everything solve.py enforces is expressible from the snapshot, because each
 assignment carries recipe_id, variant_id, protein and carb. Day adjacency means
-neighbouring entries of rules.week.days (the week is not circular).
+neighbouring entries of rules.week.days (the week is not circular). Only the
+meals in rules.week.meals are planned; with dinner left out, the dinner rules
+find no dinner slots and the solver adds no dinner constraints.
 """
 
 from __future__ import annotations
@@ -246,18 +248,24 @@ class VariantConsistent:
 
 
 class WeeklyProteinCount:
-    """Each configured protein is used exactly its weekly count."""
+    """At each planned meal, each configured protein is used exactly its weekly count."""
 
     code = "weekly_protein_count"
 
     def check(self, plan: PlanView, context: RuleContext) -> list[RuleViolation]:
         out = []
-        for protein, count in context.rules.constraints.weekly_protein_counts.items():
-            used = [a for a in plan.assignments if a.protein == protein.value]
-            if len(used) != count:
-                out.append(
-                    _violation(self.code, f"{protein.value} is used {len(used)} times, expected exactly {count}", used)
-                )
+        for meal in context.rules.week.meals:
+            served = plan.meal(meal)
+            for protein, count in context.rules.constraints.weekly_protein_counts[meal].items():
+                used = [a for a in served if a.protein == protein.value]
+                if len(used) != count:
+                    out.append(
+                        _violation(
+                            self.code,
+                            f"{protein.value} is used {len(used)} times at {meal.value}, expected exactly {count}",
+                            used,
+                        )
+                    )
         return out
 
 
@@ -286,19 +294,6 @@ def _fish_dinners(plan: PlanView, context: RuleContext) -> dict[str, Assignment]
         for a in plan.meal(MealType.DINNER)
         if a.protein == ProteinType.FISH.value and a.day in context.days
     }
-
-
-class FishDinnerWeeklyMax:
-    """At most fish_dinner_max_per_week dinners are fish."""
-
-    code = "fish_dinner_weekly_max"
-
-    def check(self, plan: PlanView, context: RuleContext) -> list[RuleViolation]:
-        fish = list(_fish_dinners(plan, context).values())
-        limit = context.rules.constraints.fish_dinner_max_per_week
-        if len(fish) > limit:
-            return [_violation(self.code, f"{len(fish)} fish dinners, at most {limit} allowed", fish)]
-        return []
 
 
 class FishDinnerConsecutiveMax:
@@ -477,7 +472,6 @@ WEEKLY_RULES: tuple[WeeklyRule, ...] = (
     VariantConsistent(),
     WeeklyProteinCount(),
     ConsecutiveSameProtein(),
-    FishDinnerWeeklyMax(),
     FishDinnerConsecutiveMax(),
     MealCarbsForbidden(),
     LunchCarbRequired(),

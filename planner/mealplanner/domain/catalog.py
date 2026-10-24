@@ -1,7 +1,7 @@
 """Pydantic models for YAML configuration schemas."""
 
 from enum import Enum
-from typing import Literal, Optional
+from typing import Literal, Optional, get_args
 
 from pydantic import BaseModel, Field, RootModel, field_validator, model_validator
 
@@ -26,6 +26,11 @@ class MealType(str, Enum):
 
     LUNCH = "lunch"
     DINNER = "dinner"
+
+
+# Species labels a recipe may use as primary_protein; each counts as fish for planning.
+FishSpecies = Literal["fish_salmon", "fish_tilapia", "fish_tuna_fillet", "fish_tuna_canned"]
+FISH_SPECIES: frozenset[str] = frozenset(get_args(FishSpecies))
 
 
 class IngredientKind(str, Enum):
@@ -144,16 +149,12 @@ class RecipeIngredient(BaseModel):
 class RecipeTags(BaseModel):
     """Recipe tags."""
 
-    primary_protein: ProteinType | Literal[
-        "fish_salmon", "fish_tilapia", "fish_tuna_fillet", "fish_tuna_canned"
-    ]
+    primary_protein: ProteinType | FishSpecies
 
     @property
     def protein_group(self) -> ProteinType:
         """Keep species-specific recipe labels within the weekly fish category."""
-        if self.primary_protein in {
-            "fish_salmon", "fish_tilapia", "fish_tuna_fillet", "fish_tuna_canned"
-        }:
+        if self.primary_protein in FISH_SPECIES:
             return ProteinType.FISH
         return ProteinType(self.primary_protein)
 
@@ -201,7 +202,7 @@ class Recipe(BaseModel):
     def validate_protein_label(self) -> "Recipe":
         """A species label must describe the ingredient receiving the portion."""
         label = self.tags.primary_protein
-        if label in {"fish_salmon", "fish_tilapia", "fish_tuna_fillet", "fish_tuna_canned"}:
+        if label in FISH_SPECIES:
             protein = next(ing for ing in self.ingredients if ing.qty == "@portion")
             if protein.item != label:
                 raise ValueError("primary_protein label must match the @portion ingredient")
@@ -210,10 +211,16 @@ class Recipe(BaseModel):
     @field_validator("ingredients")
     @classmethod
     def exactly_one_protein(cls, v: list[RecipeIngredient]) -> list[RecipeIngredient]:
-        """Validate exactly one protein ingredient with @portion."""
+        """Validate exactly one protein ingredient: the @portion row with role protein."""
         protein_count = sum(1 for ing in v if ing.qty == "@portion")
         if protein_count != 1:
             raise ValueError(f"Recipe must have exactly one protein with qty='@portion', found {protein_count}")
+        protein_rows = [ing for ing in v if ing.role == "protein"]
+        if len(protein_rows) != 1 or protein_rows[0].qty != "@portion":
+            raise ValueError(
+                "Recipe must have exactly one role 'protein' row, the @portion one; "
+                "use role 'protein_extra' for any other protein"
+            )
         return v
 
 
@@ -245,9 +252,9 @@ class ProteinPortions(BaseModel):
 class Constraints(BaseModel):
     """Planning constraints."""
 
-    weekly_protein_counts: dict[ProteinType, int]
+    # Per meal: how many of that meal's weekly slots each protein fills.
+    weekly_protein_counts: dict[MealType, dict[ProteinType, int]]
     no_consecutive_same_protein: bool
-    fish_dinner_max_per_week: int
     fish_dinner_max_consecutive: int
     max_recipe_uses_per_week: int
 
@@ -268,6 +275,11 @@ class Rules(BaseModel):
         if value is not None:
             return value
         return getattr(self.protein_portions_g[protein_type], meal, 0)
+
+    def without_meal(self, meal: MealType) -> "Rules":
+        """The same rules with `meal` no longer planned; its settings stay but are unused."""
+        meals = [m for m in self.week.meals if m != meal]
+        return self.model_copy(update={"week": self.week.model_copy(update={"meals": meals})})
 
 
 

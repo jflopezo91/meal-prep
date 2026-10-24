@@ -439,4 +439,4 @@ def test_every_listed_variant_makes_a_valid_snapshot(env: SwapEnv) -> None:
                 base.snapshot, lunch_or_dinner["assignment_id"], variant, "pair", INPUTS, base.pantry
             )
             stamp_revision(raw, 2, base.pantry)  # validates the full snapshot invariants
-    assert "bistec_a_caballo__carb_none" not in catalog_variants(INPUTS)  # two protein rows: unplaceable
+    assert "bistec_a_caballo__carb_none" in catalog_variants(INPUTS)  # its egg is protein_extra, so it is placeable

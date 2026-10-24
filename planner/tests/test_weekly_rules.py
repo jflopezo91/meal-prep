@@ -68,8 +68,7 @@ def test_rule_codes_are_unique_and_stable() -> None:
         "variant_consistent",
         "weekly_protein_count",
         "consecutive_same_protein",
-        "fish_dinner_weekly_max",
-        "fish_dinner_consecutive_max",
+            "fish_dinner_consecutive_max",
         "meal_carbs_forbidden",
         "lunch_carb_required",
         "consecutive_lunch_same_carb",
@@ -176,10 +175,6 @@ def m_consecutive_protein(plan: dict) -> None:
     swap(plan, ("tue", "dinner"), ("wed", "dinner"))  # chicken dinner mon and tue
 
 
-def m_fish_weekly(plan: dict) -> None:
-    pass  # the plan is valid; the limit is lowered below
-
-
 def m_fish_consecutive(plan: dict) -> None:
     swap(plan, ("wed", "dinner"), ("fri", "dinner"))  # fish dinners tue and wed
 
@@ -222,7 +217,6 @@ MUTATIONS = [
     ("variant_consistent", m_variant, INPUTS),
     ("weekly_protein_count", m_protein_count, INPUTS),
     ("consecutive_same_protein", m_consecutive_protein, INPUTS),
-    ("fish_dinner_weekly_max", m_fish_weekly, with_constraints(fish_dinner_max_per_week=1)),
     (
         "fish_dinner_consecutive_max",
         m_fish_consecutive,
@@ -245,18 +239,13 @@ def test_every_rule_has_a_mutation() -> None:
 @pytest.mark.parametrize("code,mutate,inputs", MUTATIONS, ids=[m[0] for m in MUTATIONS])
 def test_each_specification_detects_exactly_its_violation(code, mutate, inputs) -> None:
     plan = baseline()
-    assert check_weekly_rules(plan, inputs) == [] or code == "fish_dinner_weekly_max"
+    assert check_weekly_rules(plan, inputs) == []
     mutate(plan)
     violations = check_weekly_rules(plan, inputs)
     assert violations, "mutation was not detected"
     assert {v.rule for v in violations} == {code}, violations
     assert all(isinstance(v, RuleViolation) and v.message for v in violations)
     assert any(v.assignment_ids and v.dates for v in violations)
-    if code == "fish_dinner_weekly_max":
-        assert set(violations[0].assignment_ids) == {
-            slot(plan, "tue", "dinner")["assignment_id"],
-            slot(plan, "fri", "dinner")["assignment_id"],
-        }
 
 
 def test_violation_reports_affected_assignments_and_dates() -> None:
@@ -278,14 +267,15 @@ def test_parameters_come_from_rules_not_constants() -> None:
 # ---------------------------------------------------------------- enforcement in the workflow
 
 
-def swapped_lunch_solution() -> MealPlanSolution:
-    """A valid real solution with two lunches swapped: structurally fine, breaks adjacency rules."""
+def repeated_lunch_solution() -> MealPlanSolution:
+    """A valid real solution with one unlinked lunch served twice: structurally fine, breaks recipe_weekly_max."""
     solution = OrToolsPlanGenerator().generate(INPUTS, 42)
     assignments = dict(solution.assignments)
-    assignments["mon_lunch"], assignments["thu_lunch"] = (
-        assignments["thu_lunch"],
-        assignments["mon_lunch"],
-    )
+    first, second = [
+        key for key, variant in assignments.items()
+        if key.endswith("_lunch") and not variant.recipe.extend_to_dinner
+    ][:2]
+    assignments[second] = assignments[first]
     return MealPlanSolution(assignments=assignments)
 
 
@@ -294,7 +284,7 @@ class Gen:
         self.bad = False
 
     def generate(self, inputs: PlannerInputs, seed: int) -> MealPlanSolution:
-        return swapped_lunch_solution() if self.bad else OrToolsPlanGenerator().generate(inputs, seed)
+        return repeated_lunch_solution() if self.bad else OrToolsPlanGenerator().generate(inputs, seed)
 
 
 class Reader:
@@ -382,10 +372,10 @@ def test_undo_allows_rule_violating_history_when_inputs_unchanged() -> None:
 
 def test_undo_reports_but_does_not_block_when_inputs_changed(caplog) -> None:
     svc, _, reader, plan_id = accepted_revision_two()
-    reader.inputs = with_constraints(fish_dinner_max_per_week=0)  # revision 1 now breaks the rules
+    reader.inputs = with_constraints(fish_dinner_max_consecutive=0)  # revision 1 now breaks the rules
     with caplog.at_level("WARNING"):
         assert svc.undo(plan_id, 2, "u1").revision == 3
-    assert "fish_dinner_weekly_max" in caplog.text
+    assert "fish_dinner_consecutive_max" in caplog.text
 
 
 def test_fixture_import_validates_rules(tmp_path: Path) -> None:

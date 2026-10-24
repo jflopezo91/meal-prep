@@ -390,15 +390,16 @@ def test_solver_time_limit_is_wired(db_path, clock, monkeypatch) -> None:
 
 def test_rule_violating_result_maps_to_rule_violation_and_stores_nothing(db_path, clock) -> None:
     class Violating:
-        """Real solution with two lunches swapped: structurally valid, but breaks adjacency rules."""
+        """Real solution with one unlinked lunch served twice: structurally valid, breaks recipe_weekly_max."""
 
         def generate(self, inputs, seed):
             solution = CachedGenerator().generate(inputs, 42)
             assignments = dict(solution.assignments)
-            assignments["mon_lunch"], assignments["thu_lunch"] = (
-                assignments["thu_lunch"],
-                assignments["mon_lunch"],
-            )
+            first, second = [
+                key for key, variant in assignments.items()
+                if key.endswith("_lunch") and not variant.recipe.extend_to_dinner
+            ][:2]
+            assignments[second] = assignments[first]
             return MealPlanSolution(assignments=assignments)
 
     client = logged_in_client(create_app(db_path=db_path, clock=clock, generator=Violating()))
