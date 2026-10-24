@@ -44,6 +44,7 @@ from ..adapters.sqlite.store import (
 )
 from ..adapters.yaml_inputs import YamlPlannerInputReader
 from ..application.auth import AuthService
+from ..application.generation import DinnerScopedInputReader
 from ..application.publication import PublicationError, PublicationResult, PublicationService
 from ..application.shopping_trips import ShoppingTripService
 from ..domain.auth import AuthError
@@ -56,6 +57,7 @@ from ..domain.weekly_plan import (
     input_basis,
     require_weekly_rules,
 )
+from .settings import dinner_enabled
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_DB_PATH = PROJECT_ROOT / "var" / "mealplanner.db"  # var/ is git-ignored
@@ -97,7 +99,7 @@ def import_fixture(
     repo = SqlitePlanRepository(db_path)
     if repo.get_plan_by_week(week_start) is not None:
         return "skipped"
-    inputs = SqlitePlannerInputReader(db_path).read()
+    inputs = DinnerScopedInputReader(SqlitePlannerInputReader(db_path), dinner_enabled()).read()
     snapshot = normalize_snapshot(
         json.loads(Path(plan_path).read_text(encoding="utf-8")),
         json.loads(Path(shopping_path).read_text(encoding="utf-8")),

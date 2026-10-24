@@ -28,6 +28,7 @@ services:
       - no-new-privileges:true
     environment:
       MEALPLANNER_TIMEZONE: America/Bogota
+      MEALPLANNER_DINNER_ENABLED: "0"  # lunch only for now; "1" plans dinner again
       MEALPLANNER_PUBLISH_REPO: git@github.com:jflopezo91/meal-plan.git
       # Plain HTTP on the home Wi-Fi (as planned for the NAS), so phones can log in.
       MEALPLANNER_COOKIE_SECURE: "0"

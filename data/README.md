@@ -40,7 +40,7 @@ Individual recipe definitions:
   - `none`: No carbs (typically for dinner)
   - `fixed`: Always includes a specific carb
   - `optional`: Solver chooses from allowed carbs
-- **ingredients**: List with roles (protein, veg, fat, etc.)
+- **ingredients**: List with roles (protein, veg, fat, etc.). Exactly one row has role `protein`: the `@portion` one. Any other protein (an egg on top, a sausage) uses `protein_extra`.
   - Use `qty: "@portion"` for protein to resolve at planning time
   - Use `qty_g`, `qty_ml`, or `qty_units` for fixed quantities
 

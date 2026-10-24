@@ -2,11 +2,27 @@
 
 from dataclasses import dataclass
 
+from ..domain.catalog import MealType
 from ..domain.planner_inputs import PlannerInputs
 from ..domain.solution import MealPlanSolution
 from .plan_output import PlanOutput, build_plan_output
-from .ports import PlanGenerator
+from .ports import PlanGenerator, PlannerInputReader
 from .shopping import ShoppingList, generate_shopping_list
+
+
+class DinnerScopedInputReader:
+    """PlannerInputReader that leaves dinner out of planning when dinner is disabled.
+
+    The stored inputs keep their dinner settings, so enabling dinner again needs no import.
+    """
+
+    def __init__(self, reader: PlannerInputReader, dinner_enabled: bool) -> None:
+        self._reader = reader
+        self._dinner_enabled = dinner_enabled
+
+    def read(self) -> PlannerInputs:
+        inputs = self._reader.read()
+        return inputs if self._dinner_enabled else inputs.without_meal(MealType.DINNER)
 
 
 @dataclass(frozen=True)

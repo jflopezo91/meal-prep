@@ -131,5 +131,5 @@ For the read-only static sample without Flask, use `npm run dev:static` instead.
 
 ## Troubleshooting
 
--   **Optimization Failed**: If the solver cannot find a solution, try relaxing constraints in `data/rules.yml` (e.g., increase `max_recipe_uses_per_week` or `fish_dinner_max_per_week`).
+-   **Optimization Failed**: If the solver cannot find a solution, try relaxing constraints in `data/rules.yml` (e.g., increase `max_recipe_uses_per_week` or `fish_dinner_max_consecutive`). Each meal's `weekly_protein_counts` must sum to the number of days.
 -   **UI Not Updating**: In API mode, generate into `site/public`, restart Flask, then refresh the frontend. Static mode uses a separate prepared sample bundle.

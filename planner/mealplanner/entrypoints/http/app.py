@@ -25,6 +25,7 @@ from .publish_routes import register_publish_routes
 from .read_routes import register_read_routes
 from .trip_routes import register_trip_routes
 from .write_routes import GenerationGate, register_write_routes
+from ..settings import dinner_enabled as configured_dinner_enabled
 
 PROJECT_ROOT = Path(__file__).resolve().parents[4]
 DEFAULT_PLAN_PATH = PROJECT_ROOT / "site/public/plan.json"
@@ -81,6 +82,7 @@ def _build_workflow_service(
     generator: PlanGenerator | None,
     solver_timeout_seconds: float | None,
     proposal_ttl: timedelta | None,
+    dinner_enabled: bool | None,
 ) -> Any:
     from ...adapters.ortools import OrToolsPlanGenerator
     from ...adapters.sqlite.store import (
@@ -88,6 +90,7 @@ def _build_workflow_service(
         SqlitePlanRepository,
         SqliteShoppingTripRepository,
     )
+    from ...application.generation import DinnerScopedInputReader
     from ...application.plan_workflows import DEFAULT_PROPOSAL_TTL, PlanWorkflowService
 
     zone = timezone or os.environ.get("MEALPLANNER_TIMEZONE", "America/Bogota")
@@ -96,9 +99,10 @@ def _build_workflow_service(
         "MEALPLANNER_SOLVER_TIMEOUT_SECONDS", DEFAULT_SOLVER_TIMEOUT_SECONDS, float
     )
     plan_generator = generator or OrToolsPlanGenerator(max_time_seconds=timeout)
+    dinner = configured_dinner_enabled() if dinner_enabled is None else dinner_enabled
     return PlanWorkflowService(
         SqlitePlanRepository(db_path),
-        SqlitePlannerInputReader(db_path),
+        DinnerScopedInputReader(SqlitePlannerInputReader(db_path), dinner),
         clock or (lambda: datetime.now(tz)),
         generator=plan_generator,
         timezone=zone,
@@ -256,6 +260,7 @@ def create_app(
     auth_service: Any = None,
     trusted_proxies: int | None = None,
     cookie_secure: bool | None = None,
+    dinner_enabled: bool | None = None,
 ) -> Any:
     """Create the API. Source files are loaded and validated once.
 
@@ -311,7 +316,8 @@ def create_app(
 
             app.config["PLAN_READ_SERVICE"] = PlanReadService(SqlitePlanReadAdapter(sqlite_path))
             app.config["PLAN_WORKFLOW_SERVICE"] = _build_workflow_service(
-                sqlite_path, timezone, clock, generator, solver_timeout_seconds, proposal_ttl
+                sqlite_path, timezone, clock, generator, solver_timeout_seconds, proposal_ttl,
+                dinner_enabled,
             )
             app.config["SHOPPING_TRIP_SERVICE"] = _build_trip_service(sqlite_path, timezone, clock)
             if publishing_service is None:

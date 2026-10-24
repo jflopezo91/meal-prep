@@ -41,20 +41,24 @@ protein_portion_overrides_g:
 
 # Planning constraints
 constraints:
-  # Weekly protein distribution (total across all meals)
+  # Weekly protein distribution per meal; each meal's counts sum to the 5 weekdays.
+  # A meal that is not planned (dinner with MEALPLANNER_DINNER_ENABLED=0) ignores its block.
   # Adjust these based on your dietary goals
   weekly_protein_counts:
-    chicken: 4
-    fish: 3
-    beef: 2
-    pork: 1
-    # Total: 10 meals (2 meals × 5 weekdays)
+    lunch:
+      chicken: 2
+      fish: 1
+      beef: 1
+      pork: 1
+    dinner:
+      chicken: 2
+      fish: 2
+      beef: 1
 
   # No same protein on consecutive days (per meal type)
   no_consecutive_same_protein: true
 
   # Fish-specific constraints
-  fish_dinner_max_per_week: 3  # Total fish dinners per week
   fish_dinner_max_consecutive: 2  # Max consecutive days with fish at dinner
 
   # Recipe usage

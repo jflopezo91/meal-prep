@@ -6,7 +6,8 @@ from pathlib import Path
 from ..adapters.files import render_plan_output, write_shopping_output
 from ..adapters.yaml_inputs import YamlPlannerInputReader, load_data, validate_recipe_file
 from ..adapters.ortools import OrToolsPlanGenerator
-from ..application.generation import generate as generate_outputs
+from ..application.generation import DinnerScopedInputReader, generate as generate_outputs
+from .settings import dinner_enabled
 
 
 def validate_data(data_dir: Path) -> int:
@@ -32,7 +33,7 @@ def generate_plan(data_dir: Path, output_dir: Path, seed: int) -> int:
     try:
         # 1. Read and validate data through the YAML source adapter
         print(f"Loading data from {data_dir}...")
-        inputs = YamlPlannerInputReader(data_dir).read()
+        inputs = DinnerScopedInputReader(YamlPlannerInputReader(data_dir), dinner_enabled()).read()
         
         # 2. Solve and construct DTOs in memory
         print(f"Generating plan with seed {seed}...")
