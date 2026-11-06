@@ -57,7 +57,7 @@ export default defineConfig(({ mode }) => {
     define: {
       'import.meta.env.VITE_READER_MODE': JSON.stringify(isPages ? 'static' : 'api'),
       'import.meta.env.VITE_API_BASE_PATH': JSON.stringify('/api/v1'),
-      'import.meta.env.VITE_DEFAULT_FROM': JSON.stringify(process.env.VITE_DEFAULT_FROM || '2026-10-19'),
+      'import.meta.env.VITE_DEFAULT_FROM': JSON.stringify(process.env.VITE_DEFAULT_FROM || ''),
       'import.meta.env.VITE_DEFAULT_TO': JSON.stringify(process.env.VITE_DEFAULT_TO || '2026-10-25'),
     },
   };
