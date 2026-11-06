@@ -73,6 +73,19 @@ egg:
   kind: protein
   shelf_life: long_lasting
 
+shrimp:
+  display: "Camarón"
+  unit: g
+  section: protein
+  kind: protein
+  notes: "Crudo y pelado."
+
+ham:
+  display: "Jamón"
+  unit: g
+  section: protein
+  kind: protein
+
 sausage:
   display: "Salchicha"
   unit: g
@@ -191,6 +204,19 @@ onion:
   section: vegetable
   kind: other
   shelf_life: fresh
+
+avocado:
+  display: "Aguacate"
+  unit: g
+  section: vegetable
+  kind: other
+  notes: "Peso de la pulpa, sin cáscara ni semilla."
+
+cucumber:
+  display: "Pepino"
+  unit: g
+  section: vegetable
+  kind: other
 
 red_onion:
   display: "Cebolla morada"
@@ -357,6 +383,12 @@ olive_oil:
   kind: other
   shelf_life: long_lasting
 
+neutral_oil:
+  display: "Aceite neutro"
+  unit: ml
+  section: fat
+  kind: other
+
 sesame_oil:
   display: "Aceite de ajonjolí"
   unit: ml
@@ -416,6 +448,13 @@ parmesan:
   section: dairy
   kind: other
   shelf_life: long_lasting
+
+grated_cheese:
+  display: "Queso rallado"
+  unit: g
+  section: dairy
+  kind: other
+  notes: "Tipo de queso sin especificar."
 
 fresh_cheese:
   display: "Queso fresco"
