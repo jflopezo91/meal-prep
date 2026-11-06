@@ -7,7 +7,7 @@ import { createApiReader } from '../src/readers/api.js';
 import { createStaticReader } from '../src/readers/static.js';
 
 const siteDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const fixtureDir = path.resolve(siteDir, '../docs/migration-to-cloud/static-examples');
+const fixtureDir = path.resolve(siteDir, '../contracts/static-examples');
 // Until the shared fixtures publish shopping_trips, inject an empty list so these tests exercise the strict manifest.
 const withTrips = (file, text) => { if (!file.endsWith('manifest.json')) return text; const m = JSON.parse(text); return JSON.stringify({ shopping_trips: [], ...m }); };
 const readJson = file => JSON.parse(fs.readFileSync(file, 'utf8'));

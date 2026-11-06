@@ -2,7 +2,7 @@
 # /volume1/docker/meal-prep/compose.yaml and writes .env next to it with MEAL_PREP_DIGEST=sha256:...
 # (the digest GitHub built and attested for the released commit). Image only, no build; the digest
 # is mandatory, so a mutable tag can never be deployed by accident.
-# Deploy, rollback and restore procedures: docs/OPERATIONS.md.
+# Deploy, rollback and restore procedures: docs/DEPLOYMENT.md.
 #
 # LAN only: plain HTTP on :8080, like any other home service. Viewing is open; changes need a login,
 # whose session cookie therefore cannot be Secure (MEALPLANNER_COOKIE_SECURE=0).

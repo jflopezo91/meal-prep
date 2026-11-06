@@ -25,7 +25,7 @@ import validate_api_contract as api
 from mealplanner.domain import shopping_trip as trip_domain
 
 ROOT = Path(__file__).resolve().parents[1]
-DOCS = ROOT / "docs/migration-to-cloud"
+DOCS = ROOT / "contracts"
 OPENAPI_PATH = DOCS / "openapi.yaml"
 PUBLICATION_SCHEMA_PATH = DOCS / "publication.schema.json"
 FRONTEND_SCHEMA_PATH = DOCS / "frontend-config.schema.json"

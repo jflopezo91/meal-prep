@@ -1,6 +1,6 @@
 """Publication export: select months, read current plans and trips, build and check a bundle.
 
-Pure of the filesystem. The bundle is the fixed layout of docs/migration-to-cloud
+Pure of the filesystem. The bundle is the fixed layout of contracts
 (publication.schema.json): an index plus, relative to ``publications/<id>/``, a manifest,
 ``plans/<plan_id>/{plan,shopping-list}.json`` and ``shopping-trips/<trip_id>.json``.
 ``check_bundle`` is the structural/coherence check shared with the writer adapter; the full

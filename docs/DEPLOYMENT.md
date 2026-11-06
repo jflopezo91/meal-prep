@@ -1,4 +1,4 @@
-# Operations
+# Deployment
 
 Everything runs from the workstation, in `main`. Defaults: `MEAL_PREP_NAS=nas-user@<wifi-ip>`, `MEAL_PREP_NAS_DIR=/volume1/docker/meal-prep`. Override them if the NAS moves.
 
@@ -71,4 +71,28 @@ Install Docker and `gh`, clone the repo, run `gh auth login`, and add the new PC
 
 ## Performance
 
-To be measured (migration plan, step 6). The limits in `deploy/docker-compose.yml` are provisional.
+To be measured (go-live checklist, step 6). The limits in `deploy/docker-compose.yml` are provisional.
+
+## Go-live checklist
+
+Each step ends in a check, and a step that fails stops the go-live.
+
+1. **Addresses.** Reserve the NAS address in the router. DHCP can move it. **Done when:** the NAS keeps `<wifi-ip>` after a restart.
+2. **Merge to `main`** and use a `gh` with `gh attestation`. **Done when:** CI is green on `main` and the attestation verifies for that commit's image.
+3. **`scripts/release.sh`.** **Done when:** a dry run prints the digest, and it refuses a dirty tree, an unpushed commit, a red CI run and a digest that fails verification.
+4. **NAS folders, permissions and publish key.** **Done when:** the container reads the key as uid 10001, and both deploy keys are listed on `meal-plan`.
+5. **First release and data move.** Stop the WSL container, back up, restore on the NAS, release, publish one month from a phone, then delete the WSL deploy key. **Done when:** the release commit is running, the shopping list in progress matches, Publish reaches `live`, and a publish from WSL fails.
+6. **Limits.** Time a month fill on the NAS under load, and adjust the limits in `deploy/docker-compose.yml`. **Done when:** a month fill finishes within the timeout and the numbers are in the Performance section.
+7. **Backups.** **Done when:** a restore of the latest weekly backup into a throwaway container shows the same plans and lists. Add the off-disk copy when the second disk arrives.
+8. **Rollback drill and exposure check.** Release a trivial change and roll it back. Confirm no port forward or tunnel. **Done when:** both paths end healthy with data intact, and a phone off the Wi-Fi sees the public site but not the NAS.
+
+## After go-live (optional)
+
+- HTTPS on the LAN with Caddy and a DNS-challenge certificate, then `MEALPLANNER_TRUSTED_PROXIES=1` and secure cookies. No app change is needed.
+- Delete the retired Pages site of `meal-prep`: `gh api -X DELETE repos/jflopezo91/meal-prep/pages`.
+- Product polish:
+  - Dinner-carb choice for linked meals.
+  - The `bistec_a_caballo` data fix.
+  - Tidy the redundant "Edit weeks" rows.
+  - A regression test for creating a list across months.
+- Review the reported npm audit findings.

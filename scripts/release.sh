@@ -6,7 +6,7 @@
 #   scripts/release.sh --dry-run       gate only: prints the digest and tag, changes nothing
 #   scripts/release.sh --rollback TAG  redeploy an earlier release (with a backup first)
 #
-# The release record is the annotated tag; nothing is committed to main. Procedures: docs/OPERATIONS.md.
+# The release record is the annotated tag; nothing is committed to main. Procedures: docs/DEPLOYMENT.md.
 set -euo pipefail
 
 NAS="${MEAL_PREP_NAS:-nas-user@<wifi-ip>}"
@@ -117,7 +117,7 @@ undo_deploy() {
             cp .env.previous .env; cp compose.yaml.previous compose.yaml; docker compose up -d
         else
             echo 'No previous release to return to; containers left as they are.'
-        fi" || echo "Could not restore the previous release; see docs/OPERATIONS.md." >&2
+        fi" || echo "Could not restore the previous release; see docs/DEPLOYMENT.md." >&2
 }
 
 deploy() {  # digest commit label
@@ -150,7 +150,7 @@ case "${1:-}" in
         cat <<MSG
 Rolled back to $tag. If a newer release migrated the database, this older code may not run correctly
 against it: restore the newest file in $DIR/backups/pre-release taken before that release
-(docs/OPERATIONS.md, "Restore a backup").
+(docs/DEPLOYMENT.md, "Restore a backup").
 MSG
         ;;
     '')

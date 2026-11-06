@@ -1,6 +1,6 @@
-# Development and operations
+# Development
 
-How to set up, run, check and publish. Design: [ARCHITECTURE.md](ARCHITECTURE.md). What comes next: [migration plan](migration-to-cloud/README.md).
+How to set up, run, check and publish. Design: [ARCHITECTURE.md](docs/ARCHITECTURE.md). Releases and the NAS: [DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
 ## Setup (WSL/Linux)
 
@@ -66,7 +66,7 @@ Without `MEALPLANNER_DB`, the API serves the JSON snapshot read-only and answers
 cd site && npm test && npm run lint && npm run build:api && npm run build:pages
 ```
 
-`planner/tests/test_architecture.py` enforces the layer rules. The API contract lives in [openapi.yaml](migration-to-cloud/openapi.yaml) and the public bundle schema in [publication.schema.json](migration-to-cloud/publication.schema.json); both have examples next to them, and the validators and tests read them in place.
+`planner/tests/test_architecture.py` enforces the layer rules. The API contract lives in [openapi.yaml](contracts/openapi.yaml) and the public bundle schema in [publication.schema.json](contracts/publication.schema.json); both have examples next to them, and the validators and tests read them in place.
 
 ## Publish
 

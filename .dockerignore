@@ -19,3 +19,4 @@ planner/*.egg-info
 *.db-*
 .env
 deploy/docker-compose*.yml
+contracts

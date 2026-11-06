@@ -19,7 +19,7 @@ from mealplanner.domain.solution import MealPlanSolution
 from mealplanner.domain.planner_inputs import PlannerInputs
 
 ROOT = Path(__file__).resolve().parents[2]
-SPEC = yaml.safe_load((ROOT / "docs/migration-to-cloud/openapi.yaml").read_text())
+SPEC = yaml.safe_load((ROOT / "contracts/openapi.yaml").read_text())
 NOW = datetime(2026, 10, 21, 15, 0, tzinfo=timezone.utc)  # Wednesday in Bogota
 FUTURE = "2026-10-26"
 FUTURE_ID = "plan_2026_10_26"

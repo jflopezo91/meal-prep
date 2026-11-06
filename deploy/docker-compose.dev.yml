@@ -34,7 +34,7 @@ services:
       MEALPLANNER_COOKIE_SECURE: "0"
     ports:
       # Loopback inside WSL; Windows forwards LAN traffic here with a netsh portproxy
-      # (see docs/DEVELOPMENT.md, "Use it from a phone").
+      # (see DEVELOPMENT.md, "Use it from a phone").
       - "127.0.0.1:8080:8080"
     volumes:
       - ../var/docker-data:/data

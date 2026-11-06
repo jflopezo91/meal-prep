@@ -25,7 +25,7 @@ flowchart LR
 
 - **Home app**: one container on the NAS. It plans, edits and publishes. Viewing is open on the home network; changes need a login.
 - **Public site**: static files built from what the home app publishes. Read-only; nothing on GitHub can call the NAS.
-- **Release**: GitHub builds and signs the image; a workstation decides when the NAS runs it (see [OPERATIONS.md](OPERATIONS.md)). How to run things: [DEVELOPMENT.md](DEVELOPMENT.md).
+- **Release**: GitHub builds and signs the image; a workstation decides when the NAS runs it (see [DEPLOYMENT.md](DEPLOYMENT.md)). How to run things: [DEVELOPMENT.md](../DEVELOPMENT.md).
 
 ## Core ideas
 
@@ -86,3 +86,16 @@ Readers (`site/src/readers/`) give both modes the same data shapes, so views do 
 | Frontend logic | a `*Model.js` file (pure, tested); UI in `components/` or `editing/` |
 
 Names: the UI says "shopping list", the code says `ShoppingTrip` (the weekly grocery DTO is `ShoppingList`).
+
+## Decisions in force
+
+| Topic | Decision |
+|---|---|
+| Hosting | Flask + SQLite in one app container on the NAS, plus a backup container. LAN only, with no inbound route or tunnel. |
+| Access | Viewing is open on the LAN; changes and publishing need a household login. |
+| Public site | `jflopezo91/meal-plan` holds data only; its workflow builds the frontend at the pinned `app-ref`. Everything published is public. |
+| Secrets | One: the publish deploy key, a file on the NAS that can write to `meal-plan` only. |
+| Images | Built and attested by GitHub, and deployed by digest only. |
+| Releases | An annotated tag on `main`, gated and deployed by `release.sh` over SSH. Rollback = the previous release. |
+| Planning | Independent weekly plans with no cross-week rules. Rules are advisory for swaps. |
+| Shopping lists | Cells for each week and group (long-lasting/fresh), either to buy or bought. There is no pantry or purchase tracking. |

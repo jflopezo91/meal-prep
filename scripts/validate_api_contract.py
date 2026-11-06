@@ -26,8 +26,8 @@ from mealplanner.domain.snapshot import (
     validate_snapshot,
 )
 
-CONTRACT = ROOT / "docs/migration-to-cloud/openapi.yaml"
-EXAMPLES = ROOT / "docs/migration-to-cloud/examples"
+CONTRACT = ROOT / "contracts/openapi.yaml"
+EXAMPLES = ROOT / "contracts/examples"
 PLAN_FIXTURE = ROOT / "site/public/plan.json"
 SHOP_FIXTURE = ROOT / "site/public/shopping_list.json"
 PANTRY_FILE = ROOT / "data/pantry.yml"

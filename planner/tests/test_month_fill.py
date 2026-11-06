@@ -24,7 +24,7 @@ from mealplanner.entrypoints.http.app import create_app
 from auth_helpers import logged_in_client
 
 ROOT = Path(__file__).resolve().parents[2]
-SPEC = yaml.safe_load((ROOT / "docs/migration-to-cloud/openapi.yaml").read_text())
+SPEC = yaml.safe_load((ROOT / "contracts/openapi.yaml").read_text())
 INPUTS: PlannerInputs = YamlPlannerInputReader(ROOT / "data").read()
 NOW = datetime(2026, 10, 21, 15, 0, tzinfo=timezone.utc)  # Wednesday in Bogota
 

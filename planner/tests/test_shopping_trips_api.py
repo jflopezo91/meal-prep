@@ -18,7 +18,7 @@ from mealplanner.entrypoints.http.app import create_app
 from auth_helpers import logged_in_client
 
 ROOT = Path(__file__).resolve().parents[2]
-SPEC = yaml.safe_load((ROOT / "docs/migration-to-cloud/openapi.yaml").read_text())
+SPEC = yaml.safe_load((ROOT / "contracts/openapi.yaml").read_text())
 NOW = datetime(2026, 10, 21, 15, 0, tzinfo=timezone.utc)
 P1, P2, P3 = "plan_2026_10_26", "plan_2026_11_02", "plan_2026_11_09"
 BASE = "/api/v1/shopping-trips"

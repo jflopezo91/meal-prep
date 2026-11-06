@@ -15,7 +15,7 @@ Code layout and layer rules: see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## Development setup (new PC)
 
-Everything needed to continue on another machine exactly as today. More detail: [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
+Everything needed to continue on another machine exactly as today. More detail: [DEVELOPMENT.md](DEVELOPMENT.md).
 
 ### 1. Windows + WSL
 In an Admin PowerShell: `wsl --install -d Ubuntu-24.04`, then open Ubuntu. Work inside the Linux filesystem (`~/dev`), never `/mnt/c`.
@@ -119,7 +119,7 @@ npm run dev:api
 ```
 Open `http://127.0.0.1:5173/meal-prep/`. The current fixture is explicitly anchored to October 19–25, 2026. Restart Flask after generating new files.
 
-For the read-only static sample without Flask, use `npm run dev:static` instead. It displays the checked-in publication example, not the latest CLI output. Setup, the container, checks and publishing are in [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md); what comes next is in the [migration plan](docs/migration-to-cloud/README.md).
+For the read-only static sample without Flask, use `npm run dev:static` instead. It displays the checked-in publication example, not the latest CLI output. Setup, the container, checks and publishing are in [DEVELOPMENT.md](DEVELOPMENT.md); what comes next is in the [migration plan](contracts/README.md).
 
 ## Configuration
 

@@ -5,7 +5,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createPlanEditor } from '../src/editing/planEditor.js';
 
-const examples = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../docs/migration-to-cloud/examples');
+const examples = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../contracts/examples');
 const example = name => JSON.parse(fs.readFileSync(path.join(examples, name), 'utf8'));
 const json = (body, status = 200, headers = {}) => new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json', ...headers } });
 

@@ -41,10 +41,10 @@ class SnapshotAndServiceTests(unittest.TestCase):
 
     def test_source_files_normalize_to_checked_in_api_examples(self) -> None:
         expected_plan = json.loads(
-            (REPO_ROOT / "docs/migration-to-cloud/examples/plan.json").read_text()
+            (REPO_ROOT / "contracts/examples/plan.json").read_text()
         )
         expected_shopping = json.loads(
-            (REPO_ROOT / "docs/migration-to-cloud/examples/shopping-list.json").read_text()
+            (REPO_ROOT / "contracts/examples/shopping-list.json").read_text()
         )
         self.assertEqual(self.plan, expected_plan)
         self.assertEqual(self.shopping, expected_shopping)
@@ -98,7 +98,7 @@ class FlaskApiTests(unittest.TestCase):
             raise
         cls.app.config["TESTING"] = True
         cls.client = cls.app.test_client()
-        cls.spec = yaml.safe_load((REPO_ROOT / "docs/migration-to-cloud/openapi.yaml").read_text())
+        cls.spec = yaml.safe_load((REPO_ROOT / "contracts/openapi.yaml").read_text())
 
     def assert_schema(self, body: dict[str, Any], schema_name: str) -> None:
         schema = self.spec["components"]["schemas"][schema_name]

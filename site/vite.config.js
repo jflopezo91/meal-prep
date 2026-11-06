@@ -16,7 +16,7 @@ const basePath = process.env.VITE_BASE_PATH || '/meal-prep/';
 if (!/^\/([A-Za-z0-9._~-]+\/)*$/.test(basePath)) throw new Error('VITE_BASE_PATH must start and end with "/" (for example /meal-plan/).');
 
 function publicationPlugin(mode) {
-  const fixtureDir = publicationDir ? path.resolve(repoDir, publicationDir) : path.join(repoDir, 'docs/migration-to-cloud/static-examples', fixtureName);
+  const fixtureDir = publicationDir ? path.resolve(repoDir, publicationDir) : path.join(repoDir, 'contracts/static-examples', fixtureName);
   if (mode === 'pages' && !publicationDir && !allowedFixtures.has(fixtureName)) throw new Error('VITE_STATIC_BUNDLE must be populated or empty.');
   if (mode === 'pages' && !fs.existsSync(path.join(fixtureDir, 'index.json'))) throw new Error('Selected static publication is missing index.json.');
   return {

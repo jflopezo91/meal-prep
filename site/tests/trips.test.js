@@ -11,8 +11,8 @@ import { runTripAction } from '../src/editing/tripActions.js';
 import { GROUP_LABEL, countChecked, coverageSummary, createTripBody, addWeekBody, groupItems, groupItemsByShelfLife, removeWeekPath, swapImpactEntries, freeGroups, addPlan, addedMessage, weekRemoval, addableWeeks, weekGroupsLabel, weekSelectable, itemCheckKey, readTripChecks, sortTrips, tripStorageKey, writeTripChecks, cellKey, cellOf, cellAt, tripCells, toBuyCells, boughtCells, tripChanged, nothingToBuy, cellsSummary, totalsForCells, selectionStorageKey, readUnselected, writeUnselected, selectedCells, toggleUnselected, purchaseBody, ingredientUses, groupUsesByWeek } from '../src/tripModel.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const examples = path.resolve(here, '../../docs/migration-to-cloud/examples');
-const staticDir = path.resolve(here, '../../docs/migration-to-cloud/static-examples/populated');
+const examples = path.resolve(here, '../../contracts/examples');
+const staticDir = path.resolve(here, '../../contracts/static-examples/populated');
 const readJson = file => JSON.parse(fs.readFileSync(file, 'utf8'));
 const example = name => readJson(path.join(examples, name));
 const json = (body, status = 200) => new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } });
