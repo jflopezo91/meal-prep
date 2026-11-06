@@ -381,13 +381,13 @@ def test_linked_pair_changes_atomically(env: Env) -> None:
     rev = created(env, seed=1)
     p = env.svc.propose_regeneration(rev.plan_id, 1, seed=2)
     by_id = {c.assignment_id: c for c in p.changes}
-    # 2026-10-27 lunch+dinner share a base recipe and both change in one proposal
-    lunch, dinner = by_id["slot_2026-10-27_lunch"], by_id["slot_2026-10-27_dinner"]
-    assert lunch.after["linked_assignment_id"] == dinner.assignment_id
+    # Which days link depends on the recipes and seed: take the first lunch+dinner pair that changed.
+    lunch = next(c for c in p.changes if c.after and c.after.get("linked_assignment_id") in by_id)
+    dinner = by_id[lunch.after["linked_assignment_id"]]
     env.svc.accept_proposal(rev.plan_id, p.proposal_id, 1, "r1")
     slots = {s["assignment_id"]: s for s in env.svc.get_current(rev.plan_id).snapshot.plan["slots"]}
-    assert slots["slot_2026-10-27_lunch"]["recipe_id"] == slots["slot_2026-10-27_dinner"]["recipe_id"]
-    assert slots["slot_2026-10-27_lunch"]["recipe_id"] == lunch.after["recipe_id"]
+    assert slots[lunch.assignment_id]["recipe_id"] == slots[dinner.assignment_id]["recipe_id"]
+    assert slots[lunch.assignment_id]["recipe_id"] == lunch.after["recipe_id"]
     assert env.repo.get_revision(rev.plan_id, 2) is not None
 
 
@@ -403,7 +403,9 @@ def test_linked_pair_split_is_rejected() -> None:
 
     changes = diff_snapshots(snap(a), snap(b))
     check_linked_pairs(changes)  # whole diff is consistent
-    partial = tuple(c for c in changes if c.assignment_id != "slot_2026-10-27_dinner")
+    linked = {c.assignment_id for c in changes}
+    pair = next(c for c in changes if c.after and c.after.get("linked_assignment_id") in linked)
+    partial = tuple(c for c in changes if c.assignment_id != pair.after["linked_assignment_id"])
     with pytest.raises(LinkedPairSplit):
         check_linked_pairs(partial)
 
