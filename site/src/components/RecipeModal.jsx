@@ -1,10 +1,12 @@
 import React from 'react';
 import { X, Utensils } from 'lucide-react';
 
-export function RecipeModal({ slot, onClose }) {
+export function RecipeModal({ slot, onClose, onSwap = null }) {
     if (!slot) return null;
 
-    const { recipeName, protein, carb, meal, day, proteinQty, carbQty, ingredients } = slot;
+    const { recipeName, protein, carb, meal, day, proteinQty, proteinUnit, carbQty, carbUnit, ingredients } = slot;
+    // Name what is bought (e.g. Salchicha); the protein type (pork) is how the weekly rules count it.
+    const proteinName = ingredients.find(ing => ing.role === 'protein')?.display ?? protein;
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
@@ -34,12 +36,13 @@ export function RecipeModal({ slot, onClose }) {
                             </div>
                             <div className="flex-1">
                                 <span className="block text-xs text-gray-500 dark:text-slate-400 uppercase">Protein</span>
-                                <span className="font-medium capitalize text-slate-900 dark:text-white">{protein}</span>
+                                <span className="font-medium text-slate-900 dark:text-white">{proteinName}</span>
+                                {proteinName.toLowerCase() !== protein && <span className="block text-xs text-gray-500 dark:text-slate-400 capitalize">{protein}</span>}
                             </div>
-                            <span className="font-mono font-bold text-lg text-slate-900 dark:text-white">{proteinQty}g</span>
+                            <span className="font-mono font-bold text-lg text-slate-900 dark:text-white">{proteinQty} {proteinUnit}</span>
                         </div>
 
-                        {carb !== 'none' && carbQty && (
+                        {carb !== 'none' && carbQty !== null && carbQty !== undefined && (
                             <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
                                 <div className="p-2 bg-white dark:bg-slate-700 rounded-md shadow-sm">
                                     <span className="text-lg">🌾</span>
@@ -48,7 +51,7 @@ export function RecipeModal({ slot, onClose }) {
                                     <span className="block text-xs text-gray-500 dark:text-slate-400 uppercase">Carb</span>
                                     <span className="font-medium capitalize text-slate-900 dark:text-white">{carb}</span>
                                 </div>
-                                <span className="font-mono font-bold text-lg text-slate-900 dark:text-white">{carbQty}g</span>
+                                <span className="font-mono font-bold text-lg text-slate-900 dark:text-white">{carbQty} {carbUnit}</span>
                             </div>
                         )}
 
@@ -68,7 +71,15 @@ export function RecipeModal({ slot, onClose }) {
                     </div>
                 </div>
 
-                <div className="bg-gray-50 dark:bg-slate-800/50 px-6 py-4 flex justify-end border-t border-gray-100 dark:border-slate-800">
+                <div className="bg-gray-50 dark:bg-slate-800/50 px-6 py-4 flex justify-end gap-2 border-t border-gray-100 dark:border-slate-800">
+                    {onSwap && (
+                        <button
+                            onClick={onSwap}
+                            className="px-4 py-2 min-h-11 border border-slate-300 dark:border-slate-600 text-slate-900 dark:text-white rounded-lg font-medium text-sm hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                        >
+                            Swap
+                        </button>
+                    )}
                     <button
                         onClick={onClose}
                         className="px-4 py-2 bg-slate-900 dark:bg-slate-700 text-white rounded-lg font-medium text-sm hover:bg-slate-800 dark:hover:bg-slate-600 transition-colors"

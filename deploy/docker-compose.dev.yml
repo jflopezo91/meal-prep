@@ -1,0 +1,57 @@
+# Local (WSL) run: builds the image from this checkout and binds to 127.0.0.1 only.
+#   mkdir -p var/docker-data
+#   docker compose -f deploy/docker-compose.dev.yml up --build
+# Then open http://127.0.0.1:8080/. Data persists in var/docker-data (git-ignored).
+#
+# Publish button (phase 6b): the deploy key is var/secrets/deploy_key (git-ignored; chmod 600, owned by you).
+# A Compose `secrets: file:` keeps the host file's owner and mode, and ssh refuses a key the running user
+# cannot own, so the container runs as your uid (DEV_UID/DEV_GID, built into the image as the `app` user).
+# APP_REVISION is the meal-prep commit recorded as `app-ref`; it must exist on the public meal-prep repo:
+#   scripts/dev-up.sh   (sets APP_REVISION=$(git rev-parse HEAD) and checks it is pushed)
+services:
+  meal-prep:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      args:
+        APP_UID: "${DEV_UID:-1000}"
+        APP_GID: "${DEV_GID:-1000}"
+        APP_REVISION: "${APP_REVISION:-}"
+    image: meal-prep:dev
+    user: "${DEV_UID:-1000}:${DEV_GID:-1000}"  # must own var/docker-data
+    read_only: true
+    restart: unless-stopped  # day-to-day app: comes back when WSL and Docker start
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      MEALPLANNER_TIMEZONE: America/Bogota
+      MEALPLANNER_DINNER_ENABLED: "0"  # lunch only for now; "1" plans dinner again
+      MEALPLANNER_PUBLISH_REPO: git@github.com:jflopezo91/meal-plan.git
+      # Plain HTTP on the home Wi-Fi (as planned for the NAS), so phones can log in.
+      MEALPLANNER_COOKIE_SECURE: "0"
+    ports:
+      # Loopback inside WSL; Windows forwards LAN traffic here with a netsh portproxy
+      # (see DEVELOPMENT.md, "Use it from a phone").
+      - "127.0.0.1:8080:8080"
+    volumes:
+      - ../var/docker-data:/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request as u; u.urlopen('http://127.0.0.1:8080/healthz', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    secrets:
+      - deploy_key  # mounted at /run/secrets/deploy_key (MEALPLANNER_PUBLISH_KEY default)
+
+secrets:
+  deploy_key:
+    file: ../var/secrets/deploy_key

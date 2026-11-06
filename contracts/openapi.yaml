@@ -1,0 +1,3205 @@
+openapi: 3.1.0
+info:
+  title: Meal Prep API
+  version: 0.1.0
+  description: |-
+    Versioned API for dated weekly meal plans and their current shopping snapshots.
+    Every GET works without a session except the publishing area. Every POST, PUT, PATCH and
+    DELETE except the session resource, and every publishing endpoint, needs the mp_session
+    cookie set by POST /api/v1/session (401 unauthenticated otherwise). Plan and shopping
+    changes also need a SQLite-backed server (403 read_only otherwise). Cross-site
+    state-changing requests are refused (403 cross_origin_rejected) and request bodies must be
+    application/json. Changes carry the revision (or trip version) the client last saw; a
+    mismatch is a 409 conflict. Responses are sent with Cache-Control: no-store. Static
+    publication is read-only.
+servers:
+  - url: http://127.0.0.1:8080
+    description: Local container
+security: []
+tags:
+  - name: Plans
+    description: Dated weekly plans, grocery snapshots, and revisions.
+  - name: Proposals
+    description: Preview, accept, discard, and undo plan changes.
+  - name: Swaps
+    description: Swap the recipe variant of a dated slot and list the variants a slot can take.
+  - name: Shopping trips
+    description: Shopping trips (shopping lists in the UI) and week coverage.
+  - name: Publishing
+    description: Publish selected months to the public repository.
+  - name: Session
+    description: Household login.
+  - name: Capabilities
+    description: What the calling client may do.
+paths:
+  /api/v1/plans:
+    get:
+      tags: [Plans]
+      operationId: listPlans
+      summary: Find plans overlapping a date range
+      description: |-
+        Returns plans whose Monday-Sunday week overlaps the inclusive date range (from <=
+        to, at most 366 days), ordered by week_start. Dates are in the household timezone.
+        Never generates a plan.
+      parameters:
+        - name: from
+          in: query
+          required: true
+          description: Inclusive start date.
+          schema:
+            type: string
+            format: date
+          example: '2026-10-01'
+        - name: to
+          in: query
+          required: true
+          description: Inclusive end date.
+          schema:
+            type: string
+            format: date
+          example: '2026-10-31'
+      responses:
+        '200':
+          description: Matching plan summaries.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlanList'
+              examples:
+                matchingPlan:
+                  externalValue: examples/plans.json
+                noMatchingPlans:
+                  externalValue: examples/plans-empty.json
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
+        '503':
+          $ref: '#/components/responses/SourceFailure'
+    post:
+      tags: [Plans]
+      operationId: createPlan
+      summary: Create revision 1 of the plan for a week
+      description: |-
+        Solves and stores a new plan for a current or future week (one plan per week). seed
+        defaults to the week's deterministic seed. At most
+        MEALPLANNER_MAX_CONCURRENT_GENERATIONS solves run at once (others get 503
+        generation_busy). A result that breaks the weekly rules is never stored (422
+        rule_violation).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePlanRequest'
+      security:
+        - cookieAuth: []
+      responses:
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '201':
+          description: The new plan at revision 1.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-store
+            Location:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Plan'
+              examples:
+                created:
+                  externalValue: examples/plan.json
+        '400':
+          $ref: '#/components/responses/WriteInvalidRequest'
+        '403':
+          $ref: '#/components/responses/WriteForbidden'
+        '409':
+          description: The week already has a plan, or has already ended.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                duplicateWeek:
+                  externalValue: examples/error-duplicate-week.json
+                notEditable:
+                  externalValue: examples/error-week-not-editable.json
+        '422':
+          description: |-
+            No valid plan found or time limit hit (generation_failed), or weekly rules
+            broken (rule_violation); nothing stored.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                generationFailed:
+                  externalValue: examples/error-generation-failed.json
+                ruleViolation:
+                  externalValue: examples/error-rule-violation.json
+        '503':
+          description: Generation busy (Retry-After given) or database unavailable.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-store
+            Retry-After:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                generationBusy:
+                  externalValue: examples/error-generation-busy.json
+  /api/v1/plans/{plan_id}:
+    get:
+      tags: [Plans]
+      operationId: getPlan
+      summary: Read a current weekly plan
+      description: |-
+        Returns the current snapshot for this plan. Slots are ordered by date, then lunch
+        before dinner. Protein quantities are raw ingredient amounts. snapshot_id is an
+        opaque content token that changes when the plan or shopping payload changes;
+        revision is the persistent integer. The seed is provenance only.
+      parameters:
+        - $ref: '#/components/parameters/PlanId'
+      responses:
+        '200':
+          description: Current plan snapshot.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Plan'
+              examples:
+                currentWeek:
+                  externalValue: examples/plan.json
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
+        '404':
+          $ref: '#/components/responses/PlanNotFound'
+        '503':
+          $ref: '#/components/responses/SourceFailure'
+  /api/v1/plans/{plan_id}/shopping-list:
+    get:
+      tags: [Plans]
+      operationId: getShoppingList
+      summary: Read the shopping list for the current plan snapshot
+      description: |-
+        Returns shopping totals for the plan's current assignments. Both revision and
+        snapshot_id must match the current snapshot, otherwise 409 snapshot_changed; refetch
+        the plan, then this list. Purchased state is not included.
+      parameters:
+        - $ref: '#/components/parameters/PlanId'
+        - name: revision
+          in: query
+          required: true
+          description: Expected current plan revision.
+          schema:
+            type: integer
+            minimum: 1
+          example: 1
+        - name: snapshot_id
+          in: query
+          required: true
+          description: Expected current snapshot token.
+          schema:
+            type: string
+            minLength: 1
+          example: sha256:dc9d775df57fb9e8732a19a732587265639005a8ed19fbd40d6392d66d51fb80
+      responses:
+        '200':
+          description: Shopping totals for the current snapshot.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShoppingList'
+              examples:
+                currentWeek:
+                  externalValue: examples/shopping-list.json
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
+        '404':
+          $ref: '#/components/responses/PlanNotFound'
+        '409':
+          description: Revision or snapshot token is stale.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                changedSnapshot:
+                  externalValue: examples/error-snapshot-changed.json
+        '503':
+          $ref: '#/components/responses/SourceFailure'
+  /api/v1/plans/{plan_id}/proposals:
+    post:
+      tags: [Proposals]
+      operationId: proposeRegeneration
+      summary: Preview a regenerated plan without changing the current revision
+      description: |-
+        Runs the solver and stores a short-lived proposal (expires_at, default 30 minutes)
+        without changing the current revision. changes lists per-slot differences; identical
+        is true when nothing would change. Accepting commits plan and shopping_list as
+        revision base_revision + 1. Only future weeks can be regenerated. seed defaults to a
+        fresh random seed.
+      parameters:
+        - $ref: '#/components/parameters/PlanId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProposeRequest'
+      security:
+        - cookieAuth: []
+      responses:
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '201':
+          description: The stored proposal.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-store
+            Location:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Proposal'
+              examples:
+                proposal:
+                  externalValue: examples/proposal.json
+        '400':
+          $ref: '#/components/responses/WriteInvalidRequest'
+        '403':
+          $ref: '#/components/responses/WriteForbidden'
+        '404':
+          $ref: '#/components/responses/PlanNotFound'
+        '409':
+          description: Stale expected revision, or the week is not editable.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                staleRevision:
+                  externalValue: examples/error-stale-revision.json
+                notEditable:
+                  externalValue: examples/error-week-not-editable.json
+        '422':
+          description: |-
+            No valid plan found or time limit hit (generation_failed), or weekly rules
+            broken (rule_violation); nothing stored.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                generationFailed:
+                  externalValue: examples/error-generation-failed.json
+                ruleViolation:
+                  externalValue: examples/error-rule-violation.json
+        '503':
+          description: Generation busy (Retry-After given) or database unavailable.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-store
+            Retry-After:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                generationBusy:
+                  externalValue: examples/error-generation-busy.json
+
+  /api/v1/plans/{plan_id}/proposals/{proposal_id}:
+    get:
+      tags: [Proposals]
+      operationId: getProposal
+      summary: Read a stored proposal
+      description: Returns the proposal while it is unexpired.
+      parameters:
+        - $ref: '#/components/parameters/PlanId'
+        - $ref: '#/components/parameters/ProposalId'
+      responses:
+        '200':
+          description: The proposal.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Proposal'
+              examples:
+                proposal:
+                  externalValue: examples/proposal.json
+        '400':
+          $ref: '#/components/responses/WriteInvalidRequest'
+        '403':
+          $ref: '#/components/responses/WriteForbidden'
+        '404':
+          description: Unknown plan or proposal.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                unknownProposal:
+                  externalValue: examples/error-proposal-not-found.json
+        '410':
+          description: The proposal expired.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                expiredProposal:
+                  externalValue: examples/error-proposal-expired.json
+
+    delete:
+      tags: [Proposals]
+      operationId: discardProposal
+      summary: Discard a proposal
+      description: Drops the proposal; no revision is created.
+      parameters:
+        - $ref: '#/components/parameters/PlanId'
+        - $ref: '#/components/parameters/ProposalId'
+      security:
+        - cookieAuth: []
+      responses:
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '204':
+          description: Proposal discarded.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-store
+        '400':
+          $ref: '#/components/responses/WriteInvalidRequest'
+        '403':
+          $ref: '#/components/responses/WriteForbidden'
+        '404':
+          description: Unknown plan or proposal.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                unknownProposal:
+                  externalValue: examples/error-proposal-not-found.json
+
+  /api/v1/plans/{plan_id}/proposals/{proposal_id}/accept:
+    post:
+      tags: [Proposals]
+      operationId: acceptProposal
+      summary: Commit a proposal as exactly one new revision
+      description: |-
+        Never re-solves. Commits the previewed content as revision N + 1 if the plan is
+        still at expected_revision, the proposal is unexpired and based on that revision,
+        and recipes, rules and pantry are unchanged since the preview. An identical proposal
+        returns changed: false and creates no revision.
+      parameters:
+        - $ref: '#/components/parameters/PlanId'
+        - $ref: '#/components/parameters/ProposalId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExpectedRevisionRequest'
+      security:
+        - cookieAuth: []
+      responses:
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '200':
+          description: The resulting revision.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MutationResult'
+              examples:
+                accepted:
+                  externalValue: examples/mutation-result.json
+                replayed:
+                  externalValue: examples/mutation-result-replayed.json
+        '400':
+          $ref: '#/components/responses/WriteInvalidRequest'
+        '403':
+          $ref: '#/components/responses/WriteForbidden'
+        '404':
+          description: Unknown plan or proposal.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                unknownProposal:
+                  externalValue: examples/error-proposal-not-found.json
+        '409':
+          description: Stale revision, changed inputs, split linked pair, or week not editable.
+          headers:
+            Cache-Control:
+              description: Responses are not stored by caches.
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                staleRevision:
+                  externalValue: examples/error-stale-revision.json
+                basisChanged:
+                  externalValue: examples/error-input-basis-changed.json
+                pairSplit:
+                  externalValue: examples/error-linked-pair-split.json
+                notEditable:
+                  externalValue: examples/error-week-not-editable.json
+        '410':
+          description: The proposal expired.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                expiredProposal:
+                  externalValue: examples/error-proposal-expired.json
+        '422':
+          description: |-
+            Idempotency-Key reused for a different request (retry_id_reused), or the content
+            breaks weekly rules (rule_violation); nothing stored.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                reusedKey:
+                  externalValue: examples/error-retry-id-reused.json
+                ruleViolation:
+                  externalValue: examples/error-rule-violation.json
+
+  /api/v1/plans/{plan_id}/undo:
+    post:
+      tags: [Proposals]
+      operationId: undoPlan
+      summary: Restore the previous revision's content as a new revision
+      description: |-
+        Appends revision N + 1 with the content of revision N - 1; history is never deleted,
+        so undoing twice restores the later content. Weekly rules are advisory for undo:
+        restoring a violating revision is allowed. Idempotency-Key works as for accept.
+      parameters:
+        - $ref: '#/components/parameters/PlanId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExpectedRevisionRequest'
+      security:
+        - cookieAuth: []
+      responses:
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '200':
+          description: The resulting revision.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MutationResult'
+              examples:
+                undone:
+                  externalValue: examples/mutation-result-undo.json
+        '400':
+          $ref: '#/components/responses/WriteInvalidRequest'
+        '403':
+          $ref: '#/components/responses/WriteForbidden'
+        '404':
+          $ref: '#/components/responses/PlanNotFound'
+        '409':
+          description: Stale revision or nothing to undo.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                staleRevision:
+                  externalValue: examples/error-stale-revision.json
+                nothingToUndo:
+                  externalValue: examples/error-nothing-to-undo.json
+        '422':
+          description: |-
+            Idempotency-Key reused for a different request (retry_id_reused); nothing
+            stored.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                reusedKey:
+                  externalValue: examples/error-retry-id-reused.json
+
+  /api/v1/catalog/variants:
+    get:
+      tags: [Swaps]
+      operationId: listSwapVariants
+      summary: List every recipe variant a slot can be swapped to
+      description: |-
+        Reads the current planner inputs (recipes and ingredients), not any plan. Every
+        variant is listed regardless of meal. Sorted by name, then variant_id. Needs the
+        SQLite-backed API; in JSON snapshot mode it returns 503 source_unavailable.
+      responses:
+        '200':
+          description: The swappable variants.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SwapVariantList'
+              examples:
+                variants:
+                  externalValue: examples/swap-variants.json
+        '503':
+          $ref: '#/components/responses/SourceFailure'
+  /api/v1/plans/{plan_id}/swaps/preview:
+    post:
+      tags: [Swaps]
+      operationId: previewSwap
+      summary: Preview a meal swap without storing anything
+      description: |-
+        Stateless: nothing is stored. Returns the slot changes, the week's grocery delta,
+        the weekly-rule violations the swapped plan would have (advisory, never blocking),
+        and the shopping trip impact. scope pair swaps a linked lunch/dinner together (on an
+        unlinked slot it equals single); scope single swaps only that slot and unlinks the
+        pair. Only slots dated today or later in the household timezone can be swapped. A
+        swap to the variant already in the slot previews as no change. extra_needed is
+        non-empty only for a done list.
+      parameters:
+        - $ref: '#/components/parameters/PlanId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SwapRequest'
+      security:
+        - cookieAuth: []
+      responses:
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '200':
+          description: What the swap would do.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SwapPreview'
+              examples:
+                openTrip:
+                  externalValue: examples/swap-preview.json
+                doneTrip:
+                  externalValue: examples/swap-preview-done-trip.json
+        '400':
+          $ref: '#/components/responses/WriteInvalidRequest'
+        '403':
+          $ref: '#/components/responses/WriteForbidden'
+        '404':
+          description: Unknown plan, slot, or variant.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                unknownPlan:
+                  externalValue: examples/error-plan-not-found.json
+                unknownSlot:
+                  externalValue: examples/error-slot-not-found.json
+                unknownVariant:
+                  externalValue: examples/error-variant-not-found.json
+        '409':
+          description: Stale revision, or the slot is dated before today.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                staleRevision:
+                  externalValue: examples/error-stale-revision.json
+                slotNotEditable:
+                  externalValue: examples/error-slot-not-editable.json
+  /api/v1/plans/{plan_id}/swaps:
+    post:
+      tags: [Swaps]
+      operationId: applySwap
+      summary: Swap a meal as exactly one new revision
+      description: |-
+        Applies the swap described by POST .../swaps/preview as revision N + 1. The slot
+        (and its linked partner for scope pair) takes the variant's recipe, protein, carb
+        and quantities; assignment_id, date and meal stay. Groceries are recomputed under a
+        new snapshot_id. Weekly rules never block a swap; rule_warnings lists violations.
+        Responds 201 with the new plan, or 200 with the current plan when the slot already
+        has that variant (no revision).
+      parameters:
+        - $ref: '#/components/parameters/PlanId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SwapRequest'
+      security:
+        - cookieAuth: []
+      responses:
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '200':
+          description: |-
+            No change (the slot already had that variant), or a replay of an earlier request
+            with the same Idempotency-Key.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SwapResult'
+              examples:
+                noop:
+                  externalValue: examples/swap-result-noop.json
+        '201':
+          description: The swap was applied as a new revision.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-store
+            Location:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SwapResult'
+              examples:
+                swapped:
+                  externalValue: examples/swap-result.json
+        '400':
+          $ref: '#/components/responses/WriteInvalidRequest'
+        '403':
+          $ref: '#/components/responses/WriteForbidden'
+        '404':
+          description: Unknown plan, slot, or variant.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                unknownPlan:
+                  externalValue: examples/error-plan-not-found.json
+                unknownSlot:
+                  externalValue: examples/error-slot-not-found.json
+                unknownVariant:
+                  externalValue: examples/error-variant-not-found.json
+        '409':
+          description: Stale revision, or the slot is dated before today.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                staleRevision:
+                  externalValue: examples/error-stale-revision.json
+                slotNotEditable:
+                  externalValue: examples/error-slot-not-editable.json
+        '422':
+          description: |-
+            Idempotency-Key reused for a different request (retry_id_reused); nothing
+            stored.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                reusedKey:
+                  externalValue: examples/error-retry-id-reused.json
+
+  /api/v1/plans/{plan_id}/revisions:
+    get:
+      tags: [Plans]
+      operationId: listRevisions
+      summary: List a plan's revision history
+      description: Oldest first. Summaries only; revisions are immutable.
+      parameters:
+        - $ref: '#/components/parameters/PlanId'
+      responses:
+        '200':
+          description: Revision summaries.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RevisionList'
+              examples:
+                history:
+                  externalValue: examples/revisions.json
+        '400':
+          $ref: '#/components/responses/WriteInvalidRequest'
+        '403':
+          $ref: '#/components/responses/WriteForbidden'
+        '404':
+          $ref: '#/components/responses/PlanNotFound'
+
+  /api/v1/months/{month}/fill:
+    post:
+      tags: [Plans]
+      operationId: fillMonth
+      summary: Create the missing weekly plans for a month
+      description: |-
+        Creates a plan for every Monday-Sunday week overlapping the month (4 to 6 weeks), in
+        order. Weeks that already ended are skipped_past; weeks that already have a plan are
+        reported as exists and never overwritten; the rest are created as revision 1 with
+        the week's deterministic seed. Each week commits independently, so a failed week
+        (status failed with an error code) does not undo the others. The whole fill holds
+        one generation slot (503 generation_busy when busy) and can take as long as one
+        solve per created week.
+      parameters:
+        - $ref: '#/components/parameters/Month'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FillMonthRequest'
+      security:
+        - cookieAuth: []
+      responses:
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '200':
+          description: One outcome per week, in week order.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MonthFillResult'
+              examples:
+                filled:
+                  externalValue: examples/month-fill-result.json
+                partial:
+                  externalValue: examples/month-fill-result-partial.json
+        '400':
+          description: Malformed month, malformed JSON body, or unknown body field.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidMonth:
+                  externalValue: examples/error-invalid-month.json
+                unknownField:
+                  externalValue: examples/error-invalid-body.json
+        '403':
+          $ref: '#/components/responses/WriteForbidden'
+        '503':
+          description: Generation busy (Retry-After given) or database unavailable.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-store
+            Retry-After:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                generationBusy:
+                  externalValue: examples/error-generation-busy.json
+
+  /api/v1/shopping-trips:
+    get:
+      tags: [Shopping trips]
+      operationId: listShoppingTrips
+      summary: List shopping trips
+      description: |-
+        Every shopping trip (shopping list in the UI), oldest first, with its weeks and
+        derived items. items are the to-buy totals at the plans' current revisions;
+        bought_items are the bought cells at their frozen revisions. Empty when the API is
+        not SQLite-backed.
+      responses:
+        '200':
+          description: Shopping trips, possibly empty.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShoppingTripList'
+              examples:
+                trips:
+                  externalValue: examples/shopping-trips.json
+                noTrips:
+                  externalValue: examples/shopping-trips-empty.json
+        '503':
+          $ref: '#/components/responses/SourceFailure'
+    post:
+      tags: [Shopping trips]
+      operationId: createShoppingTrip
+      summary: Create an open shopping trip for weeks
+      description: |-
+        Creates an open trip (version 1) covering the given plans for the given groups
+        (default both). A (plan, group) pair can belong to at most one trip (409
+        week_already_on_trip). name defaults to the covered date range. Trips never modify
+        plans.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateShoppingTripRequest'
+      security:
+        - cookieAuth: []
+      responses:
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '201':
+          description: The new trip.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-store
+            Location:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShoppingTrip'
+              examples:
+                created:
+                  externalValue: examples/shopping-trip.json
+        '400':
+          $ref: '#/components/responses/TripInvalidRequest'
+        '403':
+          $ref: '#/components/responses/WriteForbidden'
+        '404':
+          $ref: '#/components/responses/PlanNotFound'
+        '409':
+          $ref: '#/components/responses/TripConflict'
+  /api/v1/shopping-trips/{trip_id}:
+    get:
+      tags: [Shopping trips]
+      operationId: getShoppingTrip
+      summary: Read one shopping trip
+      description: |-
+        Returns the trip with its weeks and derived totals: items (to-buy cells at current
+        revisions) and bought_items (bought cells at frozen revisions). Totals are never
+        stored. status is derived (done when every cell is bought). Item checkboxes are
+        device-local.
+      parameters:
+        - $ref: '#/components/parameters/TripId'
+      responses:
+        '200':
+          description: The trip.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShoppingTrip'
+              examples:
+                open:
+                  externalValue: examples/shopping-trip.json
+                done:
+                  externalValue: examples/shopping-trip-done.json
+        '400':
+          $ref: '#/components/responses/TripInvalidRequest'
+        '404':
+          $ref: '#/components/responses/TripNotFound'
+        '503':
+          $ref: '#/components/responses/SourceFailure'
+    delete:
+      tags: [Shopping trips]
+      operationId: deleteShoppingTrip
+      summary: Delete a shopping trip
+      description: Deletes the trip in any status, freeing its weeks. Plans are untouched.
+      parameters:
+        - $ref: '#/components/parameters/TripId'
+        - $ref: '#/components/parameters/ExpectedVersion'
+      security:
+        - cookieAuth: []
+      responses:
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '204':
+          description: Trip deleted.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-store
+        '400':
+          $ref: '#/components/responses/TripInvalidRequest'
+        '403':
+          $ref: '#/components/responses/WriteForbidden'
+        '404':
+          $ref: '#/components/responses/TripNotFound'
+        '409':
+          $ref: '#/components/responses/TripConflict'
+  /api/v1/shopping-trips/{trip_id}/weeks:
+    post:
+      tags: [Shopping trips]
+      operationId: addShoppingTripWeek
+      summary: Add a week to a trip
+      description: |-
+        Adds a plan's week to a trip in any state for the given groups (default both). New
+        cells are to_buy, so a done list becomes open. A week already on the trip gains the
+        groups it lacks. 409 week_already_on_trip when the week already has all requested
+        groups, or a (plan, group) pair is on another trip.
+      parameters:
+        - $ref: '#/components/parameters/TripId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddTripWeekRequest'
+      security:
+        - cookieAuth: []
+      responses:
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '200':
+          description: The updated trip.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShoppingTrip'
+              examples:
+                updated:
+                  externalValue: examples/shopping-trip.json
+        '400':
+          $ref: '#/components/responses/TripInvalidRequest'
+        '403':
+          $ref: '#/components/responses/WriteForbidden'
+        '404':
+          $ref: '#/components/responses/TripOrPlanNotFound'
+        '409':
+          $ref: '#/components/responses/TripConflict'
+  /api/v1/shopping-trips/{trip_id}/weeks/{plan_id}:
+    delete:
+      tags: [Shopping trips]
+      operationId: removeShoppingTripWeek
+      summary: Remove a week from a trip
+      description: |-
+        Removes the plan's week from a trip, or with the group query parameter only that
+        group (the week disappears when no group is left). 409 last_week when nothing else
+        would remain (delete the trip instead); 404 week_not_on_trip when the plan or group
+        is not on the trip; 400 invalid_request for an unknown group.
+      parameters:
+        - $ref: '#/components/parameters/TripId'
+        - $ref: '#/components/parameters/PlanId'
+        - $ref: '#/components/parameters/ExpectedVersion'
+        - $ref: '#/components/parameters/TripGroup'
+      security:
+        - cookieAuth: []
+      responses:
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '200':
+          description: The updated trip.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShoppingTrip'
+              examples:
+                updated:
+                  externalValue: examples/shopping-trip.json
+        '400':
+          $ref: '#/components/responses/TripInvalidRequest'
+        '403':
+          $ref: '#/components/responses/WriteForbidden'
+        '404':
+          $ref: '#/components/responses/TripOrPlanNotFound'
+        '409':
+          $ref: '#/components/responses/TripConflict'
+  /api/v1/shopping-trips/{trip_id}/purchases:
+    post:
+      tags: [Shopping trips]
+      operationId: markShoppingTripPurchases
+      summary: Mark cells bought
+      description: |-
+        Marks the given (plan_id, group) cells bought, freezing each week's current revision
+        and snapshot_id and recording bought_at. All or nothing. 404 week_not_on_trip when a
+        cell is not on the trip, 409 invalid_transition when a cell is already bought.
+      parameters:
+        - $ref: '#/components/parameters/TripId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PurchasesRequest'
+      security:
+        - cookieAuth: []
+      responses:
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '200':
+          description: The updated trip.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShoppingTrip'
+              examples:
+                partial:
+                  externalValue: examples/shopping-trip-partial.json
+        '400':
+          $ref: '#/components/responses/TripInvalidRequest'
+        '403':
+          $ref: '#/components/responses/WriteForbidden'
+        '404':
+          $ref: '#/components/responses/TripOrPlanNotFound'
+        '409':
+          $ref: '#/components/responses/TripConflict'
+  /api/v1/shopping-trips/{trip_id}/purchases/undo:
+    post:
+      tags: [Shopping trips]
+      operationId: unmarkShoppingTripPurchases
+      summary: Return cells to to-buy
+      description: |-
+        Returns the given bought cells to to_buy and drops their frozen revision. All or
+        nothing. 404 week_not_on_trip when a cell is not on the trip, 409 invalid_transition
+        when a cell is already to buy.
+      parameters:
+        - $ref: '#/components/parameters/TripId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PurchasesRequest'
+      security:
+        - cookieAuth: []
+      responses:
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '200':
+          description: The updated trip.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShoppingTrip'
+              examples:
+                open:
+                  externalValue: examples/shopping-trip.json
+        '400':
+          $ref: '#/components/responses/TripInvalidRequest'
+        '403':
+          $ref: '#/components/responses/WriteForbidden'
+        '404':
+          $ref: '#/components/responses/TripOrPlanNotFound'
+        '409':
+          $ref: '#/components/responses/TripConflict'
+  /api/v1/shopping-trips/{trip_id}/done:
+    post:
+      tags: [Shopping trips]
+      operationId: markShoppingTripDone
+      summary: Mark every to-buy cell bought
+      description: |-
+        Marks every to-buy cell bought (see markShoppingTripPurchases). 409
+        invalid_transition when no cell is to buy.
+      parameters:
+        - $ref: '#/components/parameters/TripId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExpectedVersionRequest'
+      security:
+        - cookieAuth: []
+      responses:
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '200':
+          description: The done trip.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShoppingTrip'
+              examples:
+                done:
+                  externalValue: examples/shopping-trip-done.json
+        '400':
+          $ref: '#/components/responses/TripInvalidRequest'
+        '403':
+          $ref: '#/components/responses/WriteForbidden'
+        '404':
+          $ref: '#/components/responses/TripNotFound'
+        '409':
+          $ref: '#/components/responses/TripConflict'
+  /api/v1/shopping-trips/{trip_id}/reopen:
+    post:
+      tags: [Shopping trips]
+      operationId: reopenShoppingTrip
+      summary: Return every bought cell to to-buy
+      description: |-
+        Returns every bought cell to to-buy (see unmarkShoppingTripPurchases). 409
+        invalid_transition when no cell is bought.
+      parameters:
+        - $ref: '#/components/parameters/TripId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExpectedVersionRequest'
+      security:
+        - cookieAuth: []
+      responses:
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '200':
+          description: The reopened trip.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShoppingTrip'
+              examples:
+                reopened:
+                  externalValue: examples/shopping-trip.json
+        '400':
+          $ref: '#/components/responses/TripInvalidRequest'
+        '403':
+          $ref: '#/components/responses/WriteForbidden'
+        '404':
+          $ref: '#/components/responses/TripNotFound'
+        '409':
+          $ref: '#/components/responses/TripConflict'
+  /api/v1/coverage:
+    get:
+      tags: [Shopping trips]
+      operationId: getCoverage
+      summary: Read week coverage for a date range
+      description: |-
+        For every plan whose week overlaps the inclusive range (same rules as listPlans),
+        reports coverage per shelf-life group (long_lasting and fresh) from shopping trips:
+        not_covered, to_buy or bought, with the trip_id and changed_since_shopping. Nothing
+        is stored on the plan. Every group is not_covered when the API is not SQLite-backed.
+      parameters:
+        - $ref: '#/components/parameters/CoverageFrom'
+        - $ref: '#/components/parameters/CoverageTo'
+      responses:
+        '200':
+          description: Per-plan coverage, ordered by week_start.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoverageList'
+              examples:
+                coverage:
+                  externalValue: examples/coverage.json
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
+        '503':
+          $ref: '#/components/responses/SourceFailure'
+  /api/v1/publishing:
+    get:
+      tags: [Publishing]
+      operationId: getPublishing
+      summary: Publishing status
+      description: |-
+        Whether publishing is configured, the public site URL, the most recently started job
+        and the most recent job confirmed live. A latest job in status pushed is refreshed
+        from GitHub first (cached at least 10 seconds), so it may come back live or failed.
+      security:
+        - cookieAuth: []
+      responses:
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '200':
+          description: Publishing status.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublishingStatus'
+              examples:
+                enabled:
+                  externalValue: examples/publishing.json
+                disabled:
+                  externalValue: examples/publishing-disabled.json
+  /api/v1/publishing/preview:
+    get:
+      tags: [Publishing]
+      operationId: previewPublication
+      summary: Preview what publishing the selected months would include
+      description: |-
+        Lists every full week overlapping the selected months with its current revision and
+        the revision in the last live job, plus every shopping trip whose weeks are all
+        included. unchanged is true when publishing now would be a no-op. Nothing is written
+        or pushed.
+      parameters:
+        - name: months
+          in: query
+          required: true
+          description: Comma-separated YYYY-MM months.
+          schema:
+            type: string
+            pattern: '^\d{4}-(0[1-9]|1[0-2])(,\d{4}-(0[1-9]|1[0-2])){0,11}$'
+          example: 2026-10,2026-11
+      security:
+        - cookieAuth: []
+      responses:
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '200':
+          description: The preview.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublishingPreview'
+              examples:
+                preview:
+                  externalValue: examples/publishing-preview.json
+        '422':
+          $ref: '#/components/responses/PublishInvalidMonths'
+        '502':
+          $ref: '#/components/responses/PublishFailed'
+        '503':
+          $ref: '#/components/responses/PublishingDisabled'
+  /api/v1/publishing/jobs:
+    post:
+      tags: [Publishing]
+      operationId: createPublicationJob
+      summary: Publish the selected months
+      description: |-
+        Runs synchronously: exports the selected months, validates the bundle, commits it to
+        the public repository and pushes it. The response is the finished job: pushed (Pages
+        deployment still to be confirmed via the job resource) or unchanged (nothing
+        committed). One job runs at a time (409 publish_in_progress). A failure is recorded
+        as a failed job (502 publish_failed) and leaves the previous public version
+        untouched. 503 publishing_disabled when publishing is not configured.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PublishRequest'
+            example:
+              months: ['2026-10', '2026-11']
+      security:
+        - cookieAuth: []
+      responses:
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '201':
+          description: The finished job.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublishingJob'
+              examples:
+                pushed:
+                  externalValue: examples/publishing-job.json
+                unchanged:
+                  externalValue: examples/publishing-job-unchanged.json
+        '400':
+          $ref: '#/components/responses/PublishInvalidRequest'
+        '403':
+          $ref: '#/components/responses/WriteForbidden'
+        '409':
+          $ref: '#/components/responses/PublishInProgress'
+        '422':
+          $ref: '#/components/responses/PublishInvalidMonths'
+        '502':
+          $ref: '#/components/responses/PublishFailed'
+        '503':
+          $ref: '#/components/responses/PublishingDisabled'
+  /api/v1/publishing/jobs/{job_id}:
+    get:
+      tags: [Publishing]
+      operationId: getPublicationJob
+      summary: Read one publication job
+      description: |-
+        A job in status pushed is refreshed from the GitHub Actions run for its commit
+        (cached at least 10 seconds): live once the Pages deployment succeeded, failed when
+        it did not. If GitHub cannot be reached the job stays pushed.
+      parameters:
+        - $ref: '#/components/parameters/JobId'
+      security:
+        - cookieAuth: []
+      responses:
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+        '200':
+          description: The job.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublishingJob'
+              examples:
+                pushed:
+                  externalValue: examples/publishing-job.json
+                live:
+                  externalValue: examples/publishing-job-live.json
+        '404':
+          $ref: '#/components/responses/PublishJobNotFound'
+        '503':
+          $ref: '#/components/responses/PublishingDisabled'
+  /api/v1/capabilities:
+    get:
+      tags: [Capabilities]
+      operationId: getCapabilities
+      summary: Read what this client may do
+      description: |-
+        Open to everyone. Without a session authenticated is false and every can_* is false.
+        With a session, authenticated is true and username names the user; can_edit_plans
+        and can_edit_shopping_trips need a SQLite-backed API, can_publish needs publishing
+        configured. Clients should use it to decide what to offer; the server re-checks
+        every mutation.
+      responses:
+        '200':
+          description: Capabilities for this client.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Capabilities'
+              examples:
+                editable:
+                  externalValue: examples/capabilities.json
+                anonymous:
+                  externalValue: examples/capabilities-anonymous.json
+  /api/v1/session:
+    get:
+      tags: [Session]
+      operationId: getSession
+      summary: Who is logged in
+      description: |-
+        Returns 200 with the username when the request carries a valid session cookie, else
+        401 unauthenticated.
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: The logged-in user.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+              examples:
+                session:
+                  externalValue: examples/session.json
+        '401':
+          $ref: '#/components/responses/Unauthenticated'
+    post:
+      tags: [Session]
+      operationId: login
+      summary: Log in
+      description: |-
+        Checks the household credentials and starts a session by setting the mp_session
+        cookie, which lasts up to 90 days (30 days if unused). An unknown user, wrong
+        password and disabled account are indistinguishable (401 invalid_credentials). After
+        5 failures in 15 minutes for one username or client address, further attempts get
+        429 too_many_attempts with Retry-After, even with the right password.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Logged in; the session cookie is set.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-store
+            Set-Cookie:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+              examples:
+                session:
+                  externalValue: examples/session.json
+        '401':
+          description: Wrong username or password, or a disabled account (invalid_credentials).
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidCredentials:
+                  externalValue: examples/error-invalid-credentials.json
+        '403':
+          $ref: '#/components/responses/CrossOriginRejected'
+        '422':
+          description: |-
+            The body is not a JSON object with only a non-empty username and password
+            (invalid_request).
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidLogin:
+                  externalValue: examples/error-invalid-login.json
+        '429':
+          description: Too many failed attempts (too_many_attempts); wait Retry-After seconds.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-store
+            Retry-After:
+              schema:
+                type: integer
+                minimum: 1
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                tooManyAttempts:
+                  externalValue: examples/error-too-many-attempts.json
+    delete:
+      tags: [Session]
+      operationId: logout
+      summary: Log out
+      description: Ends the session and clears the cookie. Always 204, with or without a session.
+      security: []
+      responses:
+        '204':
+          description: Logged out.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-store
+        '403':
+          $ref: '#/components/responses/CrossOriginRejected'
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: mp_session
+      description: Session cookie set by POST /api/v1/session.
+  parameters:
+    Month:
+      name: month
+      in: path
+      required: true
+      schema:
+        type: string
+        pattern: '^\d{4}-(0[1-9]|1[0-2])$'
+      example: '2026-10'
+    PlanId:
+      name: plan_id
+      in: path
+      required: true
+      description: Opaque plan identifier. Invalid identifiers return 400.
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 128
+        pattern: '^[A-Za-z0-9][A-Za-z0-9_-]*$'
+      example: plan_2026_10_19
+    ProposalId:
+      name: proposal_id
+      in: path
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 128
+        pattern: '^[A-Za-z0-9][A-Za-z0-9_-]*$'
+      example: prop_9b1f0c2e4d5a4f7c8a3e6d1b2c0f4a55
+    TripId:
+      name: trip_id
+      in: path
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 128
+        pattern: '^[A-Za-z0-9][A-Za-z0-9_-]*$'
+      example: trip_5c1e9a7f3b2d4e6f8a0b1c2d3e4f5a6b
+    JobId:
+      name: job_id
+      in: path
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 128
+        pattern: '^[A-Za-z0-9][A-Za-z0-9_-]*$'
+      example: job_20261021T150000Z_3f9a1c20
+    ExpectedVersion:
+      name: expected_version
+      in: query
+      required: true
+      description: |-
+        The trip version the client last saw (DELETE has no body). A mismatch returns 409
+        stale_version.
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 2147483647
+      example: 2
+    TripGroup:
+      name: group
+      in: query
+      required: false
+      description: Remove only this shelf-life group; without it the whole week is removed.
+      schema:
+        $ref: '#/components/schemas/ShelfLife'
+    CoverageFrom:
+      name: from
+      in: query
+      required: true
+      description: Inclusive start date.
+      schema:
+        type: string
+        format: date
+      example: '2026-10-01'
+    CoverageTo:
+      name: to
+      in: query
+      required: true
+      description: Inclusive end date.
+      schema:
+        type: string
+        format: date
+      example: '2026-10-31'
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: |-
+        Client-generated retry id. Reusing it for the same request replays the original
+        result with replayed: true; reusing it for a different request returns 422
+        retry_id_reused.
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 128
+        pattern: '^[\x21-\x7e]+$'
+      example: 3f0c8e52-6c1a-4d0e-9a53-0d6a2d9d7c11
+  responses:
+    WriteInvalidRequest:
+      description: |-
+        Malformed request: bad JSON, unknown or invalid field or identifier, missing
+        Idempotency-Key, or week_start not a Monday (invalid_week).
+      headers:
+        Cache-Control:
+          schema:
+            type: string
+            const: no-store
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            unknownField:
+              externalValue: examples/error-invalid-body.json
+            missingKey:
+              externalValue: examples/error-missing-idempotency-key.json
+            invalidWeek:
+              externalValue: examples/error-invalid-week.json
+    Unauthenticated:
+      description: No valid session (unauthenticated).
+      headers:
+        Cache-Control:
+          schema:
+            type: string
+            const: no-store
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            unauthenticated:
+              externalValue: examples/error-unauthenticated.json
+    CrossOriginRejected:
+      description: Cross-site state-changing request (cross_origin_rejected).
+      headers:
+        Cache-Control:
+          schema:
+            type: string
+            const: no-store
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            crossOrigin:
+              externalValue: examples/error-cross-origin-rejected.json
+    WriteForbidden:
+      description: |-
+        Plan and shopping changes need a SQLite-backed API (read_only), or the request came
+        from another site (cross_origin_rejected).
+      headers:
+        Cache-Control:
+          schema:
+            type: string
+            const: no-store
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            crossOrigin:
+              externalValue: examples/error-cross-origin-rejected.json
+            readOnly:
+              externalValue: examples/error-read-only.json
+    TripInvalidRequest:
+      description: Malformed request, or a missing or invalid expected_version.
+      headers:
+        Cache-Control:
+          schema:
+            type: string
+            const: no-store
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            unknownField:
+              externalValue: examples/error-invalid-body.json
+    TripNotFound:
+      description: No shopping trip exists for the requested identifier.
+      headers:
+        Cache-Control:
+          schema:
+            type: string
+            const: no-store
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            unknownTrip:
+              externalValue: examples/error-trip-not-found.json
+    TripOrPlanNotFound:
+      description: Unknown trip (trip_not_found), unknown plan (plan_not_found), or a plan that is not on the trip (week_not_on_trip).
+      headers:
+        Cache-Control:
+          schema:
+            type: string
+            const: no-store
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            unknownTrip:
+              externalValue: examples/error-trip-not-found.json
+            unknownPlan:
+              externalValue: examples/error-plan-not-found.json
+            weekNotOnTrip:
+              externalValue: examples/error-week-not-on-trip.json
+    TripConflict:
+      description: stale_version (expected_version is behind), week_already_on_trip, invalid_transition (a cell is already in the requested state, or no cell can move), or last_week. Nothing was changed.
+      headers:
+        Cache-Control:
+          schema:
+            type: string
+            const: no-store
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            staleVersion:
+              externalValue: examples/error-stale-version.json
+            weekAlreadyOnTrip:
+              externalValue: examples/error-week-already-on-trip.json
+            invalidTransition:
+              externalValue: examples/error-invalid-transition.json
+            lastWeek:
+              externalValue: examples/error-last-week.json
+    InvalidRequest:
+      description: Missing or malformed input, or an invalid date range.
+      headers:
+        Cache-Control:
+          schema:
+            type: string
+            const: no-store
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            invalidRange:
+              externalValue: examples/error-invalid-range.json
+            invalidDate:
+              externalValue: examples/error-invalid-date.json
+            invalidRevision:
+              externalValue: examples/error-invalid-revision.json
+    PlanNotFound:
+      description: No plan exists for the requested identifier.
+      headers:
+        Cache-Control:
+          schema:
+            type: string
+            const: no-store
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            unknownPlan:
+              externalValue: examples/error-plan-not-found.json
+    SourceFailure:
+      description: The source is unavailable or contains invalid plan data.
+      headers:
+        Cache-Control:
+          schema:
+            type: string
+            const: no-store
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            unavailable:
+              externalValue: examples/error-source-unavailable.json
+            invalidSource:
+              externalValue: examples/error-source-invalid.json
+    PublishInvalidRequest:
+      description: Malformed JSON body, unknown field, or missing months.
+      headers:
+        Cache-Control:
+          schema:
+            type: string
+            const: no-store
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            unknownField:
+              externalValue: examples/error-invalid-body.json
+    PublishInvalidMonths:
+      description: months is empty, malformed, duplicated, or over 12.
+      headers:
+        Cache-Control:
+          schema:
+            type: string
+            const: no-store
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            invalidMonths:
+              externalValue: examples/error-invalid-months.json
+    PublishInProgress:
+      description: |-
+        Another publication job is running (one older than 10 minutes counts as crashed).
+      headers:
+        Cache-Control:
+          schema:
+            type: string
+            const: no-store
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            inProgress:
+              externalValue: examples/error-publish-in-progress.json
+    PublishFailed:
+      description: |-
+        Export, validation, commit or push failed; the job is recorded as failed and the
+        previous public version is untouched.
+      headers:
+        Cache-Control:
+          schema:
+            type: string
+            const: no-store
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            failed:
+              externalValue: examples/error-publish-failed.json
+    PublishingDisabled:
+      description: Publishing is not configured or the application revision is unknown.
+      headers:
+        Cache-Control:
+          schema:
+            type: string
+            const: no-store
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            disabled:
+              externalValue: examples/error-publishing-disabled.json
+    PublishJobNotFound:
+      description: No publication job exists for the requested identifier.
+      headers:
+        Cache-Control:
+          schema:
+            type: string
+            const: no-store
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            notFound:
+              externalValue: examples/error-not-found.json
+  schemas:
+    PlanList:
+      type: object
+      additionalProperties: false
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/PlanSummary'
+    PlanSummary:
+      type: object
+      additionalProperties: false
+      required: [plan_id, week_start, week_end, timezone, revision, snapshot_id, generated_at, seed]
+      properties:
+        plan_id:
+          type: string
+          minLength: 1
+          maxLength: 128
+          pattern: '^[A-Za-z0-9][A-Za-z0-9_-]*$'
+          description: Opaque identity of the saved week.
+        week_start:
+          type: string
+          format: date
+        week_end:
+          type: string
+          format: date
+          description: Inclusive Sunday of the week.
+        timezone:
+          type: string
+          example: America/Bogota
+        revision:
+          type: integer
+          minimum: 1
+        snapshot_id:
+          type: string
+          minLength: 1
+          description: |-
+            Opaque content token for the normalized plan and shopping payload; unchanged
+            content keeps its token.
+        generated_at:
+          type: string
+          format: date-time
+          description: Generation timestamp; does not determine week_start.
+        seed:
+          type: integer
+          description: Solver seed, provenance only.
+    Plan:
+      type: object
+      additionalProperties: false
+      required: [plan_id, week_start, week_end, timezone, revision, snapshot_id, generated_at, seed, slots, derived]
+      properties:
+        plan_id:
+          type: string
+          minLength: 1
+          maxLength: 128
+          pattern: '^[A-Za-z0-9][A-Za-z0-9_-]*$'
+          description: Opaque identity of the saved week.
+        week_start:
+          type: string
+          format: date
+        week_end:
+          type: string
+          format: date
+          description: Inclusive Sunday of the week.
+        timezone:
+          type: string
+          example: America/Bogota
+        revision:
+          type: integer
+          minimum: 1
+        snapshot_id:
+          type: string
+          minLength: 1
+          description: Opaque content token shared with the matching shopping list.
+        generated_at:
+          type: string
+          format: date-time
+          description: Generation timestamp; does not determine week_start.
+        seed:
+          type: integer
+          description: Solver seed, provenance only.
+        slots:
+          type: array
+          description: Ordered by date, then lunch before dinner.
+          items:
+            $ref: '#/components/schemas/MealAssignment'
+        derived:
+          $ref: '#/components/schemas/PlanDerived'
+    PlanDerived:
+      type: object
+      additionalProperties: false
+      required: [protein_counts, carb_counts]
+      properties:
+        protein_counts:
+          type: object
+          additionalProperties:
+            type: integer
+            minimum: 0
+          required: [chicken, beef, pork, fish, egg]
+          properties:
+            chicken: {type: integer, minimum: 0}
+            beef: {type: integer, minimum: 0}
+            pork: {type: integer, minimum: 0}
+            fish: {type: integer, minimum: 0}
+            egg: {type: integer, minimum: 0}
+        carb_counts:
+          type: object
+          additionalProperties:
+            type: integer
+            minimum: 0
+    MealAssignment:
+      type: object
+      additionalProperties: false
+      required: [assignment_id, date, day, meal, recipe_id, recipe_name, variant_id, protein, protein_quantity, carb, carb_quantity, ingredients, extended_from_lunch, linked_assignment_id]
+      properties:
+        assignment_id:
+          type: string
+          minLength: 1
+          description: Stable identity of the slot within its plan.
+        date:
+          type: string
+          format: date
+        day:
+          type: string
+          enum: [mon, tue, wed, thu, fri, sat, sun]
+        meal:
+          type: string
+          enum: [lunch, dinner]
+        recipe_id:
+          type: string
+          minLength: 1
+        recipe_name:
+          type: string
+        variant_id:
+          type: string
+          minLength: 1
+        protein:
+          type: string
+          enum: [chicken, beef, pork, fish, egg]
+        protein_quantity:
+          $ref: '#/components/schemas/Quantity'
+          description: Raw ingredient quantity, not nutritional protein weight.
+        carb:
+          type: [string, 'null']
+        carb_quantity:
+          oneOf:
+            - $ref: '#/components/schemas/Quantity'
+            - type: 'null'
+        ingredients:
+          type: array
+          items:
+            $ref: '#/components/schemas/PlanIngredient'
+        extended_from_lunch:
+          type: boolean
+          description: True for a dinner that reuses its lunch's base recipe.
+        linked_assignment_id:
+          type: [string, 'null']
+          description: Reciprocal assignment ID of the linked same-day pair, else null.
+    Quantity:
+      type: object
+      additionalProperties: false
+      required: [value, unit]
+      properties:
+        value:
+          type: number
+          minimum: 0
+        unit:
+          type: string
+          enum: [g, ml, units]
+    PlanIngredient:
+      type: object
+      additionalProperties: false
+      required: [ingredient_id, display, quantity, unit, role]
+      properties:
+        ingredient_id:
+          type: string
+          minLength: 1
+        display:
+          type: string
+        quantity:
+          type: number
+          minimum: 0
+        unit:
+          type: string
+          enum: [g, ml, units]
+        role:
+          type: string
+          enum: [protein, protein_extra, veg, fat, condiment, garnish, herb, spice, dairy, other, carb]
+          description: Recipe ingredient role; carb is added for the variant's carbohydrate ingredient.
+    ShoppingList:
+      type: object
+      additionalProperties: false
+      required: [plan_id, revision, snapshot_id, week_start, week_end, sections]
+      properties:
+        plan_id:
+          type: string
+          minLength: 1
+          maxLength: 128
+          pattern: '^[A-Za-z0-9][A-Za-z0-9_-]*$'
+        revision:
+          type: integer
+          minimum: 1
+        snapshot_id:
+          type: string
+          minLength: 1
+        week_start:
+          type: string
+          format: date
+        week_end:
+          type: string
+          format: date
+        sections:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              $ref: '#/components/schemas/ShoppingLine'
+    ShoppingLine:
+      type: object
+      additionalProperties: false
+      required: [ingredient_id, display, quantity, unit, section, notes]
+      properties:
+        ingredient_id:
+          type: string
+          minLength: 1
+        display:
+          type: string
+        quantity:
+          type: number
+          minimum: 0
+        unit:
+          type: string
+          enum: [g, ml, units]
+        section:
+          type: string
+        notes:
+          type: [string, 'null']
+    Capabilities:
+      type: object
+      additionalProperties: false
+      required: [authenticated, can_edit_plans, can_edit_shopping_trips, can_publish]
+      properties:
+        authenticated:
+          type: boolean
+          description: True when the request carries a valid session.
+        username:
+          type: string
+          description: Present only when authenticated.
+        can_edit_plans:
+          type: boolean
+          description: True only for a logged-in user of a SQLite-backed API.
+        can_edit_shopping_trips:
+          type: boolean
+          description: Same conditions; gates shopping trip changes.
+        can_publish:
+          type: boolean
+          description: True only for a logged-in user when publishing is configured.
+    Session:
+      type: object
+      additionalProperties: false
+      required: [username]
+      properties:
+        username:
+          type: string
+          description: Normalized (lowercase) username.
+    LoginRequest:
+      type: object
+      additionalProperties: false
+      required: [username, password]
+      properties:
+        username:
+          type: string
+          minLength: 1
+          maxLength: 1024
+        password:
+          type: string
+          minLength: 1
+          maxLength: 1024
+    PublishRequest:
+      type: object
+      additionalProperties: false
+      required: [months]
+      properties:
+        months:
+          type: array
+          minItems: 1
+          maxItems: 12
+          uniqueItems: true
+          items:
+            type: string
+            pattern: '^\d{4}-(0[1-9]|1[0-2])$'
+    PublishingJob:
+      type: object
+      additionalProperties: false
+      required: [job_id, months, status, publication_id, commit_sha, run_url, error, started_at, finished_at, deployed_at]
+      description: A private record of one publish attempt.
+      properties:
+        job_id:
+          type: string
+          pattern: '^[A-Za-z0-9][A-Za-z0-9_-]*$'
+        months:
+          type: array
+          items:
+            type: string
+            pattern: '^\d{4}-(0[1-9]|1[0-2])$'
+        status:
+          type: string
+          enum: [running, pushed, live, failed, unchanged]
+          description: |-
+            running (in progress, or crashed until it is 10 minutes old), pushed (committed
+            and pushed, deployment not yet confirmed), live (Pages deployment confirmed),
+            failed, unchanged (identical content already published; no commit).
+        publication_id:
+          type: [string, 'null']
+          description: The publication this job pushed, or for unchanged the one already published.
+        commit_sha:
+          type: [string, 'null']
+          pattern: '^[0-9a-f]{40}$'
+        run_url:
+          type: [string, 'null']
+          format: uri
+          description: GitHub Actions run that deploys the pushed commit, once known.
+        error:
+          type: [string, 'null']
+          description: Safe failure message (no paths or credentials).
+        started_at:
+          type: string
+          format: date-time
+        finished_at:
+          type: [string, 'null']
+          format: date-time
+          description: When the export and push finished.
+        deployed_at:
+          type: [string, 'null']
+          format: date-time
+          description: Set only with status live.
+    PublishingStatus:
+      type: object
+      additionalProperties: false
+      required: [enabled, site_url, latest_job, last_live_job]
+      properties:
+        enabled:
+          type: boolean
+        site_url:
+          type: string
+        latest_job:
+          anyOf:
+            - $ref: '#/components/schemas/PublishingJob'
+            - type: 'null'
+        last_live_job:
+          anyOf:
+            - $ref: '#/components/schemas/PublishingJob'
+            - type: 'null'
+    PublishingPreview:
+      type: object
+      additionalProperties: false
+      required: [months, weeks, trips, unchanged]
+      properties:
+        months:
+          type: array
+          items:
+            type: string
+            pattern: '^\d{4}-(0[1-9]|1[0-2])$'
+        weeks:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [plan_id, week_start, week_end, revision, published_revision]
+            properties:
+              plan_id:
+                type: string
+              week_start:
+                type: string
+                format: date
+              week_end:
+                type: string
+                format: date
+              revision:
+                type: integer
+                minimum: 1
+              published_revision:
+                type: [integer, 'null']
+                minimum: 1
+                description: Revision of this week in the last live job; null when never published.
+        trips:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [trip_id, name, status]
+            properties:
+              trip_id:
+                type: string
+              name:
+                type: string
+              status:
+                type: string
+                enum: [open, done]
+        unchanged:
+          type: boolean
+          description: True when publishing now would be a no-op.
+    FillMonthRequest:
+      type: object
+      additionalProperties: false
+      maxProperties: 0
+    WeekFillOutcome:
+      type: object
+      additionalProperties: false
+      required: [week_start, week_end, status]
+      properties:
+        week_start:
+          type: string
+          format: date
+        week_end:
+          type: string
+          format: date
+        status:
+          type: string
+          enum: [created, exists, skipped_past, failed]
+        plan_id:
+          type: string
+          minLength: 1
+          maxLength: 128
+          pattern: '^[A-Za-z0-9][A-Za-z0-9_-]*$'
+          description: Present for created and exists.
+        revision:
+          type: integer
+          minimum: 1
+          description: Present for created (always 1) and exists (the current revision).
+        error:
+          type: object
+          additionalProperties: false
+          required: [code, message]
+          description: Present only for failed.
+          properties:
+            code:
+              type: string
+              enum: [generation_failed, rule_violation, week_not_editable, invalid_week]
+            message:
+              type: string
+    MonthFillResult:
+      type: object
+      additionalProperties: false
+      required: [month, weeks]
+      properties:
+        month:
+          type: string
+          pattern: '^\d{4}-(0[1-9]|1[0-2])$'
+        weeks:
+          type: array
+          minItems: 4
+          maxItems: 6
+          items:
+            $ref: '#/components/schemas/WeekFillOutcome'
+    CreatePlanRequest:
+      type: object
+      additionalProperties: false
+      required: [week_start]
+      properties:
+        week_start:
+          type: string
+          format: date
+        seed:
+          type: integer
+          minimum: 0
+          maximum: 2147483647
+          description: Solver seed; defaults to the week's deterministic seed.
+    ProposeRequest:
+      type: object
+      additionalProperties: false
+      required: [expected_revision]
+      properties:
+        expected_revision:
+          type: integer
+          minimum: 1
+          maximum: 2147483647
+        seed:
+          type: integer
+          minimum: 0
+          maximum: 2147483647
+          description: Solver seed; defaults to a fresh random seed.
+    ExpectedRevisionRequest:
+      type: object
+      additionalProperties: false
+      required: [expected_revision]
+      properties:
+        expected_revision:
+          type: integer
+          minimum: 1
+          maximum: 2147483647
+    SlotChange:
+      type: object
+      additionalProperties: false
+      required: [assignment_id, date, meal, kind, before, after]
+      properties:
+        assignment_id:
+          type: string
+          minLength: 1
+        date:
+          type: string
+          format: date
+        meal:
+          type: string
+          enum: [lunch, dinner]
+        kind:
+          type: string
+          enum: [changed, added, removed]
+        before:
+          oneOf:
+            - $ref: '#/components/schemas/MealAssignment'
+            - type: 'null'
+        after:
+          oneOf:
+            - $ref: '#/components/schemas/MealAssignment'
+            - type: 'null'
+    Proposal:
+      type: object
+      additionalProperties: false
+      required: [proposal_id, plan_id, base_revision, base_snapshot_id, seed, created_at, expires_at, identical, replaced_swaps, changes, plan, shopping_list]
+      properties:
+        proposal_id:
+          type: string
+          minLength: 1
+          maxLength: 128
+          pattern: '^[A-Za-z0-9][A-Za-z0-9_-]*$'
+        plan_id:
+          type: string
+          minLength: 1
+          maxLength: 128
+          pattern: '^[A-Za-z0-9][A-Za-z0-9_-]*$'
+        base_revision:
+          type: integer
+          minimum: 1
+        base_snapshot_id:
+          type: string
+          minLength: 1
+        seed:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        expires_at:
+          type: string
+          format: date-time
+        identical:
+          type: boolean
+          description: True when accepting would change nothing.
+        replaced_swaps:
+          type: integer
+          minimum: 0
+          description: |-
+            Slots changed by manual swaps since the last generated revision that accepting
+            would replace; warn when above 0.
+        changes:
+          type: array
+          items:
+            $ref: '#/components/schemas/SlotChange'
+        plan:
+          $ref: '#/components/schemas/Plan'
+        shopping_list:
+          $ref: '#/components/schemas/ShoppingList'
+    SwapRequest:
+      type: object
+      additionalProperties: false
+      required: [slot_id, variant_id, scope, expected_revision]
+      properties:
+        slot_id:
+          type: string
+          minLength: 1
+          maxLength: 128
+        variant_id:
+          type: string
+          minLength: 1
+          maxLength: 128
+          description: A variant_id from GET /api/v1/catalog/variants.
+        scope:
+          type: string
+          enum: [pair, single]
+          description: pair swaps a linked lunch/dinner together (an unlinked slot is swapped alone); single swaps only this slot and unlinks the pair.
+        expected_revision:
+          type: integer
+          minimum: 1
+          maximum: 2147483647
+    SwapVariant:
+      type: object
+      additionalProperties: false
+      required: [recipe_id, variant_id, name, protein, carb]
+      properties:
+        recipe_id:
+          type: string
+          minLength: 1
+        variant_id:
+          type: string
+          minLength: 1
+        name:
+          type: string
+          description: Display name plans show for this variant.
+        protein:
+          type: string
+          enum: [chicken, beef, pork, fish, egg]
+        carb:
+          type: [string, 'null']
+    SwapVariantList:
+      type: object
+      additionalProperties: false
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/SwapVariant'
+    GroceryDeltaRow:
+      type: object
+      additionalProperties: false
+      required: [ingredient_id, display, unit, section, before, after, difference]
+      properties:
+        ingredient_id:
+          type: string
+          minLength: 1
+        display:
+          type: string
+        unit:
+          type: string
+          enum: [g, ml, units]
+        section:
+          type: string
+        before:
+          type: number
+          minimum: 0
+          description: Weekly quantity before the swap (0 when absent).
+        after:
+          type: number
+          minimum: 0
+          description: Weekly quantity after the swap (0 when absent).
+        difference:
+          type: number
+          description: after - before, never 0.
+    RuleWarning:
+      type: object
+      additionalProperties: false
+      required: [rule, message]
+      properties:
+        rule:
+          type: string
+          minLength: 1
+          description: Stable weekly rule code, for example consecutive_same_protein.
+        message:
+          type: string
+    ExtraNeededRow:
+      type: object
+      additionalProperties: false
+      required: [ingredient_id, display, unit, quantity]
+      properties:
+        ingredient_id:
+          type: string
+          minLength: 1
+        display:
+          type: string
+        unit:
+          type: string
+          enum: [g, ml, units]
+        quantity:
+          type: number
+          exclusiveMinimum: 0
+    SwapTripImpact:
+      type: object
+      additionalProperties: false
+      required: [trip_id, name, status, groups, extra_needed]
+      properties:
+        trip_id:
+          type: string
+          minLength: 1
+        name:
+          type: string
+        status:
+          type: string
+          enum: [open, done]
+        groups:
+          type: array
+          minItems: 1
+          maxItems: 2
+          description: Ordered long_lasting, fresh.
+          items:
+            type: object
+            additionalProperties: false
+            required: [group, state]
+            properties:
+              group:
+                $ref: '#/components/schemas/ShelfLife'
+              state:
+                type: string
+                enum: [to_buy, bought]
+        extra_needed:
+          type: array
+          description: |-
+            Empty while every cell is to buy. For bought cells, what the swapped week needs
+            beyond the cell's frozen revision, for that group's ingredients.
+          items:
+            $ref: '#/components/schemas/ExtraNeededRow'
+    SwapPreview:
+      type: object
+      additionalProperties: false
+      required: [plan_id, base_revision, changes, grocery_delta, rule_warnings, trips]
+      properties:
+        plan_id:
+          type: string
+          minLength: 1
+          maxLength: 128
+          pattern: '^[A-Za-z0-9][A-Za-z0-9_-]*$'
+        base_revision:
+          type: integer
+          minimum: 1
+        changes:
+          type: array
+          items:
+            $ref: '#/components/schemas/SlotChange'
+        grocery_delta:
+          type: array
+          items:
+            $ref: '#/components/schemas/GroceryDeltaRow'
+        rule_warnings:
+          type: array
+          description: Every weekly-rule violation the swapped plan has (advisory).
+          items:
+            $ref: '#/components/schemas/RuleWarning'
+        trips:
+          type: array
+          description: Every shopping list the week is on, oldest first.
+          items:
+            $ref: '#/components/schemas/SwapTripImpact'
+
+    SwapResult:
+      type: object
+      additionalProperties: false
+      required: [plan, rule_warnings]
+      properties:
+        plan:
+          $ref: '#/components/schemas/Plan'
+        rule_warnings:
+          type: array
+          description: Every weekly-rule violation the resulting plan has (advisory).
+          items:
+            $ref: '#/components/schemas/RuleWarning'
+    MutationResult:
+      type: object
+      additionalProperties: false
+      required: [plan_id, revision, snapshot_id, changed, replayed]
+      properties:
+        plan_id:
+          type: string
+          minLength: 1
+          maxLength: 128
+          pattern: '^[A-Za-z0-9][A-Za-z0-9_-]*$'
+        revision:
+          type: integer
+          minimum: 1
+          description: Current revision after the call.
+        snapshot_id:
+          type: string
+          minLength: 1
+        changed:
+          type: boolean
+        replayed:
+          type: boolean
+          description: True when this replays an earlier request with the same Idempotency-Key.
+    RevisionSummary:
+      type: object
+      additionalProperties: false
+      required: [revision, snapshot_id, source, created_at]
+      properties:
+        revision:
+          type: integer
+          minimum: 1
+        snapshot_id:
+          type: string
+          minLength: 1
+        source:
+          type: string
+          enum: [import, create, regenerate, swap, undo]
+        created_at:
+          type: string
+          format: date-time
+    RevisionList:
+      type: object
+      additionalProperties: false
+      required: [plan_id, items]
+      properties:
+        plan_id:
+          type: string
+          minLength: 1
+          maxLength: 128
+          pattern: '^[A-Za-z0-9][A-Za-z0-9_-]*$'
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/RevisionSummary'
+    CoverageState:
+      type: string
+      enum: [not_covered, to_buy, bought]
+      description: not_covered (the week's group is on no trip), to_buy (a to-buy cell) or bought (a bought cell).
+    ShelfLife:
+      type: string
+      enum: [long_lasting, fresh]
+      description: |-
+        Long-lasting (frozen proteins, rice, oils, condiments, spices) or fresh (vegetables,
+        herbs, dairy, bread). Labels come from the planner inputs at read time, not from
+        plan snapshots.
+    GroupCoverage:
+      type: object
+      additionalProperties: false
+      required: [coverage, trip_id, changed_since_shopping]
+      properties:
+        coverage:
+          $ref: '#/components/schemas/CoverageState'
+        trip_id:
+          anyOf:
+            - {type: string, minLength: 1, maxLength: 128, pattern: '^[A-Za-z0-9][A-Za-z0-9_-]*$'}
+            - type: 'null'
+        changed_since_shopping:
+          type: boolean
+    TripCell:
+      type: object
+      additionalProperties: false
+      required: [group, state, bought_at, revision, snapshot_id, changed_since_shopping]
+      description: |-
+        A bought cell freezes the revision and snapshot it was bought at; a to-buy cell
+        follows the plan's current revision and has null bought_at, revision and
+        snapshot_id.
+      properties:
+        group:
+          $ref: '#/components/schemas/ShelfLife'
+        state:
+          type: string
+          enum: [to_buy, bought]
+        bought_at:
+          type: [string, 'null']
+          format: date-time
+        revision:
+          type: [integer, 'null']
+          minimum: 1
+          description: Frozen revision; null while to buy.
+        snapshot_id:
+          type: [string, 'null']
+          minLength: 1
+          description: snapshot_id of that revision; null while to buy.
+        changed_since_shopping:
+          type: boolean
+          description: True for a bought cell when the plan's current_revision is newer than revision.
+    ShoppingTripWeek:
+      type: object
+      additionalProperties: false
+      required: [plan_id, week_start, week_end, current_revision, groups, cells]
+      properties:
+        plan_id: {type: string, minLength: 1, maxLength: 128, pattern: '^[A-Za-z0-9][A-Za-z0-9_-]*$'}
+        week_start:
+          type: string
+          format: date
+        week_end:
+          type: string
+          format: date
+        current_revision:
+          type: integer
+          minimum: 1
+        groups:
+          type: array
+          minItems: 1
+          maxItems: 2
+          uniqueItems: true
+          description: Shelf-life groups of this week on the trip, ordered long_lasting, fresh.
+          items:
+            $ref: '#/components/schemas/ShelfLife'
+        cells:
+          type: array
+          minItems: 1
+          maxItems: 2
+          description: One cell per entry of groups, in the same order.
+          items:
+            $ref: '#/components/schemas/TripCell'
+    ShoppingTripItem:
+      type: object
+      additionalProperties: false
+      required: [ingredient_id, display, quantity, unit, section, shelf_life, plan_ids, quantity_by_plan]
+      properties:
+        ingredient_id:
+          type: string
+          minLength: 1
+        display:
+          type: string
+        quantity:
+          type: number
+          minimum: 0
+          description: Sum over the contributing weeks whose groups include this item's shelf_life.
+        unit:
+          type: string
+          enum: [g, ml, units]
+        section:
+          type: string
+        shelf_life:
+          $ref: '#/components/schemas/ShelfLife'
+        plan_ids:
+          type: array
+          description: Plans contributing to this item, in week order.
+          items: {type: string, minLength: 1, maxLength: 128, pattern: '^[A-Za-z0-9][A-Za-z0-9_-]*$'}
+        quantity_by_plan:
+          type: object
+          description: Each plan's quantity (rounded to 2 decimals); quantity is exactly their sum.
+          propertyNames: {minLength: 1, maxLength: 128, pattern: '^[A-Za-z0-9][A-Za-z0-9_-]*$'}
+          additionalProperties:
+            type: number
+            minimum: 0
+    ShoppingTrip:
+      type: object
+      additionalProperties: false
+      required: [trip_id, name, status, version, created_at, updated_at, completed_at, weeks, items, bought_items]
+      description: |-
+        A shopping trip (shopping list in the UI) with its weeks and derived items. Also
+        used by the static publication.
+      properties:
+        trip_id: {type: string, minLength: 1, maxLength: 128, pattern: '^[A-Za-z0-9][A-Za-z0-9_-]*$'}
+        name:
+          type: string
+          minLength: 1
+          maxLength: 80
+        status:
+          type: string
+          enum: [open, done]
+          description: 'Derived: done when every cell is bought, else open.'
+        version:
+          type: integer
+          minimum: 1
+          description: Starts at 1 and increases by 1 on every mutation; the optimistic-concurrency token.
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        completed_at:
+          type: [string, 'null']
+          format: date-time
+          description: Latest bought_at while done; null while open.
+        weeks:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/ShoppingTripWeek'
+        items:
+          type: array
+          description: |-
+            To-buy totals: the saved grocery rows of the to-buy cells at the plans' current
+            revisions, per ingredient and unit, grouped by section. Bought cells never count
+            here.
+          items:
+            $ref: '#/components/schemas/ShoppingTripItem'
+        bought_items:
+          type: array
+          description: The same totals for bought cells, at their frozen revisions.
+          items:
+            $ref: '#/components/schemas/ShoppingTripItem'
+    ShoppingTripList:
+      type: object
+      additionalProperties: false
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ShoppingTrip'
+    CreateShoppingTripRequest:
+      type: object
+      additionalProperties: false
+      required: [plan_ids]
+      properties:
+        plan_ids:
+          type: array
+          minItems: 1
+          maxItems: 60
+          uniqueItems: true
+          items: {type: string, minLength: 1, maxLength: 128, pattern: '^[A-Za-z0-9][A-Za-z0-9_-]*$'}
+        name:
+          type: [string, 'null']
+          maxLength: 80
+          description: Optional label; defaults to the covered date range.
+        groups:
+          type: array
+          minItems: 1
+          maxItems: 2
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/ShelfLife'
+          description: Groups to cover for every given week. Defaults to both.
+    AddTripWeekRequest:
+      type: object
+      additionalProperties: false
+      required: [plan_id, expected_version]
+      properties:
+        plan_id: {type: string, minLength: 1, maxLength: 128, pattern: '^[A-Za-z0-9][A-Za-z0-9_-]*$'}
+        groups:
+          type: array
+          minItems: 1
+          maxItems: 2
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/ShelfLife'
+          description: Groups to cover. Defaults to both. A week already on the list gains the groups it lacks.
+        expected_version:
+          type: integer
+          minimum: 1
+          maximum: 2147483647
+    PurchasesRequest:
+      type: object
+      additionalProperties: false
+      required: [expected_version, cells]
+      properties:
+        expected_version:
+          type: integer
+          minimum: 1
+          maximum: 2147483647
+        cells:
+          type: array
+          minItems: 1
+          maxItems: 120
+          description: The (week, group) cells to move; each at most once.
+          items:
+            type: object
+            additionalProperties: false
+            required: [plan_id, group]
+            properties:
+              plan_id: {type: string, minLength: 1, maxLength: 128, pattern: '^[A-Za-z0-9][A-Za-z0-9_-]*$'}
+              group:
+                $ref: '#/components/schemas/ShelfLife'
+    ExpectedVersionRequest:
+      type: object
+      additionalProperties: false
+      required: [expected_version]
+      properties:
+        expected_version:
+          type: integer
+          minimum: 1
+          maximum: 2147483647
+    WeekCoverage:
+      type: object
+      additionalProperties: false
+      required: [plan_id, week_start, week_end, groups]
+      properties:
+        plan_id: {type: string, minLength: 1, maxLength: 128, pattern: '^[A-Za-z0-9][A-Za-z0-9_-]*$'}
+        week_start:
+          type: string
+          format: date
+        week_end:
+          type: string
+          format: date
+        groups:
+          type: object
+          additionalProperties: false
+          required: [long_lasting, fresh]
+          description: Coverage of the week per shelf-life group; each group is on at most one list.
+          properties:
+            long_lasting:
+              $ref: '#/components/schemas/GroupCoverage'
+            fresh:
+              $ref: '#/components/schemas/GroupCoverage'
+    CoverageList:
+      type: object
+      additionalProperties: false
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/WeekCoverage'
+    ErrorResponse:
+      type: object
+      additionalProperties: false
+      required: [error]
+      properties:
+        error:
+          type: object
+          additionalProperties: false
+          required: [code, message, details]
+          properties:
+            code:
+              type: string
+              enum: [invalid_request, invalid_week, unauthenticated, invalid_credentials, too_many_attempts, cross_origin_rejected, read_only, plan_not_found, snapshot_changed, source_unavailable, source_invalid, stale_revision, proposal_not_found, proposal_expired, input_basis_changed, retry_id_reused, nothing_to_undo, linked_pair_split, week_not_editable, duplicate_week, generation_failed, rule_violation, generation_busy, slot_not_found, variant_not_found, slot_not_editable, trip_not_found, stale_version, week_already_on_trip, invalid_transition, week_not_on_trip, last_week, invalid_months, publish_in_progress, publishing_disabled, publish_failed, not_found]
+            message:
+              type: string
+            details:
+              type: array
+              items:
+                type: object
+                additionalProperties: false
+                required: [field, message]
+                properties:
+                  field:
+                    type: string
+                  message:
+                    type: string

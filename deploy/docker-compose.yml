@@ -1,0 +1,88 @@
+# Production Compose file for the NAS. scripts/release.sh copies it to
+# /volume1/docker/meal-prep/compose.yaml and writes .env next to it with MEAL_PREP_DIGEST=sha256:...
+# (the digest GitHub built and attested for the released commit). Image only, no build; the digest
+# is mandatory, so a mutable tag can never be deployed by accident.
+# Deploy, rollback and restore procedures: docs/DEPLOYMENT.md.
+#
+# LAN only: plain HTTP on :8080, like any other home service. Viewing is open; changes need a login,
+# whose session cookie therefore cannot be Secure (MEALPLANNER_COOKIE_SECURE=0).
+name: meal-prep
+services:
+  meal-prep:
+    container_name: meal-prep
+    image: ghcr.io/jflopezo91/meal-prep@${MEAL_PREP_DIGEST:?set by scripts/release.sh}
+    user: "10001:10001"
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    environment:
+      MEALPLANNER_TIMEZONE: America/Bogota
+      MEALPLANNER_DINNER_ENABLED: "0"  # lunch only for now; "1" plans dinner again
+      MEALPLANNER_PUBLISH_REPO: git@github.com:jflopezo91/meal-plan.git
+      MEALPLANNER_COOKIE_SECURE: "0"  # plain HTTP on the LAN
+    ports:
+      - "8080:8080"
+    volumes:
+      - /volume1/docker/meal-prep/data:/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request as u; u.urlopen('http://127.0.0.1:8080/healthz', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    # PROVISIONAL limits: to be measured with a month fill on the NAS (docs/DEPLOYMENT.md, step 6).
+    mem_limit: 1g
+    cpus: 2.0
+    pids_limit: 256
+    # The publish deploy key, mounted as a file (never an environment variable).
+    secrets:
+      - deploy_key
+
+  # Weekly database backups into /volume1/docker/meal-prep/backups/weekly (newest 12 kept).
+  # Same image, so no extra software; release.sh also uses this service for the pre-release backup.
+  backup:
+    container_name: meal-prep-backup
+    image: ghcr.io/jflopezo91/meal-prep@${MEAL_PREP_DIGEST:?set by scripts/release.sh}
+    user: "10001:10001"
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    environment:
+      MEALPLANNER_TIMEZONE: America/Bogota
+    entrypoint: ["/usr/local/bin/backup-loop.sh"]
+    volumes:
+      - /volume1/docker/meal-prep/data:/data  # read-write: SQLite needs the -wal/-shm files to read a live database
+      - /volume1/docker/meal-prep/backups:/backups
+    healthcheck:
+      # Unhealthy when the newest weekly backup is older than 8 days (11520 min), or there is none.
+      test: ["CMD", "sh", "-c", "test -n \"$$(find /backups/weekly -name 'mealplanner-*.db' -mmin -11520 2>/dev/null | head -n 1)\""]
+      interval: 10m
+      timeout: 10s
+      retries: 1
+      start_period: 2h
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    mem_limit: 256m
+
+secrets:
+  deploy_key:
+    # Generated on the NAS: ssh-keygen -t ed25519 -N "" -f /volume1/docker/meal-prep/secrets/deploy_key
+    # then: chown 10001:10001 deploy_key && chmod 600 deploy_key && chmod 700 ../secrets
+    # (the file keeps its host owner and mode, and ssh rejects a key the container user does not own).
+    file: /volume1/docker/meal-prep/secrets/deploy_key

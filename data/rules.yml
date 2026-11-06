@@ -15,13 +15,13 @@ meal_rules:
 # All weights are RAW (uncooked)
 protein_portions_g:
   chicken:
-    lunch: 260
+    lunch: 175
     dinner: 100  # Reduced for dinner (assumes pre-workout protein)
   beef:
-    lunch: 280
+    lunch: 185
     dinner: 100
   pork:
-    lunch: 280
+    lunch: 230
     dinner: 100
   fish:
     lunch: 280
@@ -30,22 +30,35 @@ protein_portions_g:
     lunch: 3   # Assuming if egg is used in lunch/dinner, it follows units
     dinner: 3
 
+# Ingredient-specific lunch portions; other meals use the protein-type defaults.
+protein_portion_overrides_g:
+  fish_salmon:
+    lunch: 200
+  fish_tilapia:
+    lunch: 200
+  fish_tuna_fillet:
+    lunch: 170
+
 # Planning constraints
 constraints:
-  # Weekly protein distribution (total across all meals)
+  # Weekly protein distribution per meal; each meal's counts sum to the 5 weekdays.
+  # A meal that is not planned (dinner with MEALPLANNER_DINNER_ENABLED=0) ignores its block.
   # Adjust these based on your dietary goals
   weekly_protein_counts:
-    chicken: 4
-    fish: 3
-    beef: 2
-    pork: 1
-    # Total: 10 meals (2 meals × 5 weekdays)
+    lunch:
+      chicken: 2
+      fish: 1
+      beef: 1
+      pork: 1
+    dinner:
+      chicken: 2
+      fish: 2
+      beef: 1
 
   # No same protein on consecutive days (per meal type)
   no_consecutive_same_protein: true
 
   # Fish-specific constraints
-  fish_dinner_max_per_week: 3  # Total fish dinners per week
   fish_dinner_max_consecutive: 2  # Max consecutive days with fish at dinner
 
   # Recipe usage

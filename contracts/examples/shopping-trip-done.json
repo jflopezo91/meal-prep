@@ -1,0 +1,392 @@
+{
+  "trip_id": "trip_8a7d6c5b4e3f2a1b0c9d8e7f6a5b4c3d",
+  "name": "Oct 19 - Oct 25",
+  "status": "done",
+  "version": 3,
+  "created_at": "2026-10-21T10:00:00-05:00",
+  "updated_at": "2026-10-21T10:05:00-05:00",
+  "completed_at": "2026-10-21T10:30:00-05:00",
+  "weeks": [
+    {
+      "plan_id": "plan_2026_10_19",
+      "week_start": "2026-10-19",
+      "week_end": "2026-10-25",
+      "current_revision": 2,
+      "groups": [
+        "long_lasting",
+        "fresh"
+      ],
+      "cells": [
+        {
+          "group": "long_lasting",
+          "state": "bought",
+          "bought_at": "2026-10-21T10:30:00-05:00",
+          "revision": 1,
+          "snapshot_id": "sha256:dc9d775df57fb9e8732a19a732587265639005a8ed19fbd40d6392d66d51fb80",
+          "changed_since_shopping": true
+        },
+        {
+          "group": "fresh",
+          "state": "bought",
+          "bought_at": "2026-10-21T10:30:00-05:00",
+          "revision": 1,
+          "snapshot_id": "sha256:dc9d775df57fb9e8732a19a732587265639005a8ed19fbd40d6392d66d51fb80",
+          "changed_since_shopping": true
+        }
+      ]
+    }
+  ],
+  "items": [],
+  "bought_items": [
+    {
+      "ingredient_id": "chicken",
+      "display": "Pollo",
+      "quantity": 720.0,
+      "unit": "g",
+      "section": "protein",
+      "shelf_life": "long_lasting",
+      "plan_ids": [
+        "plan_2026_10_19"
+      ],
+      "quantity_by_plan": {
+        "plan_2026_10_19": 720.0
+      }
+    },
+    {
+      "ingredient_id": "sausage",
+      "display": "Salchicha",
+      "quantity": 330.0,
+      "unit": "g",
+      "section": "protein",
+      "shelf_life": "long_lasting",
+      "plan_ids": [
+        "plan_2026_10_19"
+      ],
+      "quantity_by_plan": {
+        "plan_2026_10_19": 330.0
+      }
+    },
+    {
+      "ingredient_id": "fish_salmon",
+      "display": "Salmón",
+      "quantity": 100.0,
+      "unit": "g",
+      "section": "protein",
+      "shelf_life": "long_lasting",
+      "plan_ids": [
+        "plan_2026_10_19"
+      ],
+      "quantity_by_plan": {
+        "plan_2026_10_19": 100.0
+      }
+    },
+    {
+      "ingredient_id": "fish_tuna_fillet",
+      "display": "Atún en filete",
+      "quantity": 280.0,
+      "unit": "g",
+      "section": "protein",
+      "shelf_life": "long_lasting",
+      "plan_ids": [
+        "plan_2026_10_19"
+      ],
+      "quantity_by_plan": {
+        "plan_2026_10_19": 280.0
+      }
+    },
+    {
+      "ingredient_id": "beef",
+      "display": "Carne de res",
+      "quantity": 380.0,
+      "unit": "g",
+      "section": "protein",
+      "shelf_life": "long_lasting",
+      "plan_ids": [
+        "plan_2026_10_19"
+      ],
+      "quantity_by_plan": {
+        "plan_2026_10_19": 380.0
+      }
+    },
+    {
+      "ingredient_id": "fish_tuna_canned",
+      "display": "Atún en lata",
+      "quantity": 100.0,
+      "unit": "g",
+      "section": "protein",
+      "shelf_life": "long_lasting",
+      "plan_ids": [
+        "plan_2026_10_19"
+      ],
+      "quantity_by_plan": {
+        "plan_2026_10_19": 100.0
+      }
+    },
+    {
+      "ingredient_id": "cherry_tomato",
+      "display": "Tomate cherry",
+      "quantity": 200.0,
+      "unit": "g",
+      "section": "vegetable",
+      "shelf_life": "fresh",
+      "plan_ids": [
+        "plan_2026_10_19"
+      ],
+      "quantity_by_plan": {
+        "plan_2026_10_19": 200.0
+      }
+    },
+    {
+      "ingredient_id": "spinach",
+      "display": "Espinaca",
+      "quantity": 160.0,
+      "unit": "g",
+      "section": "vegetable",
+      "shelf_life": "fresh",
+      "plan_ids": [
+        "plan_2026_10_19"
+      ],
+      "quantity_by_plan": {
+        "plan_2026_10_19": 160.0
+      }
+    },
+    {
+      "ingredient_id": "carrot",
+      "display": "Zanahoria",
+      "quantity": 320.0,
+      "unit": "g",
+      "section": "vegetable",
+      "shelf_life": "fresh",
+      "plan_ids": [
+        "plan_2026_10_19"
+      ],
+      "quantity_by_plan": {
+        "plan_2026_10_19": 320.0
+      }
+    },
+    {
+      "ingredient_id": "tomato",
+      "display": "Tomate",
+      "quantity": 370.0,
+      "unit": "g",
+      "section": "vegetable",
+      "shelf_life": "fresh",
+      "plan_ids": [
+        "plan_2026_10_19"
+      ],
+      "quantity_by_plan": {
+        "plan_2026_10_19": 370.0
+      }
+    },
+    {
+      "ingredient_id": "asparagus",
+      "display": "Espárragos",
+      "quantity": 370.0,
+      "unit": "g",
+      "section": "vegetable",
+      "shelf_life": "fresh",
+      "plan_ids": [
+        "plan_2026_10_19"
+      ],
+      "quantity_by_plan": {
+        "plan_2026_10_19": 370.0
+      }
+    },
+    {
+      "ingredient_id": "ginger",
+      "display": "Jengibre",
+      "quantity": 30.0,
+      "unit": "g",
+      "section": "vegetable",
+      "shelf_life": "fresh",
+      "plan_ids": [
+        "plan_2026_10_19"
+      ],
+      "quantity_by_plan": {
+        "plan_2026_10_19": 30.0
+      }
+    },
+    {
+      "ingredient_id": "green_beans",
+      "display": "Habichuela",
+      "quantity": 170.0,
+      "unit": "g",
+      "section": "vegetable",
+      "shelf_life": "fresh",
+      "plan_ids": [
+        "plan_2026_10_19"
+      ],
+      "quantity_by_plan": {
+        "plan_2026_10_19": 170.0
+      }
+    },
+    {
+      "ingredient_id": "broccoli",
+      "display": "Brócoli",
+      "quantity": 400.0,
+      "unit": "g",
+      "section": "vegetable",
+      "shelf_life": "fresh",
+      "plan_ids": [
+        "plan_2026_10_19"
+      ],
+      "quantity_by_plan": {
+        "plan_2026_10_19": 400.0
+      }
+    },
+    {
+      "ingredient_id": "bell_pepper",
+      "display": "Pimentón",
+      "quantity": 300.0,
+      "unit": "g",
+      "section": "vegetable",
+      "shelf_life": "fresh",
+      "plan_ids": [
+        "plan_2026_10_19"
+      ],
+      "quantity_by_plan": {
+        "plan_2026_10_19": 300.0
+      }
+    },
+    {
+      "ingredient_id": "peas",
+      "display": "Arverja",
+      "quantity": 50.0,
+      "unit": "g",
+      "section": "vegetable",
+      "shelf_life": "fresh",
+      "plan_ids": [
+        "plan_2026_10_19"
+      ],
+      "quantity_by_plan": {
+        "plan_2026_10_19": 50.0
+      }
+    },
+    {
+      "ingredient_id": "olives",
+      "display": "Aceitunas",
+      "quantity": 60.0,
+      "unit": "g",
+      "section": "condiment",
+      "shelf_life": "long_lasting",
+      "plan_ids": [
+        "plan_2026_10_19"
+      ],
+      "quantity_by_plan": {
+        "plan_2026_10_19": 60.0
+      }
+    },
+    {
+      "ingredient_id": "tomato_sauce",
+      "display": "Salsa de tomate",
+      "quantity": 50.0,
+      "unit": "ml",
+      "section": "condiment",
+      "shelf_life": "long_lasting",
+      "plan_ids": [
+        "plan_2026_10_19"
+      ],
+      "quantity_by_plan": {
+        "plan_2026_10_19": 50.0
+      }
+    },
+    {
+      "ingredient_id": "achiote",
+      "display": "Achiote",
+      "quantity": 5.0,
+      "unit": "g",
+      "section": "condiment",
+      "shelf_life": "long_lasting",
+      "plan_ids": [
+        "plan_2026_10_19"
+      ],
+      "quantity_by_plan": {
+        "plan_2026_10_19": 5.0
+      }
+    },
+    {
+      "ingredient_id": "greek_yogurt",
+      "display": "Yogurt griego",
+      "quantity": 100.0,
+      "unit": "g",
+      "section": "dairy",
+      "shelf_life": "fresh",
+      "plan_ids": [
+        "plan_2026_10_19"
+      ],
+      "quantity_by_plan": {
+        "plan_2026_10_19": 100.0
+      }
+    },
+    {
+      "ingredient_id": "yuca",
+      "display": "Yuca",
+      "quantity": 70.0,
+      "unit": "g",
+      "section": "carb",
+      "shelf_life": "fresh",
+      "plan_ids": [
+        "plan_2026_10_19"
+      ],
+      "quantity_by_plan": {
+        "plan_2026_10_19": 70.0
+      }
+    },
+    {
+      "ingredient_id": "lentils",
+      "display": "Lentejas",
+      "quantity": 55.0,
+      "unit": "g",
+      "section": "carb",
+      "shelf_life": "long_lasting",
+      "plan_ids": [
+        "plan_2026_10_19"
+      ],
+      "quantity_by_plan": {
+        "plan_2026_10_19": 55.0
+      }
+    },
+    {
+      "ingredient_id": "rice",
+      "display": "Arroz",
+      "quantity": 80.0,
+      "unit": "g",
+      "section": "carb",
+      "shelf_life": "long_lasting",
+      "plan_ids": [
+        "plan_2026_10_19"
+      ],
+      "quantity_by_plan": {
+        "plan_2026_10_19": 80.0
+      }
+    },
+    {
+      "ingredient_id": "platano_verde",
+      "display": "Plátano verde",
+      "quantity": 100.0,
+      "unit": "g",
+      "section": "carb",
+      "shelf_life": "fresh",
+      "plan_ids": [
+        "plan_2026_10_19"
+      ],
+      "quantity_by_plan": {
+        "plan_2026_10_19": 100.0
+      }
+    },
+    {
+      "ingredient_id": "sesame_seeds",
+      "display": "Ajonjolí",
+      "quantity": 15.0,
+      "unit": "g",
+      "section": "fat",
+      "shelf_life": "long_lasting",
+      "plan_ids": [
+        "plan_2026_10_19"
+      ],
+      "quantity_by_plan": {
+        "plan_2026_10_19": 15.0
+      }
+    }
+  ]
+}

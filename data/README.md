@@ -40,7 +40,7 @@ Individual recipe definitions:
   - `none`: No carbs (typically for dinner)
   - `fixed`: Always includes a specific carb
   - `optional`: Solver chooses from allowed carbs
-- **ingredients**: List with roles (protein, veg, fat, etc.)
+- **ingredients**: List with roles (protein, veg, fat, etc.). Exactly one row has role `protein`: the `@portion` one. Any other protein (an egg on top, a sausage) uses `protein_extra`.
   - Use `qty: "@portion"` for protein to resolve at planning time
   - Use `qty_g`, `qty_ml`, or `qty_units` for fixed quantities
 
@@ -87,8 +87,8 @@ Before running the planner, validate the data structure:
 ```bash
 # From the project root
 export PYTHONPATH=$PYTHONPATH:$(pwd)/planner
-python3 -m mealplanner.cli validate-data data
-python3 -m mealplanner.cli validate-recipe data/recipes/pollo_asiatico.yml
+python3 -m mealplanner.entrypoints.cli validate-data data
+python3 -m mealplanner.entrypoints.cli validate-recipe data/recipes/pollo_asiatico.yml
 ```
 
 This will check:
@@ -100,3 +100,18 @@ This will check:
 - Filename matches recipe `id`
 - Exactly one quantity field per ingredient line
 - Ingredient role uses a supported value
+
+### Ingredient-specific protein portions
+
+`rules.yml` supports `protein_portion_overrides_g`, keyed by ingredient ID, with
+optional `lunch` and `dinner` values. A missing meal override uses the corresponding
+`protein_portions_g` default. These raw quantities apply to generated meals,
+manual swaps, and shopping lists. Salmon and tilapia lunches use 200 g; fresh tuna
+uses 170 g. Canned tuna retains the fish default, and dinner portions stay at 100 g.
+
+Fish recipes use ingredient-specific `tags.primary_protein` labels:
+`fish_salmon`, `fish_tilapia`, `fish_tuna_fillet` (fresh tuna), or
+`fish_tuna_canned`. The label must match the ingredient using `@portion`.
+All four still count as `fish` for weekly quotas, consecutive-protein rules,
+dinner limits, and plan/swap output. Legacy `primary_protein: fish` remains
+supported. Portion overrides use the matching ingredient ID.
