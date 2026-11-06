@@ -8,7 +8,7 @@ Meal Prep plans the household's week, says what to buy, and publishes a read-onl
 flowchart LR
   subgraph home["Home network"]
     B[Browser] -->|HTTP :8080| APP
-    subgraph NAS["NAS · one container"]
+    subgraph NAS["NAS · app + backup containers"]
       APP[Flask API + React app] --> DB[(SQLite /data)]
     end
   end
@@ -16,7 +16,7 @@ flowchart LR
   MP -->|Actions build| SITE[Public site<br/>jflopezo91.github.io/meal-plan]
   PHONE[Phone, anywhere] --> SITE
   subgraph CD["Release (workstation)"]
-    REL[release.sh + Komodo]
+    REL[release.sh over SSH]
   end
   GH[meal-prep repo] -->|Actions: test, build, attest| GHCR[(GHCR image)]
   REL -->|deploy by digest| NAS
@@ -25,7 +25,7 @@ flowchart LR
 
 - **Home app**: one container on the NAS. It plans, edits and publishes. Viewing is open on the home network; changes need a login.
 - **Public site**: static files built from what the home app publishes. Read-only; nothing on GitHub can call the NAS.
-- **Release**: GitHub builds and signs the image; a workstation decides when the NAS runs it (see the [go-live plan](migration-to-cloud/README.md)). How to run things: [DEVELOPMENT.md](DEVELOPMENT.md).
+- **Release**: GitHub builds and signs the image; a workstation decides when the NAS runs it (see [OPERATIONS.md](OPERATIONS.md)). How to run things: [DEVELOPMENT.md](DEVELOPMENT.md).
 
 ## Core ideas
 
@@ -71,7 +71,7 @@ Readers (`site/src/readers/`) give both modes the same data shapes, so views do 
 2. **Images by digest:** the NAS runs exactly the image GitHub built and attested for a release.
 3. **Server decides:** the session check on the server is the boundary, not hidden buttons.
 4. **Outbound only:** the NAS pushes to GitHub; nothing calls in. No port forwarding.
-5. **State outside the image:** SQLite in `/data`, backed up before every release.
+5. **State outside the image:** SQLite in `/data`, backed up weekly and before every release.
 
 ## Where do I put new code?
 

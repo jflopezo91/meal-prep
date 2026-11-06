@@ -1,12 +1,16 @@
-# Production Compose file for the NAS Docker app (Docker > Project > Create) and plain `docker compose`.
-# Image only, no build. Replace the digest with the one printed by the container workflow's job summary,
-# after `gh attestation verify --owner jflopezo91 oci://ghcr.io/jflopezo91/meal-prep@sha256:<digest>`.
-# Rollback = put the previous digest back and redeploy.
+# Production Compose file for the NAS. scripts/release.sh copies it to
+# /volume1/docker/meal-prep/compose.yaml and writes .env next to it with MEAL_PREP_DIGEST=sha256:...
+# (the digest GitHub built and attested for the released commit). Image only, no build; the digest
+# is mandatory, so a mutable tag can never be deployed by accident.
+# Deploy, rollback and restore procedures: docs/OPERATIONS.md.
 #
-# One-time on the NAS (SSH): mkdir -p /volume1/docker/meal-prep/data && chown 10001:10001 /volume1/docker/meal-prep/data
+# LAN only: plain HTTP on :8080, like any other home service. Viewing is open; changes need a login,
+# whose session cookie therefore cannot be Secure (MEALPLANNER_COOKIE_SECURE=0).
+name: meal-prep
 services:
   meal-prep:
-    image: ghcr.io/jflopezo91/meal-prep@sha256:REPLACE_WITH_DIGEST  # placeholder: never use a mutable tag
+    container_name: meal-prep
+    image: ghcr.io/jflopezo91/meal-prep@${MEAL_PREP_DIGEST:?set by scripts/release.sh}
     user: "10001:10001"
     read_only: true
     tmpfs:
@@ -19,10 +23,9 @@ services:
       MEALPLANNER_TIMEZONE: America/Bogota
       MEALPLANNER_DINNER_ENABLED: "0"  # lunch only for now; "1" plans dinner again
       MEALPLANNER_PUBLISH_REPO: git@github.com:jflopezo91/meal-plan.git
+      MEALPLANNER_COOKIE_SECURE: "0"  # plain HTTP on the LAN
     ports:
-      # Household login exists (phase 6c), but its Secure session cookie needs HTTPS beyond localhost:
-      # keep the port on loopback until the LAN HTTPS decision (phase 6d), then open it to the LAN.
-      - "127.0.0.1:8080:8080"
+      - "8080:8080"
     volumes:
       - /volume1/docker/meal-prep/data:/data
     healthcheck:
@@ -36,14 +39,46 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
-    # Starting limits; set from solver timings measured on the NAS (phase 6d).
-    # mem_limit: 1g
-    # cpus: 2.0
-    # pids_limit: 256
-    #
-    # Phase 6b: the publish deploy key, mounted as a file (never an environment variable).
+    # PROVISIONAL limits: to be measured with a month fill on the NAS (migration plan, step 6).
+    mem_limit: 1g
+    cpus: 2.0
+    pids_limit: 256
+    # The publish deploy key, mounted as a file (never an environment variable).
     secrets:
       - deploy_key
+
+  # Weekly database backups into /volume1/docker/meal-prep/backups/weekly (newest 12 kept).
+  # Same image, so no extra software; release.sh also uses this service for the pre-release backup.
+  backup:
+    container_name: meal-prep-backup
+    image: ghcr.io/jflopezo91/meal-prep@${MEAL_PREP_DIGEST:?set by scripts/release.sh}
+    user: "10001:10001"
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    environment:
+      MEALPLANNER_TIMEZONE: America/Bogota
+    entrypoint: ["/usr/local/bin/backup-loop.sh"]
+    volumes:
+      - /volume1/docker/meal-prep/data:/data  # read-write: SQLite needs the -wal/-shm files to read a live database
+      - /volume1/docker/meal-prep/backups:/backups
+    healthcheck:
+      # Unhealthy when the newest weekly backup is older than 8 days (11520 min), or there is none.
+      test: ["CMD", "sh", "-c", "test -n \"$$(find /backups/weekly -name 'mealplanner-*.db' -mmin -11520 2>/dev/null | head -n 1)\""]
+      interval: 10m
+      timeout: 10s
+      retries: 1
+      start_period: 2h
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    mem_limit: 256m
 
 secrets:
   deploy_key:

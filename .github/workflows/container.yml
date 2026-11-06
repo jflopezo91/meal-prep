@@ -1,12 +1,12 @@
 name: Container image
 
 # Builds the linux/amd64 image. Pull requests only build (no registry login, no push);
-# pushes to the project branch and manual runs publish to GHCR with build provenance.
+# pushes to main and manual runs publish to GHCR with build provenance.
 on:
   pull_request:
     paths: [Dockerfile, .dockerignore, deploy/**, planner/**, site/**, data/**, .github/workflows/container.yml]
   push:
-    branches: [feature/cloud-migration]
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -21,7 +21,7 @@ env:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -40,7 +40,7 @@ jobs:
     # Pull requests: prove the image builds, nothing leaves the runner.
     if: github.event_name == 'pull_request'
     needs: test
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -56,7 +56,7 @@ jobs:
   publish:
     if: github.event_name != 'pull_request'
     needs: test
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
       packages: write
@@ -83,7 +83,7 @@ jobs:
           # Deployments pin the digest; tags are only for humans browsing GHCR.
           tags: |
             ${{ env.IMAGE }}:sha-${{ github.sha }}
-            ${{ env.IMAGE }}:${{ github.ref_name == 'feature/cloud-migration' && 'cloud-migration' || 'manual' }}
+            ${{ env.IMAGE }}:${{ github.ref_name == 'main' && 'main' || 'manual' }}
           labels: |
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
             org.opencontainers.image.revision=${{ github.sha }}
@@ -101,7 +101,6 @@ jobs:
             echo ""
             echo "\`${IMAGE}@${DIGEST}\`"
             echo ""
-            echo "Verify, then put this digest in deploy/docker-compose.yml:"
-            echo ""
-            echo "\`gh attestation verify --owner jflopezo91 oci://${IMAGE}@${DIGEST}\`"
+            echo "Nothing to copy: scripts/release.sh on the workstation finds this digest for the commit,"
+            echo "verifies its attestation and deploys it."
           } >> "$GITHUB_STEP_SUMMARY"

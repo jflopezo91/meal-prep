@@ -1,3 +1,5 @@
+> **2026-11-05:** Komodo was dropped. Releases are `scripts/release.sh` over SSH, recorded as git tags, because the NAS runs too little to justify an orchestrator. References to Komodo below are historical.
+
 > **Archive.** The full migration plan as of 2026-10-22, when phases 1–5c and 6a–6c were complete. Kept for the reasoning behind decisions; it is not maintained. Current plan: [README.md](README.md). How to run things: [DEVELOPMENT.md](../DEVELOPMENT.md).
 
 # Household meal planner: NAS app and public read-only calendar

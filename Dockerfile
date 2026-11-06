@@ -48,8 +48,9 @@ WORKDIR /app
 COPY planner/mealplanner ./planner/mealplanner
 COPY data ./data
 COPY --from=frontend /build/site/dist ./static
-COPY deploy/entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN python -m compileall -q /app/planner && chmod 0755 /usr/local/bin/entrypoint.sh
+COPY deploy/entrypoint.sh deploy/backup-loop.sh deploy/backup-now.sh /usr/local/bin/
+RUN python -m compileall -q /app/planner \
+    && chmod 0755 /usr/local/bin/entrypoint.sh /usr/local/bin/backup-loop.sh /usr/local/bin/backup-now.sh
 
 # The meal-prep commit this image was built from (git SHA). The publish step records it as `app-ref` in
 # the public repository so its workflow builds the frontend from exactly this code. Empty = unknown, and
