@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { addMonths, isSelectedMonth, isValidMonth, monthBounds, monthOf, monthWeeks, monthsOfYear, weekMonths } from '../src/dates.js';
+import { addMonths, initialWeek, isSelectedMonth, isValidMonth, monthBounds, monthOf, monthWeeks, monthsOfYear, weekMonths } from '../src/dates.js';
 import { buildMonthRows, summarizeDay } from '../src/monthModel.js';
 
 test('addMonths rolls over year boundaries in both directions', () => {
@@ -63,4 +63,11 @@ test('buildMonthRows marks out-of-month days, weekends and missing plans', () =>
   assert.equal(rows[0].days[0].meals.length, 1); // meals of dimmed days are still shown
   assert.equal(rows[5].weekStart, '2026-11-30'); assert.equal(rows[5].days[0].date, '2026-11-30');
   assert.equal(rows[5].days[1].inMonth, false); // Dec 1 is outside Nov
+});
+
+test('the app opens on the current week unless a build overrides it', () => {
+  assert.equal(initialWeek('', '2026-11-06'), '2026-11-02');
+  assert.equal(initialWeek(undefined, '2026-11-02'), '2026-11-02');
+  assert.equal(initialWeek('', '2026-11-08'), '2026-11-02');
+  assert.equal(initialWeek('2026-10-21', '2026-11-06'), '2026-10-19');
 });

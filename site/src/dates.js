@@ -9,6 +9,8 @@ export function todayIn(timeZone) {
   try { return new Intl.DateTimeFormat('en-CA', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()); }
   catch { return new Intl.DateTimeFormat('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()); }
 }
+// The week the app opens on: a build-time override if set, otherwise the week of today.
+export function initialWeek(override, today) { return mondayOf(override || today); }
 export function formatWeekRange(weekStart) {
   const fmt = (value, withYear) => new Intl.DateTimeFormat(undefined, { timeZone: 'UTC', month: 'short', day: 'numeric', ...(withYear ? { year: 'numeric' } : {}) }).format(new Date(`${value}T00:00:00Z`));
   return `${fmt(weekStart, false)} – ${fmt(addDays(weekStart, 6), true)}`;

@@ -12,13 +12,13 @@ import { createApiReader } from './readers/api';
 import { createStaticReader } from './readers/static';
 import { validatePair, addDays } from './readers/shared.js';
 import { authStore } from './auth/authStore.js';
-import { mondayOf, todayIn, formatWeekRange, formatMonth, monthOf } from './dates.js';
+import { initialWeek, mondayOf, todayIn, formatWeekRange, formatMonth, monthOf } from './dates.js';
 
 const createReader = () => import.meta.env.VITE_READER_MODE === 'static'
   ? createStaticReader('publication/index.json')
   : createApiReader(import.meta.env.VITE_API_BASE_PATH || '/api/v1');
 let reader = createReader();
-const INITIAL_WEEK = mondayOf(import.meta.env.VITE_DEFAULT_FROM || '2026-10-19');
+const INITIAL_WEEK = initialWeek(import.meta.env.VITE_DEFAULT_FROM, todayIn());
 
 // Editing is home-only. In the static (Pages) build these constants fold to null at build time, so
 // the write client and editing UI are never bundled and cannot be enabled at runtime.
