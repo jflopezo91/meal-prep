@@ -39,7 +39,7 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
-    # PROVISIONAL limits: to be measured with a month fill on the NAS (migration plan, step 6).
+    # PROVISIONAL limits: to be measured with a month fill on the NAS (docs/DEPLOYMENT.md, step 6).
     mem_limit: 1g
     cpus: 2.0
     pids_limit: 256
