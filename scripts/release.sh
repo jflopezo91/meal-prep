@@ -9,7 +9,12 @@
 # The release record is the annotated tag; nothing is committed to main. Procedures: docs/DEPLOYMENT.md.
 set -euo pipefail
 
-NAS="${MEAL_PREP_NAS:-nas-user@<wifi-ip>}"
+# The NAS login stays out of this public repository: MEAL_PREP_NAS=user@address, from the environment
+# or from a local file outside the repo.
+CONFIG="${MEAL_PREP_CONFIG:-$HOME/.config/meal-prep/release.env}"
+# shellcheck source=/dev/null
+if [[ -f $CONFIG ]]; then source "$CONFIG"; fi
+NAS="${MEAL_PREP_NAS:-}"
 DIR="${MEAL_PREP_NAS_DIR:-/volume1/docker/meal-prep}"
 REPO=jflopezo91/meal-prep
 IMAGE="ghcr.io/$REPO"
@@ -18,6 +23,7 @@ HOST="${NAS#*@}"
 HEALTH_WAIT=180  # seconds
 
 die() { printf 'REFUSED: %s\n' "$*" >&2; exit 1; }
+[[ $NAS == *@* || ${1:-} == --help || ${1:-} == -h ]] || die "set MEAL_PREP_NAS=user@address in $CONFIG"
 say() { printf '==> %s\n' "$*"; }
 remote() { ssh -o BatchMode=yes -o ConnectTimeout=10 "$NAS" "$@"; }
 

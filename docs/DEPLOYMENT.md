@@ -1,6 +1,6 @@
 # Deployment
 
-Everything runs from the workstation, in `main`. Defaults: `MEAL_PREP_NAS=nas-user@<wifi-ip>`, `MEAL_PREP_NAS_DIR=/volume1/docker/meal-prep`. Override them if the NAS moves.
+Everything runs from the workstation, in `main`. The NAS login stays out of this public repository: put `MEAL_PREP_NAS=user@address` in `~/.config/meal-prep/release.env` on the workstation, and update it if the NAS moves.
 
 ## Release
 
@@ -67,7 +67,7 @@ Add `deploy_key.pub` to `jflopezo91/meal-plan` as a write deploy key. The privat
 
 ## Move to another PC
 
-Install Docker and `gh`, clone the repo, run `gh auth login`, and add the new PC's SSH public key to `~/.ssh/authorized_keys` on the NAS.
+Install Docker and `gh`, clone the repo, run `gh auth login`, create `~/.config/meal-prep/release.env`, and add the new PC's SSH public key to `~/.ssh/authorized_keys` on the NAS.
 
 ## Performance
 
@@ -77,7 +77,7 @@ To be measured (go-live checklist, step 6). The limits in `deploy/docker-compose
 
 Each step ends in a check, and a step that fails stops the go-live.
 
-1. **Addresses.** Reserve the NAS address in the router. DHCP can move it. **Done when:** the NAS keeps `<wifi-ip>` after a restart.
+1. **Addresses.** Reserve the NAS address in the router, because DHCP can move it. **Done when:** the NAS keeps its address after a restart.
 2. **Merge to `main`** and use a `gh` with `gh attestation`. **Done when:** CI is green on `main` and the attestation verifies for that commit's image.
 3. **`scripts/release.sh`.** **Done when:** a dry run prints the digest, and it refuses a dirty tree, an unpushed commit, a red CI run and a digest that fails verification.
 4. **NAS folders, permissions and publish key.** **Done when:** the container reads the key as uid 10001, and both deploy keys are listed on `meal-plan`.
