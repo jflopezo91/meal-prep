@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { createPlanEditor } from '../src/editing/planEditor.js';
+import { createPlanEditor, newKey } from '../src/editing/planEditor.js';
 
 const examples = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../contracts/examples');
 const example = name => JSON.parse(fs.readFileSync(path.join(examples, name), 'utf8'));
@@ -108,4 +108,14 @@ test('fillMonth, revisions, and discard use the documented endpoints', async () 
     assert.equal(mock.calls[2].method, 'DELETE');
     await assert.rejects(editor.fillMonth('2026-13'), { code: 'invalid_request' });
   } finally { mock.restore(); }
+});
+
+test('idempotency keys work over plain HTTP, where crypto.randomUUID is missing', () => {
+  const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
+  const httpOnly = { getRandomValues: array => globalThis.crypto.getRandomValues(array) };
+  const keys = new Set(Array.from({ length: 50 }, () => newKey(httpOnly)));
+  assert.equal(keys.size, 50);
+  for (const key of keys) assert.match(key, uuid);
+  assert.match(newKey(), uuid);
+  assert.throws(() => newKey({}), error => error.code === 'invalid_request');
 });

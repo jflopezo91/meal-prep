@@ -26,10 +26,16 @@ function checkTrip(trip, tripId) {
   if (tripId !== undefined && trip.trip_id !== tripId) throw new ReaderError('source_invalid', 'The API returned a different shopping list.');
   return trip;
 }
-function newKey() {
-  const crypto = globalThis.crypto;
-  if (!crypto?.randomUUID) throw new ReaderError('invalid_request', 'This browser cannot generate an idempotency key.');
-  return crypto.randomUUID();
+// crypto.randomUUID exists only on HTTPS or localhost; the app is served over plain HTTP on the
+// home network, so build the same random v4 UUID from crypto.getRandomValues there.
+export function newKey(crypto = globalThis.crypto) {
+  if (crypto?.randomUUID) return crypto.randomUUID();
+  if (!crypto?.getRandomValues) throw new ReaderError('invalid_request', 'This browser cannot generate an idempotency key.');
+  const bytes = crypto.getRandomValues(new Uint8Array(16));
+  bytes[6] = (bytes[6] & 0x0f) | 0x40;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  const hex = Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
 }
 function parseRetryAfter(value) {
   const seconds = Number.parseInt(value ?? '', 10);
