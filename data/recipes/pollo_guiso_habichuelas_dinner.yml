@@ -1,17 +1,18 @@
 # Recipe: Pollo con Guiso y Habichuelas
 # Based on R002 from Excel data
-# Dinner version - NO CARBS
+# Lunch with any carb; dinner without one.
 
 id: pollo_guiso_habichuelas_dinner
 name: "Pollo con guiso y habichuelas"
-meal_types: [dinner]
+meal_types: [lunch, dinner]
 
 tags:
   primary_protein: chicken
 
-# No carbs for dinner
 carbs:
-  strategy: none
+  strategy: optional
+  allowed: [rice, potato, yuca, platano_verde, platano_maduro, arepa, corn, pasta]
+  default: rice
 
 ingredients:
   # Protein - quantity resolved at planning time
