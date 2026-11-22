@@ -501,6 +501,13 @@ honey:
   kind: other
   shelf_life: long_lasting
 
+panela:
+  display: "Panela"
+  unit: g
+  section: condiment
+  kind: other
+  shelf_life: long_lasting
+
 olives:
   display: "Aceitunas"
   unit: g
