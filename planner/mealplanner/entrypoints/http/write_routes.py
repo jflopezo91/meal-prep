@@ -16,7 +16,16 @@ from typing import Any
 from ...application.errors import InvalidRequest, PlanNotFound
 from ...application.plan_workflows import PlanWorkflowService
 from ...domain.month import MONTH_PATTERN, MonthFillResult
-from ...domain.swap import SCOPES, SlotNotEditable, SlotNotFound, SwapOutcome, SwapPreview, VariantNotFound
+from ...domain.swap import (
+    SCOPES,
+    CarbNotAllowed,
+    CarbRequired,
+    SlotNotEditable,
+    SlotNotFound,
+    SwapOutcome,
+    SwapPreview,
+    VariantNotFound,
+)
 from ...domain.weekly_plan import (
     DuplicateWeek,
     GenerationFailed,
@@ -56,6 +65,8 @@ ERROR_MAP: list[tuple[type[Exception], int, str]] = [
     (SlotNotFound, 404, "slot_not_found"),
     (VariantNotFound, 404, "variant_not_found"),
     (SlotNotEditable, 409, "slot_not_editable"),
+    (CarbRequired, 422, "carb_required"),
+    (CarbNotAllowed, 422, "carb_not_allowed"),
     (DuplicateWeek, 409, "duplicate_week"),
     (InvalidWeek, 400, "invalid_week"),
     (GenerationFailed, 422, "generation_failed"),
@@ -292,6 +303,8 @@ def register_write_routes(
             "slot_not_found": "This plan has no meal slot with that slot_id.",
             "variant_not_found": "The catalog has no recipe variant with that variant_id.",
             "slot_not_editable": "Meals before today cannot be swapped.",
+            "carb_required": "A lunch needs a carb.",
+            "carb_not_allowed": "This meal cannot include a carb.",
         }
         return fixed.get(code, str(exc) or code)
 

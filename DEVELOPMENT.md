@@ -25,7 +25,7 @@ docker compose -f deploy/docker-compose.dev.yml down
 
 `dev-up.sh` sets `APP_REVISION` to the current commit and refuses an unpushed one: Publish tells the public site to render with that commit's frontend, so it must exist on GitHub. A plain `docker compose up --build` leaves the revision empty, and Publish then answers `503 publishing_disabled`.
 
-- **Data:** `var/docker-data/` (git-ignored). The first start imports the planner inputs shipped in the image; later starts only run `db_cli migrate`. Newer recipe inputs are not applied by themselves: run `db_cli import --replace-inputs` when you want them.
+- **Data:** `var/docker-data/` (git-ignored). The first start imports the planner inputs shipped in the image; later starts only run `db_cli migrate`. Newer recipe inputs are not applied by themselves: run `db_cli import --replace-inputs` when you want them. On the NAS, `scripts/release.sh` does this after every healthy deploy.
 - **Container:** gunicorn with 1 worker and 4 threads (`WEB_WORKERS`, `WEB_THREADS`, `WEB_TIMEOUT`). It runs non-root with a read-only root filesystem and no capabilities. `GET /healthz` is the liveness check. The dev Compose file runs as your uid/gid (`DEV_UID`/`DEV_GID`), so the bind-mounted data and deploy key stay yours.
 - **Users:** viewing is open, while changes and publishing need a login. The password comes from a prompt or stdin, never from an argument.
 

@@ -35,8 +35,17 @@ def catalog(client) -> list[dict]:
 
 
 def other_variant(client, slot: dict, *, same_protein: bool = False) -> str:
-    for v in catalog(client):
-        if v["recipe_id"] != slot["recipe_id"] and (v["protein"] == slot["protein"]) == same_protein:
+    """Another recipe's variant valid for the slot's meal (a carb at lunch, none at dinner), from a
+    recipe that also has a no-carb variant so a linked partner can follow."""
+    items = catalog(client)
+    has_none = {v["recipe_id"] for v in items if v["carb"] is None}
+    wants_carb = slot["meal"] == "lunch"
+    for v in items:
+        if v["recipe_id"] == slot["recipe_id"] or v["recipe_id"] not in has_none:
+            continue
+        if (v["carb"] is not None) != wants_carb:
+            continue
+        if (v["protein"] == slot["protein"]) == same_protein:
             return v["variant_id"]
     raise AssertionError
 
@@ -57,7 +66,7 @@ def linked_lunch(plan: dict) -> dict:
 def test_catalog_lists_sorted_variants_with_display_names(client) -> None:
     items = catalog(client)
     assert [(i["name"], i["variant_id"]) for i in items] == sorted((i["name"], i["variant_id"]) for i in items)
-    assert all(set(i) == {"recipe_id", "variant_id", "name", "protein", "carb"} for i in items)
+    assert all(set(i) == {"recipe_id", "variant_id", "name", "protein", "carb", "default"} for i in items)
     assert any(i["carb"] is None for i in items) and any(i["carb"] for i in items)
 
 
@@ -73,7 +82,9 @@ def test_preview_returns_changes_delta_warnings_and_stores_nothing(client, plan)
     preview = ok(client.post(PREVIEW, json=body(lunch, variant)), 200, "SwapPreview")
     assert preview["plan_id"] == FUTURE_ID and preview["base_revision"] == 1
     assert {c["assignment_id"] for c in preview["changes"]} == {lunch["assignment_id"], lunch["linked_assignment_id"]}
-    assert all(c["kind"] == "changed" and c["after"]["variant_id"] == variant for c in preview["changes"])
+    by_meal = {c["after"]["meal"]: c["after"]["variant_id"] for c in preview["changes"]}
+    assert all(c["kind"] == "changed" for c in preview["changes"])
+    assert by_meal == {"lunch": variant, "dinner": f"{variant.split('__')[0]}__carb_none"}  # dinner drops the carb
     assert preview["grocery_delta"] and preview["trips"] == []
     assert all(r["difference"] != 0 for r in preview["grocery_delta"])
     revisions = ok(client.get(f"/api/v1/plans/{FUTURE_ID}/revisions"), 200, "RevisionList")["items"]
@@ -219,3 +230,12 @@ def test_preview_lists_each_trip_with_its_groups_and_limits_extra_needed(client,
     labels = {i["ingredient_id"]: i["shelf_life"] for t in (ll, fresh) for i in t["items"]}
     assert all(labels.get(i, "long_lasting") == "long_lasting" for i in extra[ll["trip_id"]])
     assert all(labels.get(i, "fresh") == "fresh" for i in extra[fresh["trip_id"]])
+
+
+def test_a_lunch_without_a_carb_is_refused_with_carb_required(client, plan) -> None:
+    lunch = linked_lunch(plan)
+    no_carb = next(v["variant_id"] for v in catalog(client) if v["carb"] is None and v["recipe_id"] != lunch["recipe_id"])
+    for url, headers in ((PREVIEW, {}), (SWAPS, {"Idempotency-Key": "carb-1"})):
+        res = client.post(url, json=body(lunch, no_carb, "single"), headers=headers)
+        assert res.status_code == 422 and res.get_json()["error"]["code"] == "carb_required"
+    assert ok(client.get(f"/api/v1/plans/{FUTURE_ID}"), 200, "Plan")["revision"] == 1

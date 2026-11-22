@@ -10,7 +10,8 @@ if [ ! -f "$db" ]; then
     $cli import --db "$db"
 else
     # Existing database: apply pending schema migrations only. Changed recipe inputs in a new image
-    # are never applied silently; run `db_cli import --replace-inputs` deliberately.
+    # are never applied silently: scripts/release.sh imports them after a healthy deploy, and in
+    # development you run `db_cli import --replace-inputs` deliberately.
     $cli migrate --db "$db"
 fi
 

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { cn } from '../lib/utils';
-import { Utensils, Fish, Beef, Drumstick, Egg, LeafyGreen, MoreHorizontal, ArrowLeftRight, BookOpen } from 'lucide-react';
+import { Utensils, Fish, Beef, Drumstick, Egg, LeafyGreen, MoreHorizontal, ArrowLeftRight, BookOpen, ChevronDown, Lock } from 'lucide-react';
+import { slotCarbName } from '../carbs';
 
 const PROTEIN_COLORS = {
     chicken: 'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-700/50',
@@ -78,8 +79,57 @@ function CardMenu({ label, actions }) {
     );
 }
 
-export function MealCard({ slot, onClick, highlighted = false, onSwap = null }) {
-    const { recipeName, protein, carb, meal, proteinQty, proteinUnit, carbQty, carbUnit } = slot;
+// One ingredient line of a card: role label, name, amount. Protein and carb share it so every card
+// reads the same way.
+const ROW = "grid grid-cols-[3.25rem_1fr_auto] items-center gap-x-2 min-h-7";
+const LABEL = "text-[11px] uppercase tracking-wide opacity-60";
+const AMOUNT = "tabular-nums font-semibold whitespace-nowrap";
+
+function IngredientRow({ label, name, amount, suffix = null }) {
+    return (
+        <div className={ROW}>
+            <span className={LABEL}>{label}</span>
+            <span className="flex items-center gap-1 min-w-0"><span className="truncate font-medium">{name}</span>{suffix}</span>
+            <span className={AMOUNT}>{amount}</span>
+        </div>
+    );
+}
+
+// The carb line. carbChoices (the recipe's lunch carbs, known once the catalog is loaded): one
+// carb shows a small lock; several, with onChangeCarb, make the line a button whose name is a pill.
+function CarbRow({ slot, carbChoices, onChangeCarb }) {
+    const name = slotCarbName(slot);
+    const amount = `${slot.carbQty} ${slot.carbUnit}`;
+    if (onChangeCarb && carbChoices?.length > 1) {
+        return (
+            <button
+                type="button"
+                onClick={event => { event.stopPropagation(); onChangeCarb(); }}
+                aria-label={`Change carb (now ${name})`}
+                className={cn(ROW, "group w-full text-left rounded-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current")}
+            >
+                <span className={LABEL}>Carb</span>
+                <span className="min-w-0">
+                    <span className="-ml-2 inline-flex max-w-full items-center gap-0.5 rounded-full bg-white/70 dark:bg-white/10 pl-2 pr-1 py-0.5 ring-1 ring-black/10 dark:ring-white/15 group-hover:bg-white dark:group-hover:bg-white/20 transition-colors">
+                        <span className="truncate font-medium">{name}</span>
+                        <ChevronDown size={13} className="shrink-0 opacity-60" />
+                    </span>
+                </span>
+                <span className={AMOUNT}>{amount}</span>
+            </button>
+        );
+    }
+    const fixed = carbChoices?.length === 1;
+    return (
+        <div title={fixed ? `${slot.recipeName} only goes with ${name}` : undefined}>
+            <IngredientRow label="Carb" name={name} amount={amount}
+                suffix={fixed ? <Lock size={11} className="shrink-0 opacity-50" aria-label="Only option" /> : null} />
+        </div>
+    );
+}
+
+export function MealCard({ slot, onClick, highlighted = false, onSwap = null, carbChoices = null, onChangeCarb = null }) {
+    const { recipeName, protein, carb, meal, proteinQty, proteinUnit, carbQty } = slot;
     const proteinName = slot.ingredients?.find(ing => ing.role === 'protein')?.display ?? 'Protein';
 
     const colorClass = PROTEIN_COLORS[protein] || PROTEIN_COLORS.default;
@@ -114,16 +164,10 @@ export function MealCard({ slot, onClick, highlighted = false, onSwap = null }) 
                 {recipeName}
             </h3>
 
-            <div className="mt-auto pt-2 text-xs space-y-1">
-                <div className="flex items-center justify-between">
-                    <span className="opacity-70 truncate">{proteinName}:</span>
-                    <span className="font-mono font-bold">{proteinQty} {proteinUnit}</span>
-                </div>
+            <div className="mt-auto pt-2 border-t border-black/5 dark:border-white/10 text-xs space-y-0.5">
+                <IngredientRow label="Protein" name={proteinName} amount={`${proteinQty} ${proteinUnit}`} />
                 {carb !== 'none' && carbQty !== null && carbQty !== undefined && (
-                    <div className="flex items-center justify-between">
-                        <span className="opacity-70">Carb:</span>
-                    <span className="font-mono font-bold">{carbQty} {carbUnit}</span>
-                    </div>
+                    <CarbRow slot={slot} carbChoices={carbChoices} onChangeCarb={onChangeCarb} />
                 )}
             </div>
         </div>

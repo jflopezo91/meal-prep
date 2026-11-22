@@ -12,7 +12,7 @@ tags:
 # Variable carb strategy - can choose from allowed carbs
 carbs:
   strategy: optional
-  allowed: [rice, potato, yuca, platano_verde]
+  allowed: [rice, potato, yuca, platano_verde, platano_maduro, arepa, corn, pasta]
   default: rice
 
 ingredients:

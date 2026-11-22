@@ -202,6 +202,7 @@ def register_read_routes(
                         "name": v.name,
                         "protein": v.protein,
                         "carb": v.carb,
+                        "default": v.default,
                     }
                     for v in items
                 ]

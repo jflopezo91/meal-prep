@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createPlanEditor } from '../src/editing/planEditor.js';
-import { filterVariants, proteinOptions, groupRecipes, defaultVariant, carbLabel, canSwapSlot, groupGroceryDelta, formatDifference, tripImpactMessage, tripImpactMessages, replacedSwapsWarning, swapErrorMessage, swapNeedsReload } from '../src/editing/swapModel.js';
+import { lunchCarbsByRecipe, slotCarbName, fitsMeal } from '../src/carbs.js';
+import { filterVariants, proteinOptions, groupRecipes, defaultVariant, carbLabel, carbSummary, changeLabels, canSwapSlot, groupGroceryDelta, formatDifference, tripImpactMessage, tripImpactMessages, replacedSwapsWarning, swapErrorMessage, swapNeedsReload } from '../src/editing/swapModel.js';
 
 const json = (body, status = 200, headers = {}) => new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json', ...headers } });
 function mockFetch(handler) {
@@ -148,22 +149,72 @@ test('swap error messages', () => {
   assert.equal(swapNeedsReload({ code: 'variant_not_found' }), false);
 });
 
-test('groupRecipes lists each recipe once with no-carb first', () => {
-  const items = [
-    { variant_id: 's_rice', recipe_id: 's', name: 'Salmón', protein: 'fish', carb: 'rice' },
-    { variant_id: 'p_none', recipe_id: 'p', name: 'Pollo', protein: 'chicken', carb: null },
-    { variant_id: 's_none', recipe_id: 's', name: 'Salmón', protein: 'fish', carb: null },
-  ];
-  const recipes = groupRecipes(items);
-  assert.deepEqual(recipes.map(r => r.recipe_id), ['s', 'p']);
-  assert.deepEqual(recipes[0].variants.map(v => v.variant_id), ['s_none', 's_rice']);
-  assert.equal(defaultVariant(recipes[0], 'rice').variant_id, 's_rice');
-  assert.equal(defaultVariant(recipes[0], 'yuca').variant_id, 's_none');
-  assert.equal(defaultVariant(recipes[0], null).variant_id, 's_none');
+const CATALOG = [
+  { variant_id: 's_yuca', recipe_id: 's', name: 'Sudado', protein: 'chicken', carb: 'yuca', default: false },
+  { variant_id: 's_potato', recipe_id: 's', name: 'Sudado', protein: 'chicken', carb: 'potato', default: true },
+  { variant_id: 's_none', recipe_id: 's', name: 'Sudado', protein: 'chicken', carb: null, default: false },
+  { variant_id: 's_arepa', recipe_id: 's', name: 'Sudado', protein: 'chicken', carb: 'arepa', default: false },
+  { variant_id: 'a_rice', recipe_id: 'a', name: 'Arroz con pollo', protein: 'chicken', carb: 'rice', default: true },
+  { variant_id: 'h_none', recipe_id: 'h', name: 'Hamburguesas', protein: 'chicken', carb: null, default: true },
+];
+
+test('groupRecipes for a lunch offers only carbs, in offer order, and drops no-carb recipes', () => {
+  const recipes = groupRecipes(CATALOG, 'lunch');
+  assert.deepEqual(recipes.map(r => r.recipe_id), ['s', 'a']);
+  assert.deepEqual(recipes[0].variants.map(v => v.carb), ['potato', 'yuca', 'arepa']);
+  assert.equal(carbSummary(recipes[0]), '3 carb options');
+  assert.equal(carbSummary(recipes[1]), 'Only Arroz');
 });
 
-test('carbLabel is readable', () => {
+test('groupRecipes for a dinner offers only the no-carb variants', () => {
+  const recipes = groupRecipes(CATALOG, 'dinner');
+  assert.deepEqual(recipes.map(r => [r.recipe_id, r.variants.map(v => v.variant_id)]), [['s', ['s_none']], ['h', ['h_none']]]);
+  assert.equal(carbSummary(recipes[0]), 'No carb');
+});
+
+test('defaultVariant keeps the current carb, else starts on the recipe default (never no carb at lunch)', () => {
+  const [sudado] = groupRecipes(CATALOG, 'lunch');
+  assert.equal(defaultVariant(sudado, 'yuca').variant_id, 's_yuca');
+  assert.equal(defaultVariant(sudado, 'rice').variant_id, 's_potato');
+  assert.equal(defaultVariant(sudado, null).variant_id, 's_potato');
+});
+
+test('fitsMeal: a lunch needs a carb and a dinner has none', () => {
+  assert.equal(fitsMeal({ carb: 'rice' }, 'lunch'), true);
+  assert.equal(fitsMeal({ carb: null }, 'lunch'), false);
+  assert.equal(fitsMeal({ carb: null }, 'dinner'), true);
+  assert.equal(fitsMeal({ carb: 'rice' }, 'dinner'), false);
+});
+
+test('lunchCarbsByRecipe lists each recipe\'s lunch carbs; one carb means a fixed recipe', () => {
+  const byRecipe = lunchCarbsByRecipe(CATALOG);
+  assert.deepEqual(byRecipe.get('s'), ['potato', 'yuca', 'arepa']);
+  assert.deepEqual(byRecipe.get('a'), ['rice']);
+  assert.equal(byRecipe.has('h'), false);
+});
+
+test('carbLabel uses the ingredient display names', () => {
   assert.equal(carbLabel(null), 'No carb');
+  assert.equal(carbLabel('none'), 'No carb');
   assert.equal(carbLabel('platano_maduro'), 'Plátano maduro');
-  assert.equal(carbLabel('rice'), 'Rice');
+  assert.equal(carbLabel('rice'), 'Arroz');
+  assert.equal(carbLabel('corn'), 'Maíz tierno');
+  assert.equal(carbLabel('something_new'), 'Something new');
+});
+
+test('slotCarbName prefers the slot\'s carb ingredient row', () => {
+  assert.equal(slotCarbName({ carb: 'arepa', ingredients: [{ role: 'carb', display: 'Arepa de maíz' }] }), 'Arepa de maíz');
+  assert.equal(slotCarbName({ carb: 'rice', ingredients: [] }), 'Arroz');
+});
+
+test('swap errors for the carb rules read clearly', () => {
+  assert.match(swapErrorMessage({ code: 'carb_required' }), /lunch always needs a carb/);
+  assert.match(swapErrorMessage({ code: 'carb_not_allowed' }), /Dinner has no carb/);
+});
+
+test('changeLabels shows only the carbs when the recipe stays the same', () => {
+  const before = { recipe_id: 'e', recipe_name: 'Ensalada', carb: 'platano_maduro' };
+  assert.deepEqual(changeLabels({ before, after: { ...before, carb: 'rice' } }), { before: 'Plátano maduro', after: 'Arroz', carbOnly: true });
+  assert.deepEqual(changeLabels({ before, after: { recipe_id: 'a', recipe_name: 'Arroz con pollo', carb: 'rice' } }), { before: 'Ensalada', after: 'Arroz con pollo', carbOnly: false });
+  assert.deepEqual(changeLabels({ before: null, after: null }), { before: '(none)', after: '(removed)', carbOnly: false });
 });

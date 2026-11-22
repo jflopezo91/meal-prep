@@ -10,7 +10,7 @@ tags:
 # Arroz obligatorio al almuerzo; sin arroz en la cena.
 carbs:
   strategy: optional
-  allowed: [rice]
+  allowed: [rice, potato, yuca, platano_verde, platano_maduro, arepa, corn, pasta]
   default: rice
 
 ingredients:

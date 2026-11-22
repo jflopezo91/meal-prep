@@ -13,7 +13,7 @@ tags:
 # Variable carb strategy for lunch
 carbs:
   strategy: optional
-  allowed: [rice, potato, yuca, pasta]
+  allowed: [rice, potato, yuca, platano_verde, platano_maduro, arepa, corn, pasta]
   default: rice
 
 ingredients:
