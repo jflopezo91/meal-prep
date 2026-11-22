@@ -27,7 +27,7 @@ const WEEKEND_COPY = {
   }
 };
 
-export function WeekGrid({ plan, onSelect, highlightIds, onSwap = null, today = null }) {
+export function WeekGrid({ plan, onSelect, highlightIds, onSwap = null, today = null, carbsByRecipe = null, onChangeCarb = null }) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
       {Object.keys(DAYS).map(day => (
@@ -72,6 +72,8 @@ export function WeekGrid({ plan, onSelect, highlightIds, onSwap = null, today = 
                     highlighted={highlightIds?.has(dto.assignment_id)}
                     onClick={() => onSelect(slot)}
                     onSwap={onSwap && today && dto.date >= today ? () => onSwap(slot) : null}
+                    carbChoices={meal === 'lunch' ? carbsByRecipe?.get(dto.recipe_id) ?? null : null}
+                    onChangeCarb={onChangeCarb && today && dto.date >= today ? () => onChangeCarb(slot) : null}
                   />
                 );
               })

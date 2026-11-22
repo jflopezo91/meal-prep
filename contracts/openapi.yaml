@@ -757,6 +757,22 @@ paths:
                   externalValue: examples/error-stale-revision.json
                 slotNotEditable:
                   externalValue: examples/error-slot-not-editable.json
+        '422':
+          description: |-
+            The swap would break a meal carb rule: a lunch without a carb (carb_required) or a
+            dinner with one (carb_not_allowed).
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                carbRequired:
+                  externalValue: examples/error-carb-required.json
   /api/v1/plans/{plan_id}/swaps:
     post:
       tags: [Swaps]
@@ -856,8 +872,8 @@ paths:
                   externalValue: examples/error-slot-not-editable.json
         '422':
           description: |-
-            Idempotency-Key reused for a different request (retry_id_reused); nothing
-            stored.
+            Idempotency-Key reused for a different request (retry_id_reused), or the swap
+            would break a meal carb rule (carb_required, carb_not_allowed); nothing stored.
           headers:
             Cache-Control:
               schema:
@@ -870,6 +886,8 @@ paths:
               examples:
                 reusedKey:
                   externalValue: examples/error-retry-id-reused.json
+                carbRequired:
+                  externalValue: examples/error-carb-required.json
 
   /api/v1/plans/{plan_id}/revisions:
     get:
@@ -2692,7 +2710,7 @@ components:
     SwapVariant:
       type: object
       additionalProperties: false
-      required: [recipe_id, variant_id, name, protein, carb]
+      required: [recipe_id, variant_id, name, protein, carb, default]
       properties:
         recipe_id:
           type: string
@@ -2708,6 +2726,11 @@ components:
           enum: [chicken, beef, pork, fish, egg]
         carb:
           type: [string, 'null']
+        default:
+          type: boolean
+          description: |-
+            True for the recipe's default carb variant (and for its only variant when it has no
+            carb choice). Callers start a new recipe on it when the current carb is not offered.
     SwapVariantList:
       type: object
       additionalProperties: false
@@ -3189,7 +3212,7 @@ components:
           properties:
             code:
               type: string
-              enum: [invalid_request, invalid_week, unauthenticated, invalid_credentials, too_many_attempts, cross_origin_rejected, read_only, plan_not_found, snapshot_changed, source_unavailable, source_invalid, stale_revision, proposal_not_found, proposal_expired, input_basis_changed, retry_id_reused, nothing_to_undo, linked_pair_split, week_not_editable, duplicate_week, generation_failed, rule_violation, generation_busy, slot_not_found, variant_not_found, slot_not_editable, trip_not_found, stale_version, week_already_on_trip, invalid_transition, week_not_on_trip, last_week, invalid_months, publish_in_progress, publishing_disabled, publish_failed, not_found]
+              enum: [invalid_request, invalid_week, unauthenticated, invalid_credentials, too_many_attempts, cross_origin_rejected, read_only, plan_not_found, snapshot_changed, source_unavailable, source_invalid, stale_revision, proposal_not_found, proposal_expired, input_basis_changed, retry_id_reused, nothing_to_undo, linked_pair_split, week_not_editable, duplicate_week, generation_failed, rule_violation, generation_busy, slot_not_found, variant_not_found, slot_not_editable, carb_required, carb_not_allowed, trip_not_found, stale_version, week_already_on_trip, invalid_transition, week_not_on_trip, last_week, invalid_months, publish_in_progress, publishing_disabled, publish_failed, not_found]
             message:
               type: string
             details:

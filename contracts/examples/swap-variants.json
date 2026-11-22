@@ -2,6 +2,7 @@
   "items": [
     {
       "carb": "rice",
+      "default": true,
       "name": "Arroz con pollo",
       "protein": "chicken",
       "recipe_id": "arroz_con_pollo",
@@ -9,6 +10,7 @@
     },
     {
       "carb": null,
+      "default": false,
       "name": "At\u00fan a la JuanFe",
       "protein": "fish",
       "recipe_id": "atun_juanfe",
@@ -16,6 +18,7 @@
     },
     {
       "carb": "rice",
+      "default": true,
       "name": "At\u00fan a la JuanFe",
       "protein": "fish",
       "recipe_id": "atun_juanfe",
@@ -23,6 +26,7 @@
     },
     {
       "carb": null,
+      "default": false,
       "name": "Pollo asi\u00e1tico",
       "protein": "chicken",
       "recipe_id": "pollo_asiatico",
@@ -30,6 +34,7 @@
     },
     {
       "carb": "rice",
+      "default": true,
       "name": "Pollo asi\u00e1tico",
       "protein": "chicken",
       "recipe_id": "pollo_asiatico",

@@ -13,6 +13,7 @@ import { createStaticReader } from './readers/static';
 import { validatePair, addDays } from './readers/shared.js';
 import { authStore } from './auth/authStore.js';
 import { initialWeek, mondayOf, todayIn, formatWeekRange, formatMonth, monthOf } from './dates.js';
+import { carbLabel, lunchCarbsByRecipe } from './carbs.js';
 
 const createReader = () => import.meta.env.VITE_READER_MODE === 'static'
   ? createStaticReader('publication/index.json')
@@ -71,11 +72,24 @@ function App() {
   const mergeMonthCoverage = useCallback(next => setMonthCoverage(previous => new Map([...previous, ...next])), []);
   const [review, setReview] = useState(null);
   const [swapSlot, setSwapSlot] = useState(null);
+  const [swapMode, setSwapMode] = useState('recipe');
+  const [carbsByRecipe, setCarbsByRecipe] = useState(null);
   const [swapNotice, setSwapNotice] = useState(null);
   const [view, setView] = useState('week');
   const [month, setMonth] = useState(monthOf(INITIAL_WEEK));
   const [monthNonce, setMonthNonce] = useState(0);
   const auth = useSyncExternalStore(authStore.subscribe, authStore.getState);
+  // The recipe catalog tells each lunch card its carb choices (one: locked; several: changeable).
+  useEffect(() => {
+    if (!canEdit || !loadEditor || carbsByRecipe) return undefined;
+    let live = true;
+    loadEditor()
+      .then(({ createPlanEditor, loadCatalog }) => loadCatalog(createPlanEditor(import.meta.env.VITE_API_BASE_PATH || '/api/v1')))
+      .then(items => { if (live) setCarbsByRecipe(lunchCarbsByRecipe(items)); })
+      .catch(() => {}); // cards then simply show the carb without choices; the swap dialog reports errors
+    return () => { live = false; };
+  }, [canEdit, carbsByRecipe]);
+  const openSwap = (slot, mode = 'recipe') => { setSwapNotice(null); setSwapMode(mode); setSwapSlot(slot); };
   const [loggingOut, setLoggingOut] = useState(false);
   const [logoutError, setLogoutError] = useState(null);
   const requestGeneration = useRef(0);
@@ -363,7 +377,8 @@ function App() {
             )}
 
             <WeekGrid plan={shown} onSelect={setSelectedSlot} highlightIds={highlightIds}
-              onSwap={canEdit && SwapDialog && !review ? slot => { setSwapNotice(null); setSwapSlot(slot); } : null} today={todayIn(plan?.timezone)} />
+              onSwap={canEdit && SwapDialog && !review ? slot => openSwap(slot) : null} today={todayIn(plan?.timezone)}
+              carbsByRecipe={carbsByRecipe} onChangeCarb={canEdit && SwapDialog && !review ? slot => openSwap(slot, 'carb') : null} />
 
             {/* Stats Summary */}
             <div className="mt-12 bg-white dark:bg-slate-900 rounded-xl p-6 border border-slate-200 dark:border-slate-800 transition-colors duration-200">
@@ -385,7 +400,7 @@ function App() {
                   <ul className="space-y-1 text-sm">
                     {Object.entries(shown.derived.carb_counts).map(([key, count]) => (
                       <li key={key} className="flex justify-between text-slate-700 dark:text-slate-300">
-                        <span className="capitalize">{key}</span>
+                        <span>{carbLabel(key)}</span>
                         <span className="font-mono font-bold text-slate-900 dark:text-white">{count}</span>
                       </li>
                     ))}
@@ -409,7 +424,9 @@ function App() {
         <RecipeModal
           slot={selectedSlot}
           onClose={() => setSelectedSlot(null)}
-          onSwap={canEdit && SwapDialog && !review && selectedSlot.date >= todayIn(plan?.timezone) ? () => { setSwapSlot(selectedSlot); setSelectedSlot(null); setSwapNotice(null); } : null}
+          onSwap={canEdit && SwapDialog && !review && selectedSlot.date >= todayIn(plan?.timezone) ? () => { openSwap(selectedSlot); setSelectedSlot(null); } : null}
+          carbChoices={selectedSlot.meal === 'lunch' ? carbsByRecipe?.get(selectedSlot.recipe_id) ?? null : null}
+          onChangeCarb={canEdit && SwapDialog && !review && selectedSlot.date >= todayIn(plan?.timezone) ? () => { openSwap(selectedSlot, 'carb'); setSelectedSlot(null); } : null}
         />
       )}
       {auth.loginOpen && LoginDialog && (
@@ -419,12 +436,12 @@ function App() {
       )}
       {swapSlot && SwapDialog && plan && (
         <Suspense fallback={null}>
-          <SwapDialog slot={swapSlot} plan={plan} onClose={() => setSwapSlot(null)} onReload={() => loadData()}
+          <SwapDialog slot={swapSlot} plan={plan} mode={swapMode} onClose={() => setSwapSlot(null)} onReload={() => loadData()}
             onApplied={async ({ variant, ruleWarnings, revision }) => {
-              const name = variant.name;
+              const text = swapMode === 'carb' ? `Carb changed to ${carbLabel(variant.carb)}.` : `Swapped to ${variant.name}.`;
               setSwapSlot(null);
               await loadData();
-              setSwapNotice({ text: `Swapped to ${name}.`, warnings: ruleWarnings, revision });
+              setSwapNotice({ text, warnings: ruleWarnings, revision });
               setTripNonce(value => value + 1);
             }} />
         </Suspense>

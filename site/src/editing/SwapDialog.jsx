@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { X, Search, Check, ArrowRight, TriangleAlert } from 'lucide-react';
-import { createPlanEditor } from './planEditor.js';
-import { filterVariants, proteinOptions, groupRecipes, defaultVariant, carbLabel, isLinked, SCOPE_LABELS, groupGroceryDelta, tripImpactMessages, SWAP_WARNING_TITLE, swapErrorMessage, swapNeedsReload } from './swapModel.js';
+import { createPlanEditor, loadCatalog } from './planEditor.js';
+import { filterVariants, proteinOptions, groupRecipes, defaultVariant, carbLabel, carbSummary, isLinked, SCOPE_LABELS, groupGroceryDelta, tripImpactMessages, SWAP_WARNING_TITLE, swapErrorMessage, swapNeedsReload } from './swapModel.js';
 
 const API_BASE = import.meta.env.VITE_API_BASE_PATH || '/api/v1';
 const btn = 'min-h-11 px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
@@ -9,10 +9,9 @@ const btnPrimary = `${btn} bg-indigo-600 text-white hover:bg-indigo-500`;
 const btnQuiet = `${btn} bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-100 hover:bg-slate-200 dark:hover:bg-slate-700`;
 const mealOf = change => `${change.date} ${change.meal}`;
 
-// Catalog is stable for the page lifetime; fetch once.
-let catalogPromise = null;
-
-export default function SwapDialog({ slot, plan, onClose, onApplied, onReload }) {
+// mode 'carb' opens on the slot's own recipe to change only its carb; 'recipe' starts from the list.
+export default function SwapDialog({ slot, plan, onClose, onApplied, onReload, mode = 'recipe' }) {
+  const carbOnly = mode === 'carb';
   const editor = useMemo(() => createPlanEditor(API_BASE), []);
   const linked = isLinked(slot);
   const [variants, setVariants] = useState(null);
@@ -28,9 +27,8 @@ export default function SwapDialog({ slot, plan, onClose, onApplied, onReload })
 
   useEffect(() => {
     let live = true;
-    catalogPromise ??= editor.getCatalogVariants();
-    catalogPromise.then(items => { if (live) setVariants(items); })
-      .catch(err => { catalogPromise = null; if (live) setProblem(swapErrorMessage(err)); });
+    loadCatalog(editor).then(items => { if (live) setVariants(items); })
+      .catch(err => { if (live) setProblem(swapErrorMessage(err)); });
     return () => { live = false; };
   }, [editor]);
 
@@ -71,11 +69,18 @@ export default function SwapDialog({ slot, plan, onClose, onApplied, onReload })
   };
 
   const current = useMemo(() => variants?.find(item => item.variant_id === slot.variant_id) ?? null, [variants, slot.variant_id]);
+  const recipes = useMemo(() => (variants ? groupRecipes(variants, slot.meal) : []), [variants, slot.meal]);
   const shown = useMemo(() => {
     if (!variants) return [];
     const matching = new Set(filterVariants(variants, query, protein).map(item => item.recipe_id));
-    return groupRecipes(variants).filter(item => matching.has(item.recipe_id));
-  }, [variants, query, protein]);
+    return recipes.filter(item => matching.has(item.recipe_id));
+  }, [variants, recipes, query, protein]);
+  // Carb mode: open on the slot's own recipe and wait for a different carb to be picked.
+  useEffect(() => {
+    if (!carbOnly || recipe) return;
+    const own = recipes.find(item => item.recipe_id === slot.recipe_id);
+    if (own) setRecipe(own);
+  }, [carbOnly, recipe, recipes, slot.recipe_id]);
   const pickRecipe = item => { setRecipe(item); void loadPreview(defaultVariant(item, current?.carb), scope); };
   const groups = preview ? groupGroceryDelta(preview.grocery_delta) : [];
   const impacts = preview ? tripImpactMessages(preview.trips ?? preview.trip) : [];
@@ -85,8 +90,8 @@ export default function SwapDialog({ slot, plan, onClose, onApplied, onReload })
       <div role="dialog" aria-modal="true" aria-label="Swap meal" className="bg-white dark:bg-slate-900 w-full sm:max-w-lg sm:rounded-2xl shadow-xl flex flex-col h-dvh sm:h-auto sm:max-h-[90vh] overflow-hidden">
         <div className="flex items-start justify-between gap-3 px-4 pt-4 pb-3 border-b border-slate-100 dark:border-slate-800">
           <div className="min-w-0">
-            <p className="text-xs uppercase tracking-wider font-semibold text-slate-500 dark:text-slate-400">Swap {slot.day} {slot.meal} · {slot.date}</p>
-            <h2 className="text-lg font-bold text-slate-900 dark:text-white truncate">Currently: {slot.recipe_name}</h2>
+            <p className="text-xs uppercase tracking-wider font-semibold text-slate-500 dark:text-slate-400">{carbOnly ? 'Change carb' : 'Swap'} {slot.day} {slot.meal} · {slot.date}</p>
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white truncate">{carbOnly ? slot.recipe_name : `Currently: ${slot.recipe_name}`}</h2>
           </div>
           <button aria-label="Close" onClick={onClose} disabled={busy === 'apply'} className="min-w-11 min-h-11 flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500"><X size={20} /></button>
         </div>
@@ -131,7 +136,7 @@ export default function SwapDialog({ slot, plan, onClose, onApplied, onReload })
                       <button disabled={busy !== null} onClick={() => pickRecipe(item)} className="w-full min-h-14 py-2 px-1 text-left flex items-center gap-3 hover:bg-slate-50 dark:hover:bg-slate-800/60 disabled:opacity-60">
                         <span className="flex-1 min-w-0">
                           <span className="block font-medium text-slate-900 dark:text-white">{item.name}</span>
-                          <span className="block text-xs text-slate-500 dark:text-slate-400"><span className="capitalize">{item.protein}</span> · {item.variants.length === 1 ? carbLabel(item.variants[0].carb) : `${item.variants.length} carb options`}</span>
+                          <span className="block text-xs text-slate-500 dark:text-slate-400"><span className="capitalize">{item.protein}</span> · {carbSummary(item)}</span>
                         </span>
                         {isCurrent && <span className="text-xs font-semibold text-indigo-600 dark:text-indigo-300 inline-flex items-center gap-1"><Check size={14} />Current</span>}
                       </button>
@@ -144,7 +149,9 @@ export default function SwapDialog({ slot, plan, onClose, onApplied, onReload })
 
           {recipe && (
             <section aria-label="Swap preview" className="space-y-4 text-sm">
-              <p className="font-semibold text-slate-800 dark:text-slate-100">New recipe: {recipe.name}</p>
+              {!carbOnly && <p className="font-semibold text-slate-800 dark:text-slate-100">New recipe: {recipe.name}</p>}
+              {carbOnly && recipe.variants.length === 1 && <p className="text-slate-600 dark:text-slate-300">{recipe.name} only goes with {carbLabel(recipe.variants[0].carb)}.</p>}
+              {carbOnly && recipe.variants.length > 1 && !chosen && <p className="text-slate-600 dark:text-slate-300">Pick the carb for this {slot.meal}.</p>}
               {recipe.variants.length > 1 && (
                 <div role="radiogroup" aria-label="Carb" className="flex flex-wrap gap-2">
                   {recipe.variants.map(item => {
@@ -212,9 +219,9 @@ export default function SwapDialog({ slot, plan, onClose, onApplied, onReload })
         </div>
 
         <div className="px-4 py-3 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 flex gap-2 justify-end">
-          {recipe && <button className={btnQuiet} disabled={busy === 'apply'} onClick={back}>Back</button>}
+          {recipe && !carbOnly && <button className={btnQuiet} disabled={busy === 'apply'} onClick={back}>Back</button>}
           <button className={btnQuiet} disabled={busy === 'apply'} onClick={onClose}>Cancel</button>
-          {recipe && <button className={btnPrimary} disabled={!preview || busy !== null} onClick={confirm}>{busy === 'apply' ? 'Swapping…' : 'Swap'}</button>}
+          {recipe && <button className={btnPrimary} disabled={!preview || busy !== null} onClick={confirm}>{busy === 'apply' ? 'Saving…' : carbOnly ? 'Change carb' : 'Swap'}</button>}
         </div>
       </div>
     </div>

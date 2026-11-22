@@ -9,7 +9,7 @@ tags:
 # El planificador selecciona un acompañamiento por almuerzo.
 carbs:
   strategy: optional
-  allowed: [potato, yuca, corn, rice]
+  allowed: [rice, potato, yuca, platano_verde, platano_maduro, arepa, corn, pasta]
   default: potato
 
 ingredients:

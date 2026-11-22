@@ -1,5 +1,8 @@
 // Pure helpers for the swap dialog (no React, no network) so they can be unit tested.
 import { groupLabel, swapImpactEntries } from '../tripModel.js';
+import { carbLabel, compareCarbs, fitsMeal } from '../carbs.js';
+
+export { carbLabel };
 
 export function normalizeText(value) {
   return String(value ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
@@ -19,27 +22,31 @@ export function filterVariants(variants, query = '', protein = null) {
   });
 }
 
-const CARB_NAMES = { platano_maduro: 'Plátano maduro', platano_verde: 'Plátano verde' };
-export function carbLabel(carb) {
-  if (!carb) return 'No carb';
-  const name = CARB_NAMES[carb] ?? carb.replace(/_/g, ' ');
-  return name.charAt(0).toUpperCase() + name.slice(1);
-}
-
-// One entry per recipe, its carb variants with "No carb" first, in catalog order otherwise.
-export function groupRecipes(variants) {
+// One entry per recipe with the variants that fit the meal (a lunch always has a carb, a dinner never
+// does), in carb offer order. Recipes with nothing for the meal are left out. Without a meal, all.
+export function groupRecipes(variants, meal = null) {
   const recipes = new Map();
   for (const item of variants) {
+    if (meal && !fitsMeal(item, meal)) continue;
     if (!recipes.has(item.recipe_id)) recipes.set(item.recipe_id, { recipe_id: item.recipe_id, name: item.name, protein: item.protein, variants: [] });
     recipes.get(item.recipe_id).variants.push(item);
   }
-  for (const recipe of recipes.values()) recipe.variants.sort((a, b) => (a.carb ? 1 : 0) - (b.carb ? 1 : 0));
+  for (const recipe of recipes.values()) recipe.variants.sort((a, b) => compareCarbs(a.carb, b.carb));
   return [...recipes.values()];
 }
 
-// Keep the slot's current carb when the new recipe offers it, else start with no carb.
+// Keep the slot's current carb when the new recipe offers it, else start on the recipe's default.
 export function defaultVariant(recipe, currentCarb) {
-  return recipe.variants.find(item => (item.carb ?? null) === (currentCarb ?? null)) ?? recipe.variants[0];
+  return recipe.variants.find(item => (item.carb ?? null) === (currentCarb ?? null))
+    ?? recipe.variants.find(item => item.default)
+    ?? recipe.variants[0];
+}
+
+// How the recipe list describes a recipe's carb choice for one meal.
+export function carbSummary(recipe) {
+  if (recipe.variants.length !== 1) return `${recipe.variants.length} carb options`;
+  const only = recipe.variants[0].carb;
+  return only ? `Only ${carbLabel(only)}` : 'No carb';
 }
 
 export function canSwapSlot(slot, today) {
@@ -115,6 +122,8 @@ export function swapErrorMessage(error) {
     case 'stale_revision': return 'This week changed since you opened it. It has been reloaded; pick the swap again.';
     case 'slot_not_editable': return 'That meal is in the past, so it can no longer be swapped.';
     case 'slot_not_found': return 'That meal is no longer in this plan. The week has been reloaded.';
+    case 'carb_required': return 'A lunch always needs a carb. Pick one.';
+    case 'carb_not_allowed': return 'Dinner has no carb. Pick the option without one.';
     case 'variant_not_found': return 'That recipe is no longer in the catalog. Pick another one.';
     case 'forbidden':
     case 'read_only': return 'This device is not allowed to change meal plans.';

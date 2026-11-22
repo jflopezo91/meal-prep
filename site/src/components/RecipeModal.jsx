@@ -1,7 +1,8 @@
 import React from 'react';
-import { X, Utensils } from 'lucide-react';
+import { X, Utensils, Lock } from 'lucide-react';
+import { slotCarbName } from '../carbs';
 
-export function RecipeModal({ slot, onClose, onSwap = null }) {
+export function RecipeModal({ slot, onClose, onSwap = null, carbChoices = null, onChangeCarb = null }) {
     if (!slot) return null;
 
     const { recipeName, protein, carb, meal, day, proteinQty, proteinUnit, carbQty, carbUnit, ingredients } = slot;
@@ -49,7 +50,13 @@ export function RecipeModal({ slot, onClose, onSwap = null }) {
                                 </div>
                                 <div className="flex-1">
                                     <span className="block text-xs text-gray-500 dark:text-slate-400 uppercase">Carb</span>
-                                    <span className="font-medium capitalize text-slate-900 dark:text-white">{carb}</span>
+                                    <span className="font-medium text-slate-900 dark:text-white">{slotCarbName(slot)}</span>
+                                    {carbChoices?.length === 1 && (
+                                        <span className="flex items-center gap-1 text-xs text-gray-500 dark:text-slate-400"><Lock size={12} />Only option for this recipe</span>
+                                    )}
+                                    {onChangeCarb && carbChoices?.length > 1 && (
+                                        <button onClick={onChangeCarb} className="mt-1 min-h-8 text-sm font-medium text-indigo-600 dark:text-indigo-300 underline underline-offset-2">Change carb</button>
+                                    )}
                                 </div>
                                 <span className="font-mono font-bold text-lg text-slate-900 dark:text-white">{carbQty} {carbUnit}</span>
                             </div>

@@ -3,6 +3,8 @@
 A swap replaces the recipe/variant of one dated slot (and, for a linked lunch/dinner
 pair, its partner) with any catalog variant. Weekly rules are advisory here: callers
 report `check_weekly_rules` violations as warnings and never refuse a swap for them.
+The meal carb rules are the exception (check_meal_carb): a lunch without a carb, or a
+dinner with one, is refused, because no plan should ever hold that.
 Everything below is storage-independent; the lifecycle service (application layer)
 decides who may swap which slot and when.
 """
@@ -14,7 +16,7 @@ from collections.abc import Callable, Mapping, Sequence
 from copy import deepcopy
 from dataclasses import dataclass
 
-from .catalog import Ingredient
+from .catalog import Ingredient, MealType
 from .planner_inputs import PlannerInputs
 from .snapshot import PROTEINS, JsonObject, PlanSnapshot
 from .variants import RecipeVariant, expand_variants, materialize_variant
@@ -41,6 +43,14 @@ class SlotNotEditable(WorkflowError):
     """The slot's date is before today in the household timezone."""
 
 
+class CarbRequired(WorkflowError):
+    """A lunch would be left without a carb (lunches always carry one, like generated plans)."""
+
+
+class CarbNotAllowed(WorkflowError):
+    """A meal whose meal_rules forbid carbs (dinner) would get one."""
+
+
 @dataclass(frozen=True)
 class SwapVariant:
     """One swappable catalog variant as listed to callers."""
@@ -50,6 +60,7 @@ class SwapVariant:
     name: str
     protein: str
     carb: str | None
+    default: bool  # the recipe's default carb variant (or its only variant)
 
 
 @dataclass(frozen=True)
@@ -99,6 +110,7 @@ def list_swap_variants(inputs: PlannerInputs) -> list[SwapVariant]:
             v.recipe.name,
             v.recipe.tags.protein_group.value,
             v.carb_ingredient_id,
+            v.carb_ingredient_id == v.recipe.carbs.default,
         )
         for v in catalog_variants(inputs).values()
     ]
@@ -148,6 +160,33 @@ def _materialize(slot: JsonObject, variant: RecipeVariant, inputs: PlannerInputs
     return updated
 
 
+def _carbs_allowed(meal: str, inputs: PlannerInputs) -> bool:
+    rule = inputs.rules.meal_rules.get(MealType(meal))
+    return rule is None or rule.allow_carbs
+
+
+def check_meal_carb(variant: RecipeVariant, meal: str, inputs: PlannerInputs) -> None:
+    """Hard carb rules, the same ones generation enforces: every lunch has a carb, and a meal
+    whose meal_rules forbid carbs (dinner) has none."""
+    if meal == MealType.LUNCH.value and variant.carb_ingredient_id is None:
+        raise CarbRequired("a lunch needs a carb")
+    if variant.carb_ingredient_id is not None and not _carbs_allowed(meal, inputs):
+        raise CarbNotAllowed(f"{meal} cannot include a carb")
+
+
+def partner_variant(variant: RecipeVariant, meal: str, inputs: PlannerInputs) -> RecipeVariant:
+    """The same recipe in the shape the partner meal allows: a linked dinner drops the lunch's
+    carb, and a linked lunch gets the recipe's default carb when the dinner variant has none."""
+    catalog = catalog_variants(inputs)
+    base = variant.base_recipe_id
+    if variant.carb_ingredient_id is not None and not _carbs_allowed(meal, inputs):
+        return catalog.get(f"{base}__carb_none", variant)
+    if variant.carb_ingredient_id is None and meal == MealType.LUNCH.value:
+        default = variant.recipe.carbs.default
+        return catalog.get(f"{base}__carb_{default}", variant) if default else variant
+    return variant
+
+
 def apply_swap(
     base: PlanSnapshot,
     slot_id: str,
@@ -181,7 +220,9 @@ def apply_swap(
             half["linked_assignment_id"] = None
             half["extended_from_lunch"] = False
     for aid in swap_ids:
-        by_id[aid].update(_materialize(by_id[aid], variant, inputs))
+        meal_variant = variant if aid == slot_id else partner_variant(variant, by_id[aid]["meal"], inputs)
+        check_meal_carb(meal_variant, by_id[aid]["meal"], inputs)
+        by_id[aid].update(_materialize(by_id[aid], meal_variant, inputs))
     plan = deepcopy(base.plan)
     plan["slots"] = slots
     carbs = Counter(s["carb"] for s in slots if s["carb"] is not None)

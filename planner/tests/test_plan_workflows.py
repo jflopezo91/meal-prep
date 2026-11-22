@@ -379,7 +379,8 @@ def test_assignment_ids_stable_across_revisions(env: Env) -> None:
 
 def test_linked_pair_changes_atomically(env: Env) -> None:
     rev = created(env, seed=1)
-    p = env.svc.propose_regeneration(rev.plan_id, 1, seed=2)
+    # Seed 3 (with the current recipes) changes at least one linked lunch+dinner pair against seed 1.
+    p = env.svc.propose_regeneration(rev.plan_id, 1, seed=3)
     by_id = {c.assignment_id: c for c in p.changes}
     # Which days link depends on the recipes and seed: take the first lunch+dinner pair that changed.
     lunch = next(c for c in p.changes if c.after and c.after.get("linked_assignment_id") in by_id)
@@ -395,7 +396,7 @@ def test_linked_pair_split_is_rejected() -> None:
     from mealplanner.application.generation import generate
 
     a = generate(INPUTS, Calls(), 1, None)
-    b = generate(INPUTS, Calls(), 2, None)
+    b = generate(INPUTS, Calls(), 3, None)  # changes a linked pair against seed 1 (current recipes)
     from mealplanner.domain.snapshot import normalize_snapshot
 
     def snap(g):

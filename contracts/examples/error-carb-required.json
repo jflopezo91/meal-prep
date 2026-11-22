@@ -1,0 +1,7 @@
+{
+  "error": {
+    "code": "carb_required",
+    "details": [],
+    "message": "A lunch needs a carb."
+  }
+}

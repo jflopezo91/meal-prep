@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { cn } from '../lib/utils';
-import { Utensils, Fish, Beef, Drumstick, Egg, LeafyGreen, MoreHorizontal, ArrowLeftRight, BookOpen } from 'lucide-react';
+import { Utensils, Fish, Beef, Drumstick, Egg, LeafyGreen, MoreHorizontal, ArrowLeftRight, BookOpen, ChevronDown, Lock } from 'lucide-react';
+import { slotCarbName } from '../carbs';
 
 const PROTEIN_COLORS = {
     chicken: 'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-700/50',
@@ -78,8 +79,35 @@ function CardMenu({ label, actions }) {
     );
 }
 
-export function MealCard({ slot, onClick, highlighted = false, onSwap = null }) {
-    const { recipeName, protein, carb, meal, proteinQty, proteinUnit, carbQty, carbUnit } = slot;
+// The carb row of a card. carbChoices (the recipe's lunch carbs, known once the catalog is loaded):
+// one carb shows a lock; several, with onChangeCarb, make the row a button that changes it.
+function CarbRow({ slot, carbChoices, onChangeCarb }) {
+    const name = slotCarbName(slot);
+    const amount = <span className="font-mono font-bold">{slot.carbQty} {slot.carbUnit}</span>;
+    const fixed = carbChoices?.length === 1;
+    if (onChangeCarb && carbChoices?.length > 1) {
+        return (
+            <button
+                type="button"
+                onClick={event => { event.stopPropagation(); onChangeCarb(); }}
+                aria-label={`Change carb (now ${name})`}
+                className="-mx-1.5 px-1.5 min-h-8 w-[calc(100%+0.75rem)] flex items-center justify-between gap-2 rounded-md border border-black/10 dark:border-white/15 bg-white/50 dark:bg-black/20 hover:bg-white/80 dark:hover:bg-black/30 focus-visible:outline-2 focus-visible:outline-current"
+            >
+                <span className="truncate font-medium">{name}</span>
+                <span className="flex items-center gap-1 shrink-0">{amount}<ChevronDown size={14} className="opacity-70" /></span>
+            </button>
+        );
+    }
+    return (
+        <div className="flex items-center justify-between gap-2" title={fixed ? `${slot.recipeName} only goes with ${name}` : undefined}>
+            <span className="truncate"><span className="opacity-70">Carb:</span> <span className="font-medium">{name}</span></span>
+            <span className="flex items-center gap-1 shrink-0">{amount}{fixed && <Lock size={12} className="opacity-60" aria-label="Only option" />}</span>
+        </div>
+    );
+}
+
+export function MealCard({ slot, onClick, highlighted = false, onSwap = null, carbChoices = null, onChangeCarb = null }) {
+    const { recipeName, protein, carb, meal, proteinQty, proteinUnit, carbQty } = slot;
     const proteinName = slot.ingredients?.find(ing => ing.role === 'protein')?.display ?? 'Protein';
 
     const colorClass = PROTEIN_COLORS[protein] || PROTEIN_COLORS.default;
@@ -120,10 +148,7 @@ export function MealCard({ slot, onClick, highlighted = false, onSwap = null }) 
                     <span className="font-mono font-bold">{proteinQty} {proteinUnit}</span>
                 </div>
                 {carb !== 'none' && carbQty !== null && carbQty !== undefined && (
-                    <div className="flex items-center justify-between">
-                        <span className="opacity-70">Carb:</span>
-                    <span className="font-mono font-bold">{carbQty} {carbUnit}</span>
-                    </div>
+                    <CarbRow slot={slot} carbChoices={carbChoices} onChangeCarb={onChangeCarb} />
                 )}
             </div>
         </div>

@@ -15,6 +15,8 @@ from mealplanner.application.plan_workflows import PlanWorkflowService
 from mealplanner.application.shopping_trips import ShoppingTripService
 from mealplanner.domain.snapshot import validate_snapshot
 from mealplanner.domain.swap import (
+    CarbNotAllowed,
+    CarbRequired,
     SlotNotEditable,
     SlotNotFound,
     VariantNotFound,
@@ -73,9 +75,14 @@ class SwapEnv:
     def unlinked(self) -> dict:
         return next(s for s in self.slots().values() if s["linked_assignment_id"] is None)
 
-    def variant_for(self, slot: dict, *, protein_differs: bool = False, carb: bool = False) -> str:
-        for v in list_swap_variants(INPUTS):
-            if v.recipe_id == slot["recipe_id"]:
+    def variant_for(self, slot: dict, *, protein_differs: bool = False, carb: bool | None = None) -> str:
+        """Another recipe's variant that is valid for the slot's meal (a carb at lunch, none at
+        dinner), from a recipe that also has a no-carb variant so a linked partner can follow."""
+        carb = slot["meal"] == "lunch" if carb is None else carb
+        variants = list_swap_variants(INPUTS)
+        has_none = {v.recipe_id for v in variants if v.carb is None}
+        for v in variants:
+            if v.recipe_id == slot["recipe_id"] or v.recipe_id not in has_none:
                 continue
             if protein_differs and v.protein == slot["protein"]:
                 continue
@@ -104,7 +111,7 @@ def unchanged(before: dict, after: dict, ids: set[str]) -> bool:
 def test_pair_swap_changes_both_linked_slots_and_keeps_the_link(env: SwapEnv) -> None:
     lunch = env.linked_lunch()
     before = env.slots()
-    variant = env.variant_for(lunch, carb=False)
+    variant = env.variant_for(lunch)  # a carb variant: lunches always have a carb
     out = env.swap(lunch, variant, "pair")
     assert out.result.changed and out.result.revision == 2 and not out.result.replayed
     rev = env.current()
@@ -113,10 +120,11 @@ def test_pair_swap_changes_both_linked_slots_and_keeps_the_link(env: SwapEnv) ->
     after = env.slots()
     dinner_id = lunch["linked_assignment_id"]
     target = INPUTS.recipes[variant.split("__")[0]]
+    expected = {lunch["assignment_id"]: variant, dinner_id: f"{target.id}__carb_none"}  # dinner drops the carb
     for aid in (lunch["assignment_id"], dinner_id):
         slot = after[aid]
-        assert slot["variant_id"] == variant and slot["recipe_name"] == target.name
-        assert slot["recipe_id"] == target.id and slot["carb"] is None
+        assert slot["variant_id"] == expected[aid] and slot["recipe_name"] == target.name
+        assert slot["recipe_id"] == target.id and (slot["carb"] is None) == (aid == dinner_id)
         assert (slot["date"], slot["meal"]) == (before[aid]["date"], before[aid]["meal"])
         assert slot["ingredients"] != before[aid]["ingredients"]
     assert after[lunch["assignment_id"]]["linked_assignment_id"] == dinner_id
@@ -435,8 +443,58 @@ def test_every_listed_variant_makes_a_valid_snapshot(env: SwapEnv) -> None:
     base = env.current()
     for lunch_or_dinner in (env.linked_lunch(), env.unlinked()):
         for variant in catalog_variants(INPUTS).values():
-            raw = apply_swap(
-                base.snapshot, lunch_or_dinner["assignment_id"], variant, "pair", INPUTS, base.pantry
-            )
+            try:
+                raw = apply_swap(
+                    base.snapshot, lunch_or_dinner["assignment_id"], variant, "pair", INPUTS, base.pantry
+                )
+            except (CarbRequired, CarbNotAllowed):
+                continue  # not a valid choice for this meal (or its linked partner); see the carb tests
             stamp_revision(raw, 2, base.pantry)  # validates the full snapshot invariants
     assert "bistec_a_caballo__carb_none" in catalog_variants(INPUTS)  # its egg is protein_extra, so it is placeable
+
+
+# ---------------------------------------------------------------- meal carb rules
+
+
+def _no_carb_variant(slot: dict) -> str:
+    variants = list_swap_variants(INPUTS)
+    return next(v.variant_id for v in variants if v.carb is None and v.recipe_id != slot["recipe_id"])
+
+
+def test_a_lunch_cannot_be_swapped_to_no_carb(env: SwapEnv) -> None:
+    lunch = env.unlinked() if env.unlinked()["meal"] == "lunch" else env.linked_lunch()
+    for scope in ("pair", "single"):
+        with pytest.raises(CarbRequired):
+            env.svc.preview_swap(env.plan_id, lunch["assignment_id"], _no_carb_variant(lunch), scope, 1)
+        with pytest.raises(CarbRequired):
+            env.swap(lunch, _no_carb_variant(lunch), scope)
+    assert env.current().revision == 1  # nothing stored
+
+
+def test_a_dinner_cannot_be_given_a_carb(env: SwapEnv) -> None:
+    dinner = env.slots()[env.linked_lunch()["linked_assignment_id"]]
+    with pytest.raises(CarbNotAllowed):
+        env.swap(dinner, env.variant_for(dinner, carb=True), "single")
+    assert env.current().revision == 1
+
+
+def test_a_pair_swap_from_the_dinner_gives_the_lunch_the_recipe_default_carb(env: SwapEnv) -> None:
+    dinner = env.slots()[env.linked_lunch()["linked_assignment_id"]]
+    variant = env.variant_for(dinner)  # the no-carb variant of another recipe
+    env.swap(dinner, variant, "pair")
+    recipe = INPUTS.recipes[variant.split("__")[0]]
+    lunch = env.slots()[dinner["linked_assignment_id"]]
+    assert lunch["recipe_id"] == recipe.id and lunch["carb"] == recipe.carbs.default
+
+
+def test_changing_only_the_carb_keeps_the_recipe_and_the_link(env: SwapEnv) -> None:
+    lunch = env.linked_lunch()
+    other = next(
+        v.variant_id for v in list_swap_variants(INPUTS)
+        if v.recipe_id == lunch["recipe_id"] and v.carb not in (None, lunch["carb"])
+    )
+    env.swap(lunch, other, "pair")
+    after = env.slots()
+    assert after[lunch["assignment_id"]]["variant_id"] == other
+    assert after[lunch["assignment_id"]]["linked_assignment_id"] == lunch["linked_assignment_id"]
+    assert after[lunch["linked_assignment_id"]]["carb"] is None

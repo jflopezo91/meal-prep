@@ -42,6 +42,14 @@ function parseRetryAfter(value) {
   return Number.isFinite(seconds) && seconds >= 0 ? seconds : null;
 }
 
+// The recipe catalog only changes with a new image, so one fetch serves the page's lifetime (the swap
+// dialog and the week cards share it). A failed fetch is forgotten so the next caller retries.
+let catalogPromise = null;
+export function loadCatalog(editor) {
+  catalogPromise ??= editor.getCatalogVariants().catch(err => { catalogPromise = null; throw err; });
+  return catalogPromise;
+}
+
 export function createPlanEditor(base = '/api/v1') {
   const path = base.replace(/\/$/, '');
   const origin = typeof window !== 'undefined' && window.location?.origin ? window.location.origin : 'http://localhost';

@@ -10,7 +10,7 @@ tags:
 
 carbs:
   strategy: optional
-  allowed: [potato]
+  allowed: [rice, potato, yuca, platano_verde, platano_maduro, arepa, corn, pasta]
   default: potato
 
 ingredients:
