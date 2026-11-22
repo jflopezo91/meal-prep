@@ -501,6 +501,13 @@ honey:
   kind: other
   shelf_life: long_lasting
 
+mayonnaise:
+  display: "Mayonesa"
+  unit: g
+  section: condiment
+  kind: other
+  shelf_life: long_lasting
+
 olives:
   display: "Aceitunas"
   unit: g
@@ -542,6 +549,13 @@ cumin:
 
 paprika:
   display: "Paprika"
+  unit: g
+  section: spice
+  kind: other
+  shelf_life: long_lasting
+
+garlic_powder:
+  display: "Ajo en polvo"
   unit: g
   section: spice
   kind: other
