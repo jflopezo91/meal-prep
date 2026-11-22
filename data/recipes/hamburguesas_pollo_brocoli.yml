@@ -1,13 +1,15 @@
 # Cantidades por porción, a partir de una receta para dos personas.
 id: hamburguesas_pollo_brocoli
 name: "Hamburguesas de pollo y brócoli"
-meal_types: [dinner]
+meal_types: [lunch, dinner]
 
 tags:
   primary_protein: chicken
 
 carbs:
-  strategy: none
+  strategy: optional
+  allowed: [rice, potato, yuca, platano_verde, platano_maduro, arepa, corn, pasta]
+  default: rice
 
 ingredients:
   - item: chicken
