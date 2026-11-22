@@ -37,7 +37,7 @@ export function WeekGrid({ plan, onSelect, highlightIds, onSwap = null, today = 
             <span className="text-xs text-slate-400 uppercase font-mono">{day}</span>
           </div>
 
-          <div className="p-4 space-y-4 flex-1 flex flex-col justify-center">
+          <div className="p-4 space-y-4 flex-1 flex flex-col">
             {WEEKEND_DAYS.has(day) ? (
               <div className="flex-1 rounded-2xl border border-dashed border-amber-300/80 dark:border-amber-700/60 bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50 dark:from-amber-950/40 dark:via-orange-950/30 dark:to-rose-950/30 p-5 flex flex-col justify-between min-h-[220px]">
                 <div className="flex items-center justify-between gap-3">

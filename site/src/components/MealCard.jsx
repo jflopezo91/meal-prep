@@ -79,29 +79,51 @@ function CardMenu({ label, actions }) {
     );
 }
 
-// The carb row of a card. carbChoices (the recipe's lunch carbs, known once the catalog is loaded):
-// one carb shows a lock; several, with onChangeCarb, make the row a button that changes it.
+// One ingredient line of a card: role label, name, amount. Protein and carb share it so every card
+// reads the same way.
+const ROW = "grid grid-cols-[3.25rem_1fr_auto] items-center gap-x-2 min-h-7";
+const LABEL = "text-[11px] uppercase tracking-wide opacity-60";
+const AMOUNT = "tabular-nums font-semibold whitespace-nowrap";
+
+function IngredientRow({ label, name, amount, suffix = null }) {
+    return (
+        <div className={ROW}>
+            <span className={LABEL}>{label}</span>
+            <span className="flex items-center gap-1 min-w-0"><span className="truncate font-medium">{name}</span>{suffix}</span>
+            <span className={AMOUNT}>{amount}</span>
+        </div>
+    );
+}
+
+// The carb line. carbChoices (the recipe's lunch carbs, known once the catalog is loaded): one
+// carb shows a small lock; several, with onChangeCarb, make the line a button whose name is a pill.
 function CarbRow({ slot, carbChoices, onChangeCarb }) {
     const name = slotCarbName(slot);
-    const amount = <span className="font-mono font-bold">{slot.carbQty} {slot.carbUnit}</span>;
-    const fixed = carbChoices?.length === 1;
+    const amount = `${slot.carbQty} ${slot.carbUnit}`;
     if (onChangeCarb && carbChoices?.length > 1) {
         return (
             <button
                 type="button"
                 onClick={event => { event.stopPropagation(); onChangeCarb(); }}
                 aria-label={`Change carb (now ${name})`}
-                className="-mx-1.5 px-1.5 min-h-8 w-[calc(100%+0.75rem)] flex items-center justify-between gap-2 rounded-md border border-black/10 dark:border-white/15 bg-white/50 dark:bg-black/20 hover:bg-white/80 dark:hover:bg-black/30 focus-visible:outline-2 focus-visible:outline-current"
+                className={cn(ROW, "group w-full text-left rounded-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current")}
             >
-                <span className="truncate font-medium">{name}</span>
-                <span className="flex items-center gap-1 shrink-0">{amount}<ChevronDown size={14} className="opacity-70" /></span>
+                <span className={LABEL}>Carb</span>
+                <span className="min-w-0">
+                    <span className="-ml-2 inline-flex max-w-full items-center gap-0.5 rounded-full bg-white/70 dark:bg-white/10 pl-2 pr-1 py-0.5 ring-1 ring-black/10 dark:ring-white/15 group-hover:bg-white dark:group-hover:bg-white/20 transition-colors">
+                        <span className="truncate font-medium">{name}</span>
+                        <ChevronDown size={13} className="shrink-0 opacity-60" />
+                    </span>
+                </span>
+                <span className={AMOUNT}>{amount}</span>
             </button>
         );
     }
+    const fixed = carbChoices?.length === 1;
     return (
-        <div className="flex items-center justify-between gap-2" title={fixed ? `${slot.recipeName} only goes with ${name}` : undefined}>
-            <span className="truncate"><span className="opacity-70">Carb:</span> <span className="font-medium">{name}</span></span>
-            <span className="flex items-center gap-1 shrink-0">{amount}{fixed && <Lock size={12} className="opacity-60" aria-label="Only option" />}</span>
+        <div title={fixed ? `${slot.recipeName} only goes with ${name}` : undefined}>
+            <IngredientRow label="Carb" name={name} amount={amount}
+                suffix={fixed ? <Lock size={11} className="shrink-0 opacity-50" aria-label="Only option" /> : null} />
         </div>
     );
 }
@@ -142,11 +164,8 @@ export function MealCard({ slot, onClick, highlighted = false, onSwap = null, ca
                 {recipeName}
             </h3>
 
-            <div className="mt-auto pt-2 text-xs space-y-1">
-                <div className="flex items-center justify-between">
-                    <span className="opacity-70 truncate">{proteinName}:</span>
-                    <span className="font-mono font-bold">{proteinQty} {proteinUnit}</span>
-                </div>
+            <div className="mt-auto pt-2 border-t border-black/5 dark:border-white/10 text-xs space-y-0.5">
+                <IngredientRow label="Protein" name={proteinName} amount={`${proteinQty} ${proteinUnit}`} />
                 {carb !== 'none' && carbQty !== null && carbQty !== undefined && (
                     <CarbRow slot={slot} carbChoices={carbChoices} onChangeCarb={onChangeCarb} />
                 )}
