@@ -27,10 +27,6 @@ ingredients:
     qty_g: 200
     notes: "Mucha cebolla"
 
-  - item: tomato
-    role: veg
-    qty_g: 100
-
   - item: garlic
     role: veg
     qty_g: 10
@@ -38,6 +34,24 @@ ingredients:
   - item: green_onion
     role: veg
     qty_g: 20
+
+  - item: cilantro
+    role: herb
+    qty_g: 10
+
+  # Spices & condiments
+  - item: cumin
+    role: spice
+    qty_g: 2
+
+  - item: achiote
+    role: condiment
+    qty_g: 5
+
+  - item: panela
+    role: condiment
+    qty_g: 10
+    notes: "Un toque para caramelizar la cebolla"
 
   # Fat
   - item: olive_oil
