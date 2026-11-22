@@ -21,10 +21,6 @@ ingredients:
     notes: "Pechuga"
 
   # Vegetables
-  - item: red_onion
-    role: veg
-    qty_g: 220
-
   - item: red_bell_pepper
     role: veg
     qty_g: 120
@@ -42,5 +38,28 @@ ingredients:
     role: other
     qty_g: 180
     notes: "1 manzana verde con cáscara"
+
+  # Dressing
+  - item: mayonnaise
+    role: condiment
+    qty_g: 40
+
+  - item: heavy_cream
+    role: dairy
+    qty_ml: 30
+
+  - item: lemon
+    role: condiment
+    qty_units: 0.5
+    notes: "El jugo"
+
+  # Spices
+  - item: thyme
+    role: herb
+    qty_g: 1
+
+  - item: garlic_powder
+    role: spice
+    qty_g: 2
 
 notes: "Ensalada fresca con pollo, vegetales crujientes y manzana"
