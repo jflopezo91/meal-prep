@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { X, Search, Check, ArrowRight, TriangleAlert } from 'lucide-react';
 import { createPlanEditor, loadCatalog } from './planEditor.js';
-import { filterVariants, proteinOptions, groupRecipes, defaultVariant, carbLabel, carbSummary, isLinked, SCOPE_LABELS, groupGroceryDelta, tripImpactMessages, SWAP_WARNING_TITLE, swapErrorMessage, swapNeedsReload } from './swapModel.js';
+import { filterVariants, proteinOptions, groupRecipes, defaultVariant, carbLabel, carbSummary, changeLabels, isLinked, SCOPE_LABELS, groupGroceryDelta, tripImpactMessages, SWAP_WARNING_TITLE, swapErrorMessage, swapNeedsReload } from './swapModel.js';
 
 const API_BASE = import.meta.env.VITE_API_BASE_PATH || '/api/v1';
 const btn = 'min-h-11 px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
@@ -156,10 +156,12 @@ export default function SwapDialog({ slot, plan, onClose, onApplied, onReload, m
                 <div role="radiogroup" aria-label="Carb" className="flex flex-wrap gap-2">
                   {recipe.variants.map(item => {
                     const selected = item.variant_id === chosen?.variant_id;
+                    // Changing only the carb: the slot's own carb is shown but is not a change to pick.
+                    const unchanged = carbOnly && item.variant_id === slot.variant_id;
                     return (
-                      <button key={item.variant_id} role="radio" aria-checked={selected} disabled={busy === 'apply'}
+                      <button key={item.variant_id} role="radio" aria-checked={selected} disabled={busy === 'apply' || unchanged}
                         onClick={() => { if (!selected) void loadPreview(item, scope); }}
-                        className={`min-h-11 px-3 rounded-full text-sm border ${selected ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200'}`}>
+                        className={`min-h-11 px-3 rounded-full text-sm border ${selected ? 'bg-indigo-600 text-white border-indigo-600' : unchanged ? 'border-dashed border-slate-300 dark:border-slate-600 text-slate-400 dark:text-slate-500 cursor-default' : 'bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200'}`}>
                         {carbLabel(item.carb)}{item.variant_id === slot.variant_id ? ' (current)' : ''}
                       </button>
                     );
@@ -172,14 +174,18 @@ export default function SwapDialog({ slot, plan, onClose, onApplied, onReload, m
                   {preview.changes.length === 0 && <p className="text-slate-600 dark:text-slate-300">Nothing would change.</p>}
                   {preview.changes.length > 0 && (
                     <ul aria-label="Meal changes" className="space-y-1">
-                      {preview.changes.map(change => (
-                        <li key={`${change.assignment_id}-${change.kind}`} className="text-slate-700 dark:text-slate-300">
-                          <span className="font-mono text-xs uppercase mr-2">{mealOf(change)}</span>
-                          <span className="line-through opacity-70">{change.before?.recipe_name ?? '(none)'}</span>
-                          <ArrowRight size={12} className="inline mx-1" />
-                          <span className="font-semibold">{change.after?.recipe_name ?? '(removed)'}</span>
-                        </li>
-                      ))}
+                      {preview.changes.map(change => {
+                        const labels = changeLabels(change);
+                        return (
+                          <li key={`${change.assignment_id}-${change.kind}`} className="text-slate-700 dark:text-slate-300">
+                            <span className="font-mono text-xs uppercase mr-2">{mealOf(change)}</span>
+                            {labels.carbOnly && <span className="mr-1">Carb:</span>}
+                            <span className="line-through opacity-70">{labels.before}</span>
+                            <ArrowRight size={12} className="inline mx-1" />
+                            <span className="font-semibold">{labels.after}</span>
+                          </li>
+                        );
+                      })}
                     </ul>
                   )}
                   <div>

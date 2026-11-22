@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createPlanEditor } from '../src/editing/planEditor.js';
 import { lunchCarbsByRecipe, slotCarbName, fitsMeal } from '../src/carbs.js';
-import { filterVariants, proteinOptions, groupRecipes, defaultVariant, carbLabel, carbSummary, canSwapSlot, groupGroceryDelta, formatDifference, tripImpactMessage, tripImpactMessages, replacedSwapsWarning, swapErrorMessage, swapNeedsReload } from '../src/editing/swapModel.js';
+import { filterVariants, proteinOptions, groupRecipes, defaultVariant, carbLabel, carbSummary, changeLabels, canSwapSlot, groupGroceryDelta, formatDifference, tripImpactMessage, tripImpactMessages, replacedSwapsWarning, swapErrorMessage, swapNeedsReload } from '../src/editing/swapModel.js';
 
 const json = (body, status = 200, headers = {}) => new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json', ...headers } });
 function mockFetch(handler) {
@@ -210,4 +210,11 @@ test('slotCarbName prefers the slot\'s carb ingredient row', () => {
 test('swap errors for the carb rules read clearly', () => {
   assert.match(swapErrorMessage({ code: 'carb_required' }), /lunch always needs a carb/);
   assert.match(swapErrorMessage({ code: 'carb_not_allowed' }), /Dinner has no carb/);
+});
+
+test('changeLabels shows only the carbs when the recipe stays the same', () => {
+  const before = { recipe_id: 'e', recipe_name: 'Ensalada', carb: 'platano_maduro' };
+  assert.deepEqual(changeLabels({ before, after: { ...before, carb: 'rice' } }), { before: 'Plátano maduro', after: 'Arroz', carbOnly: true });
+  assert.deepEqual(changeLabels({ before, after: { recipe_id: 'a', recipe_name: 'Arroz con pollo', carb: 'rice' } }), { before: 'Ensalada', after: 'Arroz con pollo', carbOnly: false });
+  assert.deepEqual(changeLabels({ before: null, after: null }), { before: '(none)', after: '(removed)', carbOnly: false });
 });

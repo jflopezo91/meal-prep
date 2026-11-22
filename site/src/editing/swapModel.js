@@ -42,6 +42,16 @@ export function defaultVariant(recipe, currentCarb) {
     ?? recipe.variants[0];
 }
 
+// The before/after text of one meal change in a preview: just the carbs when the recipe stays the
+// same (a carb change), else the recipe names.
+export function changeLabels(change) {
+  const { before, after } = change;
+  if (before && after && before.recipe_id === after.recipe_id) {
+    return { before: carbLabel(before.carb), after: carbLabel(after.carb), carbOnly: true };
+  }
+  return { before: before?.recipe_name ?? '(none)', after: after?.recipe_name ?? '(removed)', carbOnly: false };
+}
+
 // How the recipe list describes a recipe's carb choice for one meal.
 export function carbSummary(recipe) {
   if (recipe.variants.length !== 1) return `${recipe.variants.length} carb options`;
