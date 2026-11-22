@@ -2,7 +2,7 @@
 # Release the meal-prep app to the NAS from the workstation. Never builds: it only approves the image
 # GitHub built and attested for the current commit of main, then deploys it by digest over SSH.
 #
-#   scripts/release.sh                 gate, backup, deploy, health check, then tag vYYYY.MM.DD[.N]
+#   scripts/release.sh                 gate, backup, deploy, health check, import recipes, then tag vYYYY.MM.DD[.N]
 #   scripts/release.sh --dry-run       gate only: prints the digest and tag, changes nothing
 #   scripts/release.sh --rollback TAG  redeploy an earlier release (with a backup first)
 #
@@ -126,6 +126,16 @@ undo_deploy() {
         fi" || echo "Could not restore the previous release; see docs/DEPLOYMENT.md." >&2
 }
 
+import_inputs() {  # apply the recipes, ingredients and rules shipped in the image just deployed
+    # The container only loads them into a fresh database (deploy/entrypoint.sh), so without this step
+    # new or changed recipes never reach the app. Additive and transactional: records only in the
+    # database are kept, plans and lists are untouched, and a failed import writes nothing.
+    # The pre-release backup taken by deploy() covers it.
+    say "importing planner inputs"
+    remote "docker exec -w /app meal-prep python -m mealplanner.entrypoints.db_cli import \
+        --db /data/mealplanner.db --data-dir data --replace-inputs"
+}
+
 deploy() {  # digest commit label
     backup_first "$3" || die "backup failed; nothing was deployed"
     say "deploying $3 ($1)"
@@ -163,6 +173,9 @@ MSG
         gate
         tag=$(next_tag)
         deploy "$digest" "$commit" "$tag"
+        # Not on --rollback: an older image would overwrite newer recipes with its own versions.
+        import_inputs || die "$tag is deployed and healthy, but the planner inputs were not imported
+(the database is unchanged). Fix the cause and run scripts/release.sh again; no tag was created."
         if ! git rev-parse -q --verify "refs/tags/$tag" >/dev/null; then
             git tag -a "$tag" -m "Release $tag" -m "digest: $digest" -m "commit: $commit" "$commit"
             git push -q origin "refs/tags/$tag"

@@ -7,8 +7,10 @@ Everything runs from the workstation, in `main`. The NAS login stays out of this
 ```bash
 git switch main && git pull
 scripts/release.sh --dry-run   # gate only
-scripts/release.sh             # gate, backup, deploy, health check, tag
+scripts/release.sh             # gate, backup, deploy, health check, import recipes, tag
 ```
+
+After the health check, the release imports the recipes, ingredients and rules from the new image into the database (`db_cli import --replace-inputs`). The container only loads them into a new database, so without this step new or changed recipes would never reach the app. The import adds new records and updates changed ones. It never deletes, never touches plans or shopping lists, and writes nothing if it fails. The output lists what it added and replaced. If the import fails, the release stops before tagging: run it again once the cause is fixed. A rollback skips the import, so older recipe versions don't overwrite newer ones.
 
 The gate requires a clean `main` equal to `origin/main`, green CI for that commit, its image in GHCR and a valid attestation. On a failed deploy the script returns to the previous release and creates no tag.
 

@@ -299,6 +299,9 @@ def _print_report(report: InputImportReport) -> None:
         f"inputs: {len(report.added)} added, {len(report.unchanged)} unchanged, "
         f"{len(report.replaced)} replaced"
     )
+    for label, names in (("added", report.added), ("replaced", report.replaced)):
+        if names:
+            print(f"  {label}: {', '.join(names)}")
 
 
 def main(argv: list[str] | None = None) -> int:
